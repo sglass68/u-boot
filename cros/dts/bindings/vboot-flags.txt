@@ -1,0 +1,73 @@
+Chromium OS Verified Boot Flags
+===============================
+
+The device tree nodes which describes the Chromium OS vboot flags are as
+follows:
+
+
+Constant
+--------
+
+Required properties :
+- compatible = "google,const-flag"
+- value : Integer value of value (0 or 1)
+
+
+GPIO
+----
+
+Required properties :
+- compatible = "google,gpio-flag"
+- gpio : phandle indicating the GPIO to use
+
+
+Optional properties :
+- sandbox-value : Value to set the GPIO to on initial startup (0 or 1). Only
+     sandbox allows setting these values, since it has a emulated GPIO system.
+
+
+Key
+---
+
+Required properties :
+- compatible = "google,key-flag"
+- key : Key code number to use (#include <linux/input.h> to get these)
+
+
+Sysinfo
+-------
+
+Required properties :
+- compatible = "google,sysinfo-flag"
+- google,name : Name of GPIO to look up in the sysinfo table
+
+
+Example
+=======
+
+	#include <linux/input.h>
+
+	write-protect {
+		compatible = "google,gpio-flag";
+		gpio = <&gpio_a 1>;
+	};
+	developer {
+		compatible = "google,const-flag";
+		value = <1>;
+	};
+	vboot-flag-lid-open {
+		compatible = "google,sysinfo-flag";
+		google,name = "lid";
+	};
+	power-off {
+		compatible = "google,key-flag";
+		key = <KEY_PAUSE>;
+	};
+	oprom-loaded {
+		compatible = "google,const-flag";
+		value = <0>;
+	};
+	ec-in-rw {
+		compatible = "google,gpio-flag";
+		gpio = <&gpio_a 3>;
+	};

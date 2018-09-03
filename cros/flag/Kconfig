@@ -1,0 +1,62 @@
+# SPDX-License-Identifier: GPL-2.0+
+#
+# Copyright 2018 Google LLC
+#
+
+config CROS_FLAG
+	bool "Chromium OS verified boot flags"
+	depends on DM
+	help
+	  Chromium OS includes a number of features which are controlled by
+	  hardware such as GPIOs or TPM settings. This uclass implements a
+	  way of reading these 'vboot' flags, with the each driver advertising
+	  the flags it can read and a method for reading those flags.
+
+	  Flags are normally read using vboot_flag_read_walk(). This checks each
+	  driver to find the one that implements the requested flag.
+
+	  Typically the flag values do not change value over the course of a
+	  boot, but this is not always true. For example, VBOOT_FLAG_LID_OPEN
+	  is 1 when the lid is open on a clamshell device, and 0 if the lid is
+	  closed. In this case vboot_flag_read_walk_prev() can be used to read
+	  the current value of the flag, along with the previous value. This
+	  allows transitions to be detected.
+
+config CROS_FLAG_GPIO
+	bool "Flags controlled by a GPIO"
+	depends on CROS_FLAG
+	help
+	  Enable support for a Chromium OS flag which is controlled by a GPIO.
+	  The flag is 1 if the GPIO is high and 0 if the GPIO is low.
+
+	  For sandbox only, the initial value of the flag can be provided in
+	  the device tree, for testing purposes.
+
+config CROS_FLAG_CONST
+	bool "Flags controlled by a constant"
+	depends on CROS_FLAG
+	help
+	  Enable support for a Chromium OS flag which is always the same value,
+	  as specified by the device-tree node. The value does not change at
+	  all over the life of the verified boot session. This can be useful
+	  for flags which are not supported on a particular platform.
+
+config CROS_FLAG_KEY
+	bool "Flags controlled by a keypress"
+	depends on CROS_FLAG && SANDBOX
+	help
+	  Enable support for a Chromium OS flag which is controlled by a
+	  keypress captured early during start-up. This is only provided for
+	  use with sandbox. A short delay at start-up allows capturing the
+	  keys to be read by this driver - see cros_ec_check_keyboard().
+
+config CROS_FLAG_SYSINFO
+	bool "Flags controlled by coreboot sysinfo"
+	depends on CROS_FLAG && X86
+	help
+	  Enable support for a Chromium OS flag which is controlled by
+	  information received by coreboot in its 'sysinfo' structure. This is
+	  used when coreboot is the first bootloader and it chain-loads into
+	  U-Boot. Since many of the flags can only be read very early in boot,
+	  this provides a way to keep a consistent flag value throughout the
+	  boot.

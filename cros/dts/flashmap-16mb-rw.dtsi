@@ -1,0 +1,167 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Read/write flash map for a 16MB SPI flash
+ *
+ * Copyright 2018 Google LLC
+ */
+
+/ {
+	binman {
+		/*
+		 * Note: rw-a and rw-b are used by auto-update. They must be
+		 * the same size, and must include the vblock, boot and
+		 * firmware-id parts within them. There is no check on this
+		 * at present so you need to manually verify that it is
+		 * correct.
+		 *
+		 * The rw-b section must not overlap/include the rw-vpd
+		 * section.
+		 */
+
+		/* ---- Section: Rewritable slot A ---- */
+		read-write-a {
+			u-boot,dm-pre-reloc;
+			type = "section";
+			label-prefix = "rw-a-";
+			block-offset = /bits/ 64 <0x00004400>;
+			vblock {
+				align = <0x1000>;
+				align-size = <0x1000>;
+				u-boot,dm-pre-reloc;
+				/*
+				 * Alignment: 4k (for updating) and must be in
+				 * start of each RW_SECTION
+				 */
+				size = <0x2000>;
+				content = <&rw_a_spl>;
+				keyblock = "firmware.keyblock";
+				signprivate = "firmware_data_key.vbprivk";
+				version = <1>;
+				kernelkey = "kernel_subkey.vbpubk";
+				preamble-flags = <0>;
+			};
+			rw_a_spl: spl {
+				u-boot,dm-pre-reloc;
+				type = "u-boot-spl-elf";
+				strip;
+			};
+			boot {
+				u-boot,dm-pre-reloc;
+				type = "u-boot-elf";
+				compress = "lz4";
+				hash {
+					u-boot,dm-pre-reloc;
+					algo = "sha256";
+				};
+			};
+			cros-ec-rw {
+				u-boot,dm-pre-reloc;
+				size = <0xf000>;
+				hash {
+					u-boot,dm-pre-reloc;
+					algo = "sha256";
+				};
+			};
+			firmware-id {
+				/* Alignment: no requirement */
+				size = <0x100>;
+				type = "text";
+				text-label = "frid";
+			};
+		};
+
+		/* ---- Section: Rewritable slot B ---- */
+		read-write-b {
+			u-boot,dm-pre-reloc;
+			type = "section";
+			label-prefix = "rw-b-";
+			size = <0x3c0000>;
+			block-offset = /bits/ 64 <0x00084400>;
+
+			vblock {
+				type = "fill";
+				align = <0x1000>;
+				align-size = <0x1000>;
+				u-boot,dm-pre-reloc;
+				/*
+				 * Alignment: 4k (for updating) and must be in
+				 * start of each RW_SECTION
+				 */
+				size = <0x2000>;
+				content = <&rw_b_dtb>;
+				keyblock = "firmware.keyblock";
+				signprivate = "firmware_data_key.vbprivk";
+				version = <1>;
+				kernelkey = "kernel_subkey.vbpubk";
+				preamble-flags = <0>;
+			};
+			rw_b_dtb: u-boot-dtb {
+			};
+			cros-ec-rw {
+				size = <0xf000>;
+				add-hash;
+			};
+			firmware-id {
+				/* Alignment: no requirement */
+				size = <0x100>;
+				type = "text";
+				text-label = "frid";
+			};
+		};
+
+		/* ---- Section: Rewritable VPD 32 KB ---- */
+		read-write-vpd {
+			type = "section";
+			rw-vpd {
+				/* Alignment: 4k (for updating) */
+				size = <0x00008000>;
+				type = "fill";
+				fill-value = [ff];
+			};
+		};
+
+		/* ---- Section: Rewritable shared 16 KB---- */
+		shared-section {
+			type = "section";
+			/* Anything in this range may be updated in recovery */
+			size = <0x4000>;
+			shared-data {
+				label = "shared-data";
+				/*
+				 * Alignment: 4k (for random read/write).
+				 * RW firmware can put calibration data here
+				 */
+				size = <0x00004000>;
+				type = "fill";
+				fill-value = [00];
+			};
+		};
+
+		/* ---- Section: Rewritable private 16 KB---- */
+		rw-private {
+			type = "section";
+			size = <0x00014000>;
+			rw-environment {
+				label = "rw-environment";
+				/*
+				 * Alignment: 4k, and must occupy bottom of
+				 * U-Boot firmware -- check CONFIG_ENV_OFFSET
+				 */
+				size = <0x00004000>;
+
+				/*
+				 * We could put the dev environment here, but
+				 * U-Boot has a default built in. Devs can
+				 * 'saveenv' to set this up.
+				 */
+				type = "fill";
+				fill-value = [00];
+			};
+			recovery-mrc-cache {
+				size = <0x10000>;
+				type = "fill";
+				fill-value = [ff];
+			};
+		};
+	};
+};

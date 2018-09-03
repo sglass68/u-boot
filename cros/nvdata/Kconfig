@@ -1,0 +1,46 @@
+config NVDATA_CROS_EC
+	bool "Non-volatile data driver that uses the Chromium OS EC"
+	help
+	  This stored non-volatile data in the EC. This data may be lost when
+	  the EC is reset but that does not happen often (Esc-Power-Refresh,
+	  running out of battery, etc.). This driver supports only the
+	  CROS_NV_DATA type.
+
+config NVDATA_TPM
+	bool "Non-volatile data driver that uses the TPM"
+	help
+	  This stored non-volatile data in the EC. This data is retained until
+	  the TPM is reset and cleared, typically after a 'power wash' cycle
+	  causes the device to enter the initial OOBE (Out-of-Box-Experience)
+	  screen. This driver supports CROS_NV_SECDATA, CROS_NV_SECDATAK and
+	  CROS_NV_REC_HASH types.
+
+config SPL_NVDATA_TPM
+	bool "Non-volatile data driver that uses the TPM in SPL"
+	help
+	  Enables support for storing NV data in the TPM within SPL. This must
+	  normally be enabled since SPL typically accesses the data to find
+	  out what action to take.
+
+	  For sandbox there is a little quirk in that the TPM driver only
+	  writes its data to the state.dtb file if it has been probed, so this
+	  option generally must be enabled within SPL even if the driver is not
+	  actually used. Otherwise the data is lost when jumping to U-Boot
+	  proper.
+
+config TPL_NVDATA_TPM
+	bool "Non-volatile data driver that uses the TPM in TPL"
+	help
+	  Enables support for storing NV data in the TPM within TPL. This must
+	  normally be enabled since TPL typically accesses the data to find
+	  out what action to take - e.g. whether to jump to the A SPL or the B
+	  SPL.
+
+config NVDATA_CMOS
+	bool "Non-volatile data driver that uses CMOS RAM"
+	help
+	  For devices which have battery-backed CMOS RAM it is possible to
+	  store non-volatile data into this instead of the EC. This data is
+	  preserved so long as the Real-Time Clock (RTC) retains power.
+	  Typically this survives even an EC restart. This driver supports only
+	  the CROS_NV_DATA type.

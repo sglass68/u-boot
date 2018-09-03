@@ -1,0 +1,35 @@
+Chromium OS Verified Firmware Store
+===================================
+
+The device tree nodes which describes the Chromium OS firmware store are as
+follows:
+
+Required properties :
+- compatible = "google,fwstore-spi" or google,fwstore-mmc
+- firmware-storage : phandle pointing to the SPI or MMC device
+
+
+Example
+=======
+
+	fwstore-spi {
+		compatible = "cros,fwstore-spi";
+		firmware-storage = <&fwstore_spi>;
+	};
+
+	spi@0 {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		reg = <0 0>;
+		compatible = "sandbox,spi";
+		cs-gpios = <0>, <&gpio_a 0>;
+		fwstore_spi: flash@0 {
+			reg = <0>;
+			compatible = "spansion,m25p128", "spi-flash";
+			spi-max-frequency = <40000000>;
+			sandbox,filename = "spi.bin";
+			emul {
+				compatible = "sandbox,spi-flash-emul";
+			};
+		};
+	};

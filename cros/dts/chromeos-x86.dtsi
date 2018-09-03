@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Chromium OS-specific options for x86
+ *
+ * Copyright 2018 Google LLC
+ */
+
+/ {
+	chromeos-config {
+		u-boot,dm-pre-reloc;
+		/* Kernel start address and size */
+		kernel-addr = <0x01008000 0x2000000>;
+
+	};
+
+	chromeos {
+		u-boot,dm-pre-reloc;
+		compatible = "simple-bus";
+		fwstore-spi {
+			u-boot,dm-pre-reloc;
+			compatible = "cros,fwstore-spi";
+			firmware-storage = <&fwstore_spi>;
+		};
+		write-protect {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		developer {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <1>;
+		};
+		lid-open {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <1>;
+		};
+		power-off {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		oprom-loaded {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		ec-in-rw {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		recovery {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <1>;
+		};
+		wipeout {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+	};
+
+	config {
+		silent_console = <0>;
+	};
+
+	chosen {
+		bootargs = "";
+	};
+};

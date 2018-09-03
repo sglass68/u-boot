@@ -1,0 +1,81 @@
+Chromium OS dts config bindings
+=============================
+
+faft-key-remap-ascii - Array for simple ascii key remap.
+ You may remap up to three keys if the GBB flag is set.
+ Keys are paired with incoming key and remapped key.
+ example remap '\' to SPACE:
+     faft-key-remap-ascii = <0x5c 0x0D 0 0 0 0>;
+
+faft-key-remap-special - Array for special key remap.
+ You may remap up to three keys if the GBB flag is set.
+ Keys are paired with incoming key and remapped key.
+ Special keys are pre-stripped of ESCAPE and '['.
+ example remap 'F9' to ENTER:
+ faft-key-remap-special = <0x32 0x20 0 0 0 0>;
+
+kernel-offset
+  location (offset into DRAM and size) of the memory area allocated for
+  kernel blob on Exynos platforms.
+
+deactivate-tpm
+	Deactivate the TPM on startup. If enabled then the TPM is deactivated
+	and the device is rebooted so that verified boot starts in that state.
+
+detachable-ui
+	Support a menu for use with devices with a detachable keyboard. This
+	changes the UI for verified boot to a separate version which only needs
+	up/down/select to operate.
+
+disable-dev-on-rec
+	Disable entry to developer mode from recovery
+
+disable-memwipe
+	Disable memory wipe, ie, bypass function wipe_unused_memory(). This
+	flag is useful for boards where memory wipe is not absolutely needed
+	because it may save a few seconds of boot time.
+
+disable-power-button-during-update
+	Don't allow the power button to be used when updating aux firmware
+
+disable-lid-shutdown-during-update
+	Don't allow a lid closure to cause the machine to shut down when
+	updating aux firmware
+
+ec-efs
+	EC uses early firmware selection
+
+ec-slow-update
+	Updating the EC is slow, so a warning screen is needed.
+
+ec-software-sync
+	Use software sync for EC updates. This is where the AP checks a hash
+	and sends new software to the EC
+
+resume-path-same-as-boot
+	Indicates that when a system resumes it takes the same path as a regular
+	boot, e.g. an x86 system runs from the reset vector at 0xfffffff0 on
+	both resume and warm/cold boot.
+
+meminit-in-readonly-code
+	Memory init code is in read-only flash
+
+oprom-matters
+	Indicates that an option ROM is needed to init the display
+
+physical-dev-switch
+	There is a physical switch for developer mode (rather than a setting in
+	the TPM).
+
+physical-rec-switch
+	There is a physical switch for recovery mode (rather than a setting in
+	the TPM).
+
+recovery-mode-mrc
+	Recovery mode has a memory-reference-code (MRC) area where signed
+	memory parameters are kept. This is done on some Intel platforms where
+	memory init is so slow that users thing the machine is broken when
+	trying to get to recovery mode.
+
+vboot2-work-buffer-size
+	Size of the vboot2 work buffer. Should normaly be 0x3000.

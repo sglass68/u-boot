@@ -1,0 +1,73 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Chromium OS-specific options for sandbox
+ *
+ * Copyright 2018 Google LLC
+ */
+
+#include "factory-friendly.dtsi"
+
+/ {
+	config {
+		hwid = "SANDBOX TEST A-A 1968";
+		silent-console = <0>;
+		u-boot-memory = "/memory";
+		u-boot-offset = <0 0x300000>;
+	};
+
+	chromeos-config {
+		u-boot,dm-pre-reloc;
+		detachable-ui;
+		recovery-mode-mrc-cache;
+
+		/* Kernel start address and size */
+		kernel-addr = <0x01008000 0x2000000>;
+
+	};
+
+	chromeos {
+		u-boot,dm-pre-reloc;
+		compatible = "simple-bus";
+		fwstore-spi {
+			u-boot,dm-pre-reloc;
+			compatible = "cros,fwstore-spi";
+			firmware-storage = <&fwstore_spi>;
+		};
+		write-protect {
+			u-boot,dm-pre-reloc;
+			compatible = "google,gpio-flag";
+			gpio = <&gpio_a 1>;
+		};
+		developer {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <1>;
+		};
+		lid-open {
+			u-boot,dm-pre-reloc;
+			compatible = "google,gpio-flag";
+			gpio = <&gpio_a 2>;
+			sandbox-value = <1>;
+		};
+		power-off {
+			u-boot,dm-pre-reloc;
+			compatible = "google,key-flag";
+			/* Use KEY_PAUSE to similate power button */
+			key = <116>;
+		};
+		oprom-loaded {
+			u-boot,dm-pre-reloc;
+			compatible = "google,const-flag";
+			value = <0>;
+		};
+		ec-in-rw {
+			u-boot,dm-pre-reloc;
+			compatible = "google,gpio-flag";
+			gpio = <&gpio_a 3>;
+		};
+	};
+
+	chosen {
+		bootargs = "";
+	};
+};

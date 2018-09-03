@@ -1,0 +1,123 @@
+# SPDX-License-Identifier: GPL-2.0+
+#
+# Copyright 2018 Google LLC
+#
+
+config CHROMEOS
+	bool "Enable Chromium OS verified boot support"
+	select BINMAN
+	imply CHROMEOS_SPI
+	imply NVDATA_CROS_EC
+	imply NVDATA_TPM
+	imply CROS_FLAG
+	imply CROS_FLAG_GPIO
+	imply CROS_FLAG_CONST
+	imply CROS_FLAG_KEY
+	imply LZ4
+	imply SPL_LZ4
+	imply BLOBLIST
+	imply NVDATA_CMOS if X86
+	imply FWSTORE_SPI_FLASH
+
+config VBOOT2
+	bool "Use Chromium OS vboot2 API where possible"
+	depends on CHROMEOS
+	default y
+	help
+	  Use vboot 2 API. This currently (August 2018) only supports the
+	  firmware selection process. It cannot be used for selecing and
+	  booting a kernel. The current U-Boot implementation only supports
+	  the vboot 2 API for firmware, so this option is required to be
+	  enabled.
+
+config VBOOT_DISABLE_DEV_ON_RECOVERY
+	bool "Disable developer mode when going into recovery"
+	depends on CHROMEOS
+
+config VBOOT_DEBUG
+	bool "Enable debugging for vboot"
+	depends on CHROMEOS
+	default y
+
+config SPL_CHROMEOS
+	bool "Enable Chromium OS verified boot support in SPL"
+	depends on CHROMEOS
+	select SUPPORT_SPL
+	imply SPL
+	imply SPL_SEPARATE_BSS
+	imply SPL_DRIVERS_MISC_SUPPORT
+	imply SPL_GPIO_SUPPORT
+	imply SPL_LIBCOMMON_SUPPORT
+	imply SPL_LIBGENERIC_SUPPORT
+	imply SPL_SERIAL_SUPPORT
+	imply SPL_SPI_FLASH_SUPPORT
+	imply SPL_SPI_SUPPORT
+	imply SPL_LOG
+	imply SPL_BLOBLIST
+	imply SPL_BOARD_INIT
+	imply SPL_ENV_SUPPORT
+	imply SPL_OF_CONTROL
+	imply SPL_DM
+	imply SPL_REGMAP
+	imply SPL_SYSCON
+	imply SPL_CROS_EC
+	imply SPL_TIMER
+	imply SPL_FWSTORE_SPI_FLASH
+
+config TPL_CHROMEOS
+	bool "Enable Chromium OS verified boot support in TPL"
+	depends on CHROMEOS
+	select SUPPORT_TPL
+	imply TPL
+	imply TPL_LIBCOMMON_SUPPORT
+	imply TPL_LIBGENERIC_SUPPORT
+	imply TPL_LOG
+	imply TPL_BLOBLIST
+	imply TPL_SYS_MALLOC_SIMPLE
+	imply TPL_HASH_SUPPORT
+	imply TPL_GPIO_SUPPORT
+	imply TPL_BOARD_INIT
+	imply TPL_DRIVERS_MISC_SUPPORT
+	imply TPL_ENV_SUPPORT
+	imply TPL_SERIAL_SUPPORT
+	imply TPL_SPI_FLASH_SUPPORT
+	imply TPL_SPI_SUPPORT
+	imply TPL_REGMAP
+	imply TPL_SYSCON
+	imply TPL_OF_CONTROL
+	imply TPL_DM
+	imply TPL_INPUT
+	imply TPL_DM_KEYBOARD
+	imply TPL_CROS_EC_KEYB
+	imply TPL_CROS_EC
+	imply TPL_TIMER
+	imply TPL_TPM
+	imply TPL_CHROMEOS
+	imply TPL_NVDATA_TPM
+	imply TPL_FWSTORE_SPI_FLASH
+
+config CROS_FULL
+	bool "Build full Chromium OS support"
+	default y
+
+config CHROMEOS_TEST
+	bool "Enable Chromium OS tests"
+	help
+	  There are currently no tests specifically for the Chromium OS boot
+	  flow, other than the large functional test of running it in sandbox.
+	  This option currently does nothing, but the intention is that it will
+	  enable building unit tests for each piece of functionality.
+
+config CROS_EC_RW_FILE
+	string "Chromium OS EC read-write image filename"
+	default "ec-rw.bin"
+	help
+	  This is the name of the file containing the Embedded Controller (EC)
+	  Read-Write image. This is synced to the EC using a process called
+	  'software sync' to ensure that the EC is always running the latest
+	  software.
+
+source "cros/cmd/Kconfig"
+source "cros/flag/Kconfig"
+source "cros/fwstore/Kconfig"
+source "cros/nvdata/Kconfig"

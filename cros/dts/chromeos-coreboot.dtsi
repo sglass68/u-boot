@@ -1,0 +1,54 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Chromium OS-specific options for coreboot
+ *
+ * Copyright 2018 Google LLC
+ */
+
+#include "factory-friendly.dtsi"
+
+/ {
+	chromeos-config {
+		u-boot,dm-pre-reloc;
+		recovery-mode-mrc-cache;
+	};
+
+	chromeos {
+		u-boot,dm-pre-reloc;
+		compatible = "simple-bus";
+		fwstore-spi {
+			u-boot,dm-pre-reloc;
+			compatible = "cros,fwstore-spi";
+			firmware-storage = <&fwstore_spi>;
+		};
+
+		vboot-flag-write-protect {
+			compatible = "google,sysinfo-flag";
+			google,name = "write protect";
+		};
+		vboot-flag-developer {
+			compatible = "google,sysinfo-flag";
+			google,name = "developer";
+		};
+		vboot-flag-lid-open {
+			compatible = "google,sysinfo-flag";
+			google,name = "lid";
+		};
+		vboot-flag-power-off {
+			compatible = "google,sysinfo-flag";
+			google,name = "power";
+		};
+		vboot-flag-oprom-loaded {
+			compatible = "google,sysinfo-flag";
+			google,name = "oprom";
+		};
+	};
+
+	config {
+		silent_console = <0>;
+	};
+
+	chosen {
+		bootargs = "";
+	};
+};

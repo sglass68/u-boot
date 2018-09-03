@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Sandbox read-only flash layout
+ *
+ * Copyright 2018 Google LLC
+ */
+
+/ {
+	binman {
+		u-boot,dm-pre-reloc;
+		compatible = "chromeos,flashmap";
+		read-only {
+			u-boot,dm-pre-reloc;
+			type = "section";
+			label-prefix = "ro-";
+			read-only;
+
+			cros-ec-rw {
+				filename = CONFIG_CROS_EC_RW_FILE;
+				size = <0xf000>;
+				add-hash;
+			};
+
+			fmap {
+				align = <0x10000>;
+			};
+
+			boot-recovery {
+				type = "u-boot";
+			};
+
+			gbb {
+				u-boot,dm-pre-reloc;
+				size = <0x8000>;
+				align = <0x1000>;
+			};
+			firmware-id {
+				size = <0x100>;
+				type = "text";
+				text-label = "frid";
+			};
+			locales {
+				compatible = "chromeos,locales";
+				type = "files";
+				pattern = "locales/*";
+				require-matches;
+				compress = "lz4";
+			};
+		};
+
+		/* ---- Section: Vital-product data (VPD) ---- */
+		read-only-vpd {
+			type = "section";
+			label-prefix = "ro-";
+			read-only;
+			vpd {
+				/* VPD offset must be aligned to 4K bytes */
+				size = <0x0001000>;
+				type = "fill";
+				fill-value = [ff];
+			};
+		};
+	};
+};

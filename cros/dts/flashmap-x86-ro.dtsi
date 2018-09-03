@@ -1,0 +1,133 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Flash layout for x86 (for testing purposes only)
+ *
+ * Copyright 2018 Google LLC
+ */
+
+#include <config.h>
+
+/ {
+	binman {
+		chromeos: image {
+		};
+	};
+};
+
+&chromeos {
+	filename = "image.bin";
+	u-boot,dm-pre-reloc;
+	end-at-4gb;
+	sort-by-offset;
+	pad-byte = <0xff>;
+	size = <CONFIG_ROM_SIZE>;
+	compatible = "chromeos,flashmap";
+#ifdef CONFIG_HAVE_INTEL_ME
+	intel-descriptor {
+		filename = CONFIG_FLASH_DESCRIPTOR_FILE;
+	};
+	intel-me {
+		filename = CONFIG_INTEL_ME_FILE;
+	};
+#endif
+	/* ---- Section: Vital-product data (VPD) ---- */
+	read-only-vpd {
+		offset = <0xffe00000>;
+		type = "section";
+		label-prefix = "ro-";
+		read-only;
+		align-size = <0x10000>;
+		vpd {
+			size = <0x4000>;
+			type = "fill";
+			fill-value = [ff];
+		};
+	};
+	read-only {
+		u-boot,dm-pre-reloc;
+		type = "section";
+		label-prefix = "ro-";
+		sort-by-offset;
+		read-only;
+		fmap {
+			offset = <(0xffe10000 - 0xffe10000)>;
+			size = <0x800>;
+		};
+		firmware-id {
+			size = <0x40>;
+			type = "text";
+			text-label = "frid";
+		};
+
+		gbb {
+			type = "gbb";
+			u-boot,dm-pre-reloc;
+			size = <0x3000>;
+			expand-size;
+			align = <0x1000>;
+		};
+		locales {
+			compatible = "chromeos,locales";
+			type = "files";
+			pattern = "locales/*";
+			require-matches;
+			compress = "lz4";
+			align = <0x40>;
+		};
+		boot-rec {
+			offset = <(0xffed0000 - 0xffe10000)>;
+			u-boot,dm-pre-reloc;
+			type = "u-boot-with-ucode-ptr";
+			hash {
+				u-boot,dm-pre-reloc;
+				algo = "sha256";
+			};
+		};
+		u-boot-dtb {
+		};
+		u-boot-ucode {
+		};
+
+#ifdef CONFIG_TPL
+		x86-start16-tpl {
+			offset = <(CONFIG_SYS_X86_START16 - 0xffe10000)>;
+		};
+#elif defined(CONFIG_SPL)
+		x86-start16-spl {
+			offset = <(CONFIG_SYS_X86_START16 - 0xffe10000)>;
+		};
+#else
+		x86-start16 {
+			offset = <(CONFIG_SYS_X86_START16 - 0xffe10000)>;
+		};
+#endif
+
+		u-boot-tpl-with-ucode-ptr {
+			offset = <(CONFIG_TPL_TEXT_BASE - 0xffe10000)>;
+		};
+		u-boot-tpl-dtb-with-ucode {
+		};
+		spl-rec {
+			type = "u-boot-spl";
+			offset = <(CONFIG_SPL_TEXT_BASE - 0xffe10000)>;
+		};
+		u-boot-spl-dtb {
+		};
+#ifdef CONFIG_HAVE_MRC
+		intel-mrc {
+			offset = <(CONFIG_X86_MRC_ADDR - 0xffe10000)>;
+		};
+#endif
+#ifdef CONFIG_HAVE_VGA_BIOS
+		intel-vga {
+			filename = CONFIG_VGA_BIOS_FILE;
+			offset = <(CONFIG_VGA_BIOS_ADDR - 0xffe10000)>;
+		};
+#endif
+#ifdef CONFIG_HAVE_REFCODE
+		intel-refcode {
+			offset = <(CONFIG_X86_REFCODE_ADDR - 0xffe10000)>;
+		};
+#endif
+	};
+};
