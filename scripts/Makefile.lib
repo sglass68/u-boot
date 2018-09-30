@@ -189,10 +189,12 @@ u_boot_dtsi = $(strip $(u_boot_dtsi_options_debug) \
 dtc_cpp_flags  = -Wp,-MD,$(depfile).pre.tmp -nostdinc                    \
 		 -I$(srctree)/arch/$(ARCH)/dts                           \
 		 -I$(srctree)/arch/$(ARCH)/dts/include                   \
+		 -I$(srctree)/cros/dts                                   \
 		 -Iinclude                                               \
 		 -I$(srctree)/include                                    \
 		 -I$(srctree)/arch/$(ARCH)/include                       \
 		 -include $(srctree)/include/linux/kconfig.h             \
+		 $(if $(VBOOT_SOURCE),-DCONFIG_CHROMEOS)		 \
 		 -D__ASSEMBLY__                                          \
 		 -undef -D__DTS__
 

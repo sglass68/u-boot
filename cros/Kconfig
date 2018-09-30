@@ -92,7 +92,6 @@ config TPL_CHROMEOS
 	imply TPL_CROS_EC
 	imply TPL_TIMER
 	imply TPL_TPM
-	imply TPL_CHROMEOS
 	imply TPL_NVDATA_TPM
 	imply TPL_FWSTORE_SPI_FLASH
 

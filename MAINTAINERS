@@ -491,6 +491,15 @@ T:	git https://gitlab.denx.de/u-boot/custodians/u-boot-cfi-flash.git
 F:	drivers/mtd/cfi_flash.c
 F:	drivers/mtd/jedec_flash.c
 
+CHROMIUM OS
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+F:	cros/
+F:	include/configs/chromeos.h
+F:	configs/chromeos_sandbox_defconfig
+F:	doc/README.chromium
+F:	doc/README.chromium-chainload
+
 CLOCK
 M:	Lukasz Majewski <lukma@denx.de>
 S:	Maintained

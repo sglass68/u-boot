@@ -139,6 +139,7 @@ else
 	ln -fsn $$dest arch/$(ARCH)/include/asm/arch
 endif
 endif
+	$(Q)ln -fsn $(KBUILD_SRC)/cros/include include/cros
 
 PHONY += FORCE
 FORCE:
