@@ -48,6 +48,7 @@ def test_log(u_boot_console):
 
     def test0():
         lines = run_test(0)
+        assert 'log_run() debug' == lines.next()
         check_log_entries(lines, 3)
 
     def test1():
@@ -71,6 +72,7 @@ def test_log(u_boot_console):
 
     def test6():
         lines = run_test(6)
+        assert 'log_run() debug' == lines.next()
         check_log_entries(lines, 3)
 
     def test7():
@@ -79,10 +81,12 @@ def test_log(u_boot_console):
 
     def test8():
         lines = run_test(8)
+        assert 'log_run() debug' == lines.next()
         check_log_entries(lines, 3)
 
     def test9():
         lines = run_test(9)
+        assert 'log_run() debug' == lines.next()
         check_log_entries(lines, 3)
 
     def test10():

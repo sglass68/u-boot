@@ -140,6 +140,9 @@ typedef struct global_data {
 #if CONFIG_IS_ENABLED(WDT)
 	struct udevice *watchdog_dev;
 #endif
+#ifdef CONFIG_CHROMEOS
+	struct vboot_info *vboot;
+#endif
 } gd_t;
 #endif
 

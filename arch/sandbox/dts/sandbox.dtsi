@@ -358,6 +358,7 @@
 	 * that the STM32L flash erases to 0, not 0xff.
 	 */
 	flash {
+		u-boot,dm-pre-reloc;
 		image-pos = <0x08000000>;
 		size = <0x20000>;
 		erase-value = <0>;
@@ -375,6 +376,15 @@
 			image-pos = <0x10000>;
 			size = <0x10000>;
 		};
+	};
+
+	nvdata {
+		u-boot,dm-pre-reloc;
+		compatible = "google,cros-ec-nvdata";
+	};
+
+	cros_ec_vboot: vboot {
+		compatible = "google,cros-ec-vboot";
 	};
 
 	keyboard-controller {

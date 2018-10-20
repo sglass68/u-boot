@@ -2,6 +2,14 @@
 
 #include <config.h>
 
+#ifdef CONFIG_CHROMEOS
+#include "chromeos-sandbox.dtsi"
+#include "flashmap-sandbox-ro.dtsi"
+#include "flashmap-16mb-rw.dtsi"
+#endif
+
+#define USB_CLASS_HUB			9
+
 / {
 	#address-cells = <1>;
 	#size-cells = <1>;
@@ -13,6 +21,7 @@
 		rtc0 = &rtc_0;
 		axi0 = &axi;
 		spi0 = &spi;
+		vboot-ec0 = &cros_ec_vboot;
 	};
 
 	memory {
@@ -67,6 +76,16 @@
 		reg = <0 0>;
 		compatible = "sandbox,spi";
 		cs-gpios = <0>, <&gpio_a 0>;
+		fwstore_spi: flash@0 {
+			u-boot,dm-pre-reloc;
+			reg = <0>;
+			compatible = "spansion,m25p128", "spi-flash";
+			spi-max-frequency = <40000000>;
+			sandbox,filename = "spi.bin";
+			emul {
+				compatible = "sandbox,spi-flash-emul";
+			};
+		};
 	};
 };
 
