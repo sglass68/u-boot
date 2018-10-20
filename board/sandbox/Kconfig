@@ -5,3 +5,9 @@ config SYS_CONFIG_NAME
 
 endif
 
+if TARGET_CHROMEOS_SANDBOX
+
+config SYS_CONFIG_NAME
+	default "chromeos_sandbox"
+
+endif

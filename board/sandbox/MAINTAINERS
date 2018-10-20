@@ -26,3 +26,10 @@ S:	Maintained
 F:	board/sandbox/
 F:	include/configs/sandbox.h
 F:	configs/sandbox_flattree_defconfig
+
+CHROMEOS_SANDBOX BOARD
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+F:	board/sandbox/
+F:	include/configs/chromeos_sandbox.h
+F:	configs/chromeos_sandbox_defconfig

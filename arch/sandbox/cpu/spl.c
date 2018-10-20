@@ -23,7 +23,8 @@ void board_init_f(ulong flag)
 
 u32 spl_boot_device(void)
 {
-	return BOOT_DEVICE_BOARD;
+	return IS_ENABLED(CONFIG_CHROMEOS) ? BOOT_DEVICE_CROS_VBOOT :
+		BOOT_DEVICE_BOARD;
 }
 
 static int spl_board_load_image(struct spl_image_info *spl_image,

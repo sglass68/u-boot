@@ -27,12 +27,19 @@ config TARGET_SANDBOX64
 config TARGET_SANDBOX_FLATTREE
 	bool "Support sandbox with a flat device tree only (no livetree)"
 
+config TARGET_CHROMEOS_SANDBOX
+	bool "Support Chrome OS sandbox"
+	select SUPPORT_TPL
+	select SUPPORT_SPL
+
 endchoice
 
 config SANDBOX64
 	bool "Use 64-bit addresses"
 	select PHYS_64BIT
 	select HOST_64BIT
+
+source "board/sandbox/Kconfig"
 
 config SYS_CONFIG_NAME
 	default "sandbox_spl" if TARGET_SANDBOX_SPL
