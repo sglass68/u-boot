@@ -1188,6 +1188,52 @@ int mmc_hwpart_config(struct mmc *mmc,
 
 	return 0;
 }
+
+int mmc_hwpart_access(struct mmc *mmc, int part)
+{
+	int err;
+	struct mmc_cmd cmd;
+
+	cmd.cmdidx = MMC_CMD_SWITCH;
+	cmd.resp_type = MMC_RSP_R1b;
+
+	/* Clear partition access bits */
+	cmd.cmdarg = (MMC_SWITCH_MODE_CLEAR_BITS << 24) |
+			(EXT_CSD_PART_CONF << 16) |
+			(EXT_CSD_PARTITION_ACCESS(0x7) << 8);
+
+	err = mmc_send_cmd(mmc, &cmd, NULL);
+	if (err) {
+		debug("Failed to clear partition access bits\n");
+		return err;
+	}
+
+	/* Set partition access bits */
+	cmd.cmdarg = (MMC_SWITCH_MODE_SET_BITS << 24) |
+			(EXT_CSD_PART_CONF << 16) |
+			(EXT_CSD_PARTITION_ACCESS(part) << 8);
+
+	err = mmc_send_cmd(mmc, &cmd, NULL);
+	if (err) {
+		debug("Failed to change partition\n");
+		return err;
+	}
+
+	return 0;
+}
+
+int mmc_get_boot_wp(struct mmc *mmc)
+{
+	ALLOC_CACHE_ALIGN_BUFFER(u8, ext_csd, MMC_MAX_BLOCK_LEN);
+	int err;
+
+	err = mmc_send_ext_csd(mmc, ext_csd);
+	if (err)
+		return err;
+
+	return ext_csd[EXT_CSD_BOOT_WP] & (EXT_CSD_BOOT_WP_PWR_WP_EN
+			| EXT_CSD_BOOT_WP_PERM_WP_EN);
+}
 #endif
 
 #if !CONFIG_IS_ENABLED(DM_MMC)
