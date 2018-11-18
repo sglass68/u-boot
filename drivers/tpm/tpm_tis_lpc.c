@@ -435,6 +435,9 @@ static int tpm_tis_lpc_open(struct udevice *dev)
 		return ret;
 	}
 
+	/* Certain TPMs need some delay here or they hang */
+	udelay(10);
+
 	tpm_write_word(priv, TIS_STS_COMMAND_READY,
 		       &regs[locality].tpm_status);
 
