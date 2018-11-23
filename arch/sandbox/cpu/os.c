@@ -576,9 +576,11 @@ static int make_exec(char *fname, const void *data, int size)
  * @argvp:  Returns newly allocated args list
  * @add_args: Arguments to add, each a string
  * @count: Number of arguments in @add_args
+ * @use_valgrind: Run the program with valgrind
  * @return 0 if OK, -ENOMEM if out of memory
  */
-static int add_args(char ***argvp, char *add_args[], int count)
+static int add_args(char ***argvp, char *add_args[], int count,
+		    bool use_valgrind)
 {
 	char **argv, **ap;
 	int argc;
@@ -586,12 +588,15 @@ static int add_args(char ***argvp, char *add_args[], int count)
 	for (argc = 0; (*argvp)[argc]; argc++)
 		;
 
-	argv = os_malloc((argc + count + 1) * sizeof(char *));
+	argv = os_malloc((argc + count + 2) * sizeof(char *));
 	if (!argv) {
 		printf("Out of memory for %d argv\n", count);
 		return -ENOMEM;
 	}
-	for (ap = *argvp, argc = 0; *ap; ap++) {
+	argc = 0;
+	if (use_valgrind)
+		argv[argc++] = "valgrind";
+	for (ap = *argvp; *ap; ap++) {
 		char *arg = *ap;
 
 		/* Drop args that we don't want to propagate */
@@ -628,15 +633,18 @@ static int add_args(char ***argvp, char *add_args[], int count)
 static int os_jump_to_file(const char *fname)
 {
 	struct sandbox_state *state = state_get_current();
+	bool use_valgrind;
 	char mem_fname[30];
 	int fd, err;
-	char *extra_args[5];
+	char *extra_args[6];
 	char **argv = state->argv;
 	int argc;
 #ifdef DEBUG
 	int i;
 #endif
 
+	use_valgrind = strlen(argv[0]) >= 8 &&
+		!strcmp(argv[0] + strlen(argv[0]) - 8, "valgrind");
 	strcpy(mem_fname, "/tmp/u-boot.mem.XXXXXX");
 	fd = mkstemp(mem_fname);
 	if (fd < 0)
@@ -648,17 +656,22 @@ static int os_jump_to_file(const char *fname)
 
 	os_fd_restore();
 
-	extra_args[0] = "-j";
-	extra_args[1] = (char *)fname;
-	extra_args[2] = "-m";
-	extra_args[3] = mem_fname;
-	argc = 4;
+	argc = 0;
+	extra_args[argc++] = "-j";
+	extra_args[argc++] = (char *)fname;
+	extra_args[argc++] = "-m";
+	extra_args[argc++] = mem_fname;
 	if (state->ram_buf_rm)
 		extra_args[argc++] = "--rm_memory";
-	err = add_args(&argv, extra_args, argc);
+	err = add_args(&argv, extra_args, argc, use_valgrind);
 	if (err)
 		return err;
-	argv[0] = (char *)fname;
+	if (use_valgrind) {
+		argv[0] = "/usr/bin/valgrind";
+		argv[1] = (char *)fname;
+	} else {
+		argv[0] = (char *)fname;
+	}
 
 #ifdef DEBUG
 	for (i = 0; argv[i]; i++)
@@ -668,7 +681,7 @@ static int os_jump_to_file(const char *fname)
 	if (state_uninit())
 		os_exit(2);
 
-	err = execv(fname, argv);
+	err = execv(argv[0], argv);
 	os_free(argv);
 	if (err) {
 		perror("Unable to run image");
