@@ -89,11 +89,12 @@ int vboot_ver_init(struct vboot_info *vboot)
 	if (ret)
 		return log_msg_ret("Cannot read nvdata", ret);
 
+#if 0
 	/* Force legacy mode */
 	ctx->nvdata[VB2_NV_OFFS_HEADER] = VB2_NV_HEADER_SIGNATURE_V1;
 	ctx->nvdata[VB2_NV_OFFS_DEV] |= VB2_NV_DEV_FLAG_LEGACY;
 	vb2_nv_regen_crc(ctx);
-
+#endif
 	print_buffer(0, ctx->nvdata, 1, sizeof(ctx->nvdata), 0);
 
 	ret = cros_ofnode_flashmap(&vboot->fmap);
