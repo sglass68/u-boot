@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <linux/input.h>
 #include <SDL.h>
+#include <sound.h>
 #include <asm/state.h>
 
 /**
