@@ -19,8 +19,8 @@ int vboot_alloc(struct vboot_info **vbootp)
 {
 	gd->vboot = malloc(sizeof(struct vboot_info));
 	if (!gd->vboot) {
-		log_err("Cannot allocate vboot %lx\n",
-			sizeof(struct vboot_info));
+		log_err("Cannot allocate vboot %x\n",
+                        (uint)sizeof(struct vboot_info));
 		return -ENOMEM;
 	}
 	memset(gd->vboot, '\0', sizeof(struct vboot_info));

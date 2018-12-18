@@ -27,7 +27,7 @@ struct vboot_stage {
  * stage.
  */
 struct vboot_stage stages[] = {
-#ifdef CONFIG_TPL_BUILD
+#if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_TPL_BUILD)
 	/* Verification stage: figures out which firmware to run */
 	[VBOOT_STAGE_VER_INIT] = {"ver_init", vboot_ver_init},
 	[VBOOT_STAGE_VER1_VBINIT] = {"ver1_vbinit", vboot_ver1_vbinit},
@@ -36,14 +36,15 @@ struct vboot_stage stages[] = {
 	[VBOOT_STAGE_VER4_LOCATEFW] = {"ver4_locatefw", vboot_ver4_locate_fw,},
 	[VBOOT_STAGE_VER_FINISH] = {"ver5_finishfw", vboot_ver5_finish_fw,},
 	[VBOOT_STAGE_VER_JUMP] = {"ver_jump", vboot_ver6_jump_fw,},
-#elif defined(CONFIG_SPL_BUILD)
+#endif
+#if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_BUILD)
 	/* SPL stage: Sets up SDRAM and jumps to U-Boot proper */
 	[VBOOT_STAGE_SPL_INIT] = {"spl_init", vboot_spl_init,},
 	[VBOOT_STAGE_SPL_JUMP_U_BOOT] =
 		{"spl_jump_u_boot", vboot_spl_jump_u_boot,},
 	[VBOOT_STAGE_RW_INIT] = {},
-#else
-	/* U-Boot stage: Boots the kernel */
+#endif
+#if !defined(CONFIG_SPL_BUILD)	/* U-Boot stage: Boots the kernel */
 	[VBOOT_STAGE_RW_INIT] = {"rw_init", vboot_rw_init,},
 	[VBOOT_STAGE_RW_SELECTKERNEL] =
 		{"rw_selectkernel", vboot_rw_select_kernel,},

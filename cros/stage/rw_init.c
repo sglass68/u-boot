@@ -107,8 +107,8 @@ static int common_params_init(struct vboot_info *vboot, bool clear_shared_data)
 	if (clear_shared_data)
 		memset(cparams->shared_data_blob, '\0',
 		       cparams->shared_data_size);
-	log_info("Found shared_data_blob at %x, size %d\n",
-		 map_to_sysmem(cparams->shared_data_blob),
+	log_info("Found shared_data_blob at %lx, size %d\n",
+		 (ulong)map_to_sysmem(cparams->shared_data_blob),
 		 cparams->shared_data_size);
 
 	return 0;

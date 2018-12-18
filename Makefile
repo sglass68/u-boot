@@ -1591,7 +1591,9 @@ BINMAN_image.bin := -akeydir=$(KBUILD_SRC)/cros/data/devkeys \
 	"-ahardware-id=TEST 999" \
 	"-afrid=123412 123" -acros-ec-rw-path=$(KBUILD_SRC)/cros/data/ecrw.bin \
 	 -m -i image
-image.bin: $(filter-out image.bin,$(ALL-y)) tpl/u-boot-tpl spl/u-boot-spl \
+image.bin: $(filter-out image.bin,$(ALL-y)) \
+		$(if($(CONFIG_TPL),tpl/u-boot-tpl) \
+		$(if($(CONFIG_SPL),spl/u-boot-spl) \
 		u-boot.bin FORCE
 	$(call if_changed,binman)
 endif
