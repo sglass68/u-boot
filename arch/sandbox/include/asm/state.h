@@ -251,8 +251,11 @@ bool state_get_skip_delays(void);
  * state_reset_for_test() - Reset ready to re-run tests
  *
  * This clears out any test state ready for another test run.
+ *
+ * @param state		Sandbox state to update
+ * @param eth_vars	Set environment variables for eth tests
  */
-void state_reset_for_test(struct sandbox_state *state);
+void state_reset_for_test(struct sandbox_state *state, bool eth_vars);
 
 /**
  * state_show() - Show information about the sandbox state

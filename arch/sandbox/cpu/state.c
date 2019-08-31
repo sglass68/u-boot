@@ -351,7 +351,7 @@ bool state_get_skip_delays(void)
 	return state->skip_delays;
 }
 
-void state_reset_for_test(struct sandbox_state *state)
+void state_reset_for_test(struct sandbox_state *state, bool eth_vars)
 {
 	/* No reset yet, so mark it as such. Always allow power reset */
 	state->last_sysreset = SYSRESET_COUNT;
@@ -367,6 +367,14 @@ void state_reset_for_test(struct sandbox_state *state)
 	 */
 	INIT_LIST_HEAD(&state->mapmem_head);
 	state->next_tag = state->ram_size;
+
+	if (eth_vars) {
+		/* set up some environment variables needed by the eth tests */
+		env_set_for_test("ethaddr", "00:00:11:22:33:44");
+		env_set_for_test("eth1addr", "00:00:11:22:33:45");
+		env_set_for_test("eth3addr", "00:00:11:22:33:46");
+		env_set_for_test("eth5addr", "00:00:11:22:33:47");
+	}
 }
 
 int state_init(void)
@@ -377,7 +385,7 @@ int state_init(void)
 	state->ram_buf = os_malloc(state->ram_size);
 	assert(state->ram_buf);
 
-	state_reset_for_test(state);
+	state_reset_for_test(state, false);
 	/*
 	 * Example of how to use GPIOs:
 	 *

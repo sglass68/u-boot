@@ -485,6 +485,12 @@ static int eth_post_probe(struct udevice *dev)
 	struct eth_device_priv *priv = dev->uclass_priv;
 	struct eth_pdata *pdata = dev->platdata;
 	unsigned char env_enetaddr[ARP_HLEN];
+	/*
+	 * These warnings always appear on sandbox and are not useful. They have
+	 * been here for some time and the issue has not been resolved. So for
+	 * now, disable them.
+	 */
+	bool show_warnings = !IS_ENABLED(CONFIG_SANDBOX);
 
 #if defined(CONFIG_NEEDS_MANUAL_RELOC)
 	struct eth_ops *ops = eth_get_ops(dev);
@@ -538,8 +544,9 @@ static int eth_post_probe(struct udevice *dev)
 		memcpy(pdata->enetaddr, env_enetaddr, ARP_HLEN);
 	} else if (is_valid_ethaddr(pdata->enetaddr)) {
 		eth_env_set_enetaddr_by_index("eth", dev->seq, pdata->enetaddr);
-		printf("\nWarning: %s using MAC address from ROM\n",
-		       dev->name);
+		if (show_warnings)
+			printf("\nWarning: %s using MAC address from ROM\n",
+			       dev->name);
 	} else if (is_zero_ethaddr(pdata->enetaddr) ||
 		   !is_valid_ethaddr(pdata->enetaddr)) {
 #ifdef CONFIG_NET_RANDOM_ETHADDR
