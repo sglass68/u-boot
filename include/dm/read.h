@@ -43,8 +43,7 @@ static inline bool dev_of_valid(struct udevice *dev)
 	return ofnode_valid(dev_ofnode(dev));
 }
 
-#ifndef CONFIG_DM_DEV_READ_INLINE
-
+#if !defined(CONFIG_DM_DEV_READ_INLINE) || CONFIG_IS_ENABLED(OF_PLATDATA)
 /**
  * dev_read_u32() - read a 32-bit integer from a device's DT property
  *
