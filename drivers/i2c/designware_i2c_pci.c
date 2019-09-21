@@ -24,7 +24,7 @@ static struct dw_scl_sda_cfg byt_config = {
 };
 
 /* Have a weak function for now - possibly should be a new uclass */
-void lpss_reset_release(void *regs);
+__weak void lpss_reset_release(void *regs);
 
 static int designware_i2c_pci_probe(struct udevice *dev)
 {
