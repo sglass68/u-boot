@@ -138,6 +138,17 @@
 #endif
 	fdtmap {
 	};
+	rw-mrc-cache {
+		type = "blob";
+		offset = <0xff3e0000>;
+		size = <0x10000>;
+		filename = "board/google/chromebook_coral/rw-mrc-cache";
+	};
+	rw-var-mrc-cache {
+		type = "blob";
+		size = <0x1000>;
+		filename = "board/google/chromebook_coral/rw-var-mrc-cache";
+	};
 #ifdef CONFIG_HAVE_CMC
 	intel-cmc {
 		filename = CONFIG_CMC_FILE;
