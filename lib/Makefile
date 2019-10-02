@@ -19,6 +19,7 @@ obj-$(CONFIG_ARCH_AT91) += at91/
 obj-$(CONFIG_OPTEE) += optee/
 
 obj-$(CONFIG_AES) += aes.o
+obj-$(CONFIG_$(SPL_TPL_)BINMAN_FDT) += binman.o
 
 ifndef API_BUILD
 ifneq ($(CONFIG_UT_UNICODE)$(CONFIG_EFI_LOADER),)
