@@ -49,8 +49,10 @@
 	};
 	u-boot-spl-dtb {
 	};
-	u-boot {
+	u-boot-nodtb {
 		offset = <CONFIG_X86_OFFSET_U_BOOT>;
+	};
+	u-boot-dtb {
 	};
 #elif defined(CONFIG_SPL)
 	u-boot-spl-with-ucode-ptr {
