@@ -299,14 +299,6 @@ static int _do_env_set(int flag, int argc, char * const argv[], int env_flag)
 	return 0;
 }
 
-int env_set_for_test(const char *varname, const char *value)
-{
-	const char * const argv[4] = { "setenv", varname, value, NULL };
-
-	assert(value);
-	return _do_env_set(0, 3, (char * const *)argv, 0);
-}
-
 int env_set(const char *varname, const char *varvalue)
 {
 	const char * const argv[4] = { "setenv", varname, varvalue, NULL };

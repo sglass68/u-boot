@@ -146,18 +146,6 @@ int env_get_yesno(const char *var);
 int env_set(const char *varname, const char *value);
 
 /**
- * env_set_for_test() - Set the value of a variable for testing
- *
- * This works as if the variable value was defined in the built-in environment,
- * so uses a flags value of 0. This should only be used in tests.
- *
- * @varname: Variable to adjust
- * @value: Value to set for the variable (cannot be NULL)
- * @return 0 if OK, 1 on error
- */
-int env_set_for_test(const char *varname, const char *value);
-
-/**
  * env_get_ulong() - Return an environment variable as an integer value
  *
  * Most U-Boot environment variables store hex values. For those which store

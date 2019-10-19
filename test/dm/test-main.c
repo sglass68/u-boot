@@ -28,7 +28,7 @@ static int dm_test_init(struct unit_test_state *uts, bool of_live)
 	memset(dms, '\0', sizeof(*dms));
 	gd->dm_root = NULL;
 	memset(dm_testdrv_op_count, '\0', sizeof(dm_testdrv_op_count));
-	state_reset_for_test(state_get_current(), true);
+	state_reset_for_test(state_get_current());
 
 #ifdef CONFIG_OF_LIVE
 	/* Determine whether to make the live tree available */
