@@ -6,3 +6,4 @@
 
 obj-y += board_init.o
 obj-$(CONFIG_$(SPL_TPL_)HANDOFF) += handoff.o
+obj-$(CONFIG_$(SPL_TPL_)WDT) += wdt.o
