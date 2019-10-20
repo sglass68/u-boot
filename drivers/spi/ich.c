@@ -432,6 +432,37 @@ static int ich_spi_adjust_size(struct spi_slave *slave, struct spi_mem_op *op)
 	return 0;
 }
 
+static int ich_protect_lockdown(struct udevice *dev)
+{
+	struct ich_spi_platdata *plat = dev_get_platdata(dev);
+	struct ich_spi_priv *priv = dev_get_priv(dev);
+	int ret = -ENOSYS;
+
+	/* Disable the BIOS write protect so write commands are allowed */
+	if (priv->pch)
+		ret = pch_set_spi_protect(priv->pch, false);
+	if (ret == -ENOSYS) {
+		u8 bios_cntl;
+
+		bios_cntl = ich_readb(priv, priv->bcr);
+		bios_cntl &= ~BIT(5);	/* clear Enable InSMM_STS (EISS) */
+		bios_cntl |= 1;		/* Write Protect Disable (WPD) */
+		ich_writeb(priv, bios_cntl, priv->bcr);
+	} else if (ret) {
+		debug("%s: Failed to disable write-protect: err=%d\n",
+		      __func__, ret);
+		return ret;
+	}
+
+	/* Lock down SPI controller settings if required */
+	if (plat->lockdown) {
+		ich_spi_config_opcode(dev);
+		spi_lock_down(plat, priv->base);
+	}
+
+	return 0;
+}
+
 static int ich_init_controller(struct udevice *dev,
 			       struct ich_spi_platdata *plat,
 			       struct ich_spi_priv *ctlr)
@@ -497,30 +528,18 @@ static int ich_spi_probe(struct udevice *dev)
 {
 	struct ich_spi_platdata *plat = dev_get_platdata(dev);
 	struct ich_spi_priv *priv = dev_get_priv(dev);
-	uint8_t bios_cntl;
 	int ret;
+
+	/* Find a PCH if there is one */
+	uclass_first_device(UCLASS_PCH, &priv->pch);
 
 	ret = ich_init_controller(dev, plat, priv);
 	if (ret)
 		return ret;
-	/* Disable the BIOS write protect so write commands are allowed */
-	ret = pch_set_spi_protect(dev->parent, false);
-	if (ret == -ENOSYS) {
-		bios_cntl = ich_readb(priv, priv->bcr);
-		bios_cntl &= ~BIT(5);	/* clear Enable InSMM_STS (EISS) */
-		bios_cntl |= 1;		/* Write Protect Disable (WPD) */
-		ich_writeb(priv, bios_cntl, priv->bcr);
-	} else if (ret) {
-		debug("%s: Failed to disable write-protect: err=%d\n",
-		      __func__, ret);
-		return ret;
-	}
 
-	/* Lock down SPI controller settings if required */
-	if (plat->lockdown) {
-		ich_spi_config_opcode(dev);
-		spi_lock_down(plat, priv->base);
-	}
+	ret = ich_protect_lockdown(dev);
+	if (ret)
+		return ret;
 
 	priv->cur_speed = priv->max_speed;
 
