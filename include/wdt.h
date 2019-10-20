@@ -6,8 +6,7 @@
 #ifndef _WDT_H_
 #define _WDT_H_
 
-#include <dm.h>
-#include <dm/read.h>
+struct udevice *dev;
 
 /*
  * Implement a simple watchdog uclass. Watchdog is basically a timer that
