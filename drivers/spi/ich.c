@@ -27,6 +27,12 @@
 #define debug_trace(x, args...)
 #endif
 
+struct ich_spi_platdata {
+	enum ich_version ich_version;	/* Controller version, 7 or 9 */
+	bool lockdown;			/* lock down controller settings? */
+	ulong mmio_base;		/* Base of MMIO registers */
+};
+
 static u8 ich_readb(struct ich_spi_priv *priv, int reg)
 {
 	u8 value = readb(priv->base + reg);
@@ -466,16 +472,9 @@ static int ich_init_controller(struct udevice *dev,
 			       struct ich_spi_platdata *plat,
 			       struct ich_spi_priv *ctlr)
 {
-	ulong sbase_addr;
-	void *sbase;
-
-	/* SBASE is similar */
-	pch_get_spi_base(dev->parent, &sbase_addr);
-	sbase = (void *)sbase_addr;
-	debug("%s: sbase=%p\n", __func__, sbase);
-
+	ctlr->base = (void *)plat->mmio_base;
 	if (plat->ich_version == ICHV_7) {
-		struct ich7_spi_regs *ich7_spi = sbase;
+		struct ich7_spi_regs *ich7_spi = ctlr->base;
 
 		ctlr->opmenu = offsetof(struct ich7_spi_regs, opmenu);
 		ctlr->menubytes = sizeof(ich7_spi->opmenu);
@@ -487,9 +486,8 @@ static int ich_init_controller(struct udevice *dev,
 		ctlr->control = offsetof(struct ich7_spi_regs, spic);
 		ctlr->bbar = offsetof(struct ich7_spi_regs, bbar);
 		ctlr->preop = offsetof(struct ich7_spi_regs, preop);
-		ctlr->base = ich7_spi;
 	} else if (plat->ich_version == ICHV_9) {
-		struct ich9_spi_regs *ich9_spi = sbase;
+		struct ich9_spi_regs *ich9_spi = ctlr->base;
 
 		ctlr->opmenu = offsetof(struct ich9_spi_regs, opmenu);
 		ctlr->menubytes = sizeof(ich9_spi->opmenu);
@@ -504,7 +502,6 @@ static int ich_init_controller(struct udevice *dev,
 		ctlr->preop = offsetof(struct ich9_spi_regs, preop);
 		ctlr->bcr = offsetof(struct ich9_spi_regs, bcr);
 		ctlr->pr = &ich9_spi->pr[0];
-		ctlr->base = ich9_spi;
 	} else {
 		debug("ICH SPI: Unrecognised ICH version %d\n",
 		      plat->ich_version);
@@ -515,8 +512,8 @@ static int ich_init_controller(struct udevice *dev,
 	ctlr->max_speed = 20000000;
 	if (plat->ich_version == ICHV_9 && ich9_can_do_33mhz(dev))
 		ctlr->max_speed = 33000000;
-	debug("ICH SPI: Version ID %d detected at %p, speed %ld\n",
-	      plat->ich_version, ctlr->base, ctlr->max_speed);
+	debug("ICH SPI: Version ID %d detected at %lx, speed %ld\n",
+	      plat->ich_version, plat->mmio_base, ctlr->max_speed);
 
 	ich_set_bbar(ctlr, 0);
 
@@ -600,6 +597,8 @@ static int ich_spi_ofdata_to_platdata(struct udevice *dev)
 
 	plat->ich_version = dev_get_driver_data(dev);
 	plat->lockdown = dev_read_bool(dev, "intel,spi-lock-down");
+
+	pch_get_spi_base(dev->parent, &plat->mmio_base);
 
 	return 0;
 }
