@@ -105,10 +105,12 @@ static void ich_set_bbar(struct ich_spi_priv *ctlr, uint32_t minaddr)
 	const uint32_t bbar_mask = 0x00ffff00;
 	uint32_t ichspi_bbar;
 
-	minaddr &= bbar_mask;
-	ichspi_bbar = ich_readl(ctlr, ctlr->bbar) & ~bbar_mask;
-	ichspi_bbar |= minaddr;
-	ich_writel(ctlr, ichspi_bbar, ctlr->bbar);
+	if (ctlr->bbar) {
+		minaddr &= bbar_mask;
+		ichspi_bbar = ich_readl(ctlr, ctlr->bbar) & ~bbar_mask;
+		ichspi_bbar |= minaddr;
+		ich_writel(ctlr, ichspi_bbar, ctlr->bbar);
+	}
 }
 
 /* @return 1 if the SPI flash supports the 33MHz speed */
@@ -748,6 +750,7 @@ static int ich_init_controller(struct udevice *dev,
 		ctlr->preop = offsetof(struct ich9_spi_regs, preop);
 		ctlr->bcr = offsetof(struct ich9_spi_regs, bcr);
 		ctlr->pr = &ich9_spi->pr[0];
+	} else if (plat->ich_version == ICHV_APL) {
 	} else {
 		debug("ICH SPI: Unrecognised ICH version %d\n",
 		      plat->ich_version);
@@ -871,7 +874,12 @@ static int ich_spi_ofdata_to_platdata(struct udevice *dev)
 #if !CONFIG_IS_ENABLED(OF_PLATDATA)
 	plat->ich_version = dev_get_driver_data(dev);
 	plat->lockdown = dev_read_bool(dev, "intel,spi-lock-down");
-	pch_get_spi_base(dev->parent, &plat->mmio_base);
+	if (plat->ich_version == ICHV_APL) {
+		plat->mmio_base = dm_pci_read_bar32(dev, 0);
+	} else  {
+		/* SBASE is similar */
+		pch_get_spi_base(dev->parent, &plat->mmio_base);
+	}
 	plat->hwseq = dev_read_u32_default(dev, "intel,hardware-seq", 0);
 #else
 	plat->ich_version = ICHV_APL;
@@ -905,6 +913,7 @@ static const struct dm_spi_ops ich_spi_ops = {
 static const struct udevice_id ich_spi_ids[] = {
 	{ .compatible = "intel,ich7-spi", ICHV_7 },
 	{ .compatible = "intel,ich9-spi", ICHV_9 },
+	{ .compatible = "intel,fast-spi", ICHV_APL },
 	{ }
 };
 
