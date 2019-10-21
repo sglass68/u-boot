@@ -598,23 +598,11 @@ static int ich_spi_child_pre_probe(struct udevice *dev)
 static int ich_spi_ofdata_to_platdata(struct udevice *dev)
 {
 	struct ich_spi_platdata *plat = dev_get_platdata(dev);
-	int node = dev_of_offset(dev);
-	int ret;
 
-	ret = fdt_node_check_compatible(gd->fdt_blob, node, "intel,ich7-spi");
-	if (ret == 0) {
-		plat->ich_version = ICHV_7;
-	} else {
-		ret = fdt_node_check_compatible(gd->fdt_blob, node,
-						"intel,ich9-spi");
-		if (ret == 0)
-			plat->ich_version = ICHV_9;
-	}
+	plat->ich_version = dev_get_driver_data(dev);
+	plat->lockdown = dev_read_bool(dev, "intel,spi-lock-down");
 
-	plat->lockdown = fdtdec_get_bool(gd->fdt_blob, node,
-					 "intel,spi-lock-down");
-
-	return ret;
+	return 0;
 }
 
 static const struct spi_controller_mem_ops ich_controller_mem_ops = {
@@ -635,8 +623,8 @@ static const struct dm_spi_ops ich_spi_ops = {
 };
 
 static const struct udevice_id ich_spi_ids[] = {
-	{ .compatible = "intel,ich7-spi" },
-	{ .compatible = "intel,ich9-spi" },
+	{ .compatible = "intel,ich7-spi", ICHV_7 },
+	{ .compatible = "intel,ich9-spi", ICHV_9 },
 	{ }
 };
 
