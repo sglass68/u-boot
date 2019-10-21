@@ -1300,7 +1300,7 @@ static int fec_phy_init(struct fec_priv *priv, struct udevice *dev)
 	return 0;
 }
 
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 /* FEC GPIO reset */
 static void fec_gpio_reset(struct fec_priv *priv)
 {
@@ -1352,7 +1352,7 @@ static int fecmxc_probe(struct udevice *dev)
 	}
 #endif
 
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 	fec_gpio_reset(priv);
 #endif
 	/* Reset chip. */
@@ -1458,7 +1458,7 @@ static int fecmxc_ofdata_to_platdata(struct udevice *dev)
 	device_get_supply_regulator(dev, "phy-supply", &priv->phy_supply);
 #endif
 
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 	ret = gpio_request_by_name(dev, "phy-reset-gpios", 0,
 				   &priv->phy_reset_gpio, GPIOD_IS_OUT);
 	if (ret < 0)

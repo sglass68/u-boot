@@ -976,7 +976,7 @@ struct mvpp2_port {
 	int phy_node;
 	int phyaddr;
 	struct mii_dev *bus;
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 	struct gpio_desc phy_reset_gpio;
 	struct gpio_desc phy_tx_disable_gpio;
 #endif
@@ -4753,7 +4753,7 @@ static int phy_info_parse(struct udevice *dev, struct mvpp2_port *port)
 		return -EINVAL;
 	}
 
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 	gpio_request_by_name(dev, "phy-reset-gpios", 0,
 			     &port->phy_reset_gpio, GPIOD_IS_OUT);
 	gpio_request_by_name(dev, "marvell,sfp-tx-disable-gpio", 0,
@@ -4781,7 +4781,7 @@ static int phy_info_parse(struct udevice *dev, struct mvpp2_port *port)
 	return 0;
 }
 
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 /* Port GPIO initialization */
 static void mvpp2_gpio_init(struct mvpp2_port *port)
 {
@@ -4814,7 +4814,7 @@ static int mvpp2_port_probe(struct udevice *dev,
 	}
 	mvpp2_port_power_up(port);
 
-#ifdef CONFIG_DM_GPIO
+#if CONFIG_IS_ENABLED(DM_GPIO)
 	mvpp2_gpio_init(port);
 #endif
 
