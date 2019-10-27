@@ -64,9 +64,15 @@ static int designware_i2c_pci_bind(struct udevice *dev)
 	return 0;
 }
 
+static const struct udevice_id designware_i2c_pci_ids[] = {
+	{ .compatible = "snps,designware-i2c-pci" },
+	{ }
+};
+
 U_BOOT_DRIVER(i2c_designware_pci) = {
 	.name	= "i2c_designware_pci",
 	.id	= UCLASS_I2C,
+	.of_match = designware_i2c_pci_ids,
 	.bind	= designware_i2c_pci_bind,
 	.probe	= designware_i2c_pci_probe,
 	.priv_auto_alloc_size = sizeof(struct dw_i2c),
