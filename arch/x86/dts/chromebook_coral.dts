@@ -29,6 +29,9 @@
 		cros-ec0 = &cros_ec;
 		fsp = &fsp_s;
 		spi0 = &spi;
+		i2c0 = &i2c_0;
+		i2c1 = &i2c_1;
+		i2c2 = &i2c_2;
 	};
 
 	config {
@@ -212,6 +215,28 @@
 					reg = <0x003f0000 0x0001000>;
 					u-boot,dm-pre-reloc;
 				};
+			};
+		};
+
+		i2c_0: i2c2@16,0 {
+			compatible = "snps,designware-i2c-pci";
+			reg = <0x0200b010 0 0 0 0>;
+		};
+
+		i2c_1: i2c2@16,1 {
+			compatible = "snps,designware-i2c-pci";
+			reg = <0x0200b110 0 0 0 0>;
+		};
+
+		i2c_2: i2c2@16,2 {
+			compatible = "snps,designware-i2c-pci";
+			reg = <0x0200b210 0 0 0 0>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			tpm@50 {
+				reg = <0x50>;
+				compatible = "google,cr50";
+				u-boot,i2c-offset-len = <0>;
 			};
 		};
 
