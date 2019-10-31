@@ -1598,8 +1598,6 @@ image.bin: $(filter-out image.bin,$(ALL-y)) \
 	$(call if_changed,binman)
 endif
 
-#$(filter-out image.bin,$(ALL-y))
-
 OBJCOPYFLAGS_u-boot-app.efi := $(OBJCOPYFLAGS_EFI)
 u-boot-app.efi: u-boot FORCE
 	$(call if_changed,zobjcopy)
