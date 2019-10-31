@@ -10,18 +10,33 @@ config SYS_BOARD
 config SYS_CPU
 	default "sandbox"
 
+choice
+	prompt "Target select"
+
+config TARGET_SANDBOX
+	bool "Support basic sandbox"
+
+config TARGET_SANDBOX_SPL
+	bool "Build sandbox with SPL"
+	select SUPPORT_SPL
+
+config TARGET_SANDBOX64
+	bool "Support 64-bit sandbox (even on 32-bit machines)"
+	select SANDBOX64
+
+config TARGET_SANDBOX_FLATTREE
+	bool "Support sandbox with a flat device tree only (no livetree)"
+
+endchoice
+
 config SANDBOX64
 	bool "Use 64-bit addresses"
 	select PHYS_64BIT
 	select HOST_64BIT
 
-config SANDBOX_SPL
-	bool "Enable SPL for sandbox"
-	select SUPPORT_SPL
-
 config SYS_CONFIG_NAME
-	default "sandbox_spl" if SANDBOX_SPL
-	default "sandbox" if !SANDBOX_SPL
+	default "sandbox_spl" if TARGET_SANDBOX_SPL
+	default "sandbox" if !TARGET_SANDBOX_SPL
 
 choice
 	prompt "Run sandbox on 32/64-bit host"

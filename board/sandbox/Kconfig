@@ -1,0 +1,7 @@
+if TARGET_SANDBOX
+
+config SYS_CONFIG_NAME
+	default "sandbox"
+
+endif
+
