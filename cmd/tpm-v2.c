@@ -385,6 +385,8 @@ U_BOOT_CMD(tpm2, CONFIG_SYS_MAXARGS, 1, do_tpm, "Issue a TPMv2.x command",
 "    Show information about the TPM.\n"
 "init\n"
 "    Initialize the software stack. Always the first command to issue.\n"
+"cleanup\n"
+"    Release the locality\n"
 "startup <mode>\n"
 "    Issue a TPM2_Startup command.\n"
 "    <mode> is one of:\n"

@@ -650,13 +650,10 @@ struct __packed acpi_dbg2_device {
  * Add an ACPI table to the RSDT (and XSDT) structure, recalculate length
  * and checksum.
  */
-int acpi_add_table(struct acpi_rsdp *rsdp, void *table);
-
 void acpi_fill_header(struct acpi_table_header *header, char *signature);
-unsigned long acpi_write_hpet(struct udevice *dev, unsigned long current,
-			      struct acpi_rsdp *rsdp);
-unsigned long acpi_write_dbg2_pci_uart(struct acpi_rsdp *rsdp, ulong current,
-				       struct udevice *dev, uint8_t access_size);
+int acpi_write_hpet(struct acpi_ctx *ctx, const struct udevice *dev);
+int acpi_write_dbg2_pci_uart(struct acpi_ctx *ctx, struct udevice *dev,
+			     uint access_size);
 void acpi_create_fadt(struct acpi_fadt *fadt, struct acpi_facs *facs,
 		      void *dsdt);
 int acpi_create_madt_lapics(u32 current);
@@ -671,13 +668,21 @@ int acpi_create_mcfg_mmconfig(struct acpi_mcfg_mmconfig *mmconfig, u32 base,
 			      u16 seg_nr, u8 start, u8 end);
 ulong acpi_fill_mcfg(ulong current);
 u32 acpi_fill_csrt(u32 current);
-void acpi_create_gnvs(struct acpi_global_nvs *gnvs);
-unsigned long acpi_create_dmar_drhd(unsigned long current, u8 flags,
-	u16 segment, u64 bar);
-unsigned long acpi_create_dmar_rmrr(unsigned long current, u16 segment,
-				    u64 bar, u64 limit);
-void acpi_dmar_rmrr_fixup(unsigned long base, unsigned long current);
-void acpi_dmar_drhd_fixup(unsigned long base, unsigned long current);
+
+/**
+ * acpi_create_gnvs() - Create a GNVS (Global Non Volatile Storage) table
+ *
+ * @gnvs: Table to fill in
+ * @return 0 if OK, -ve on error
+ */
+int acpi_create_gnvs(struct acpi_global_nvs *gnvs);
+
+int acpi_create_dmar_drhd(struct acpi_ctx *ctx, uint flags, uint segment,
+			  u64 bar);
+int acpi_create_dmar_rmrr(struct acpi_ctx *ctx, uint segment, u64 bar,
+			  u64 limit);
+void acpi_dmar_rmrr_fixup(struct acpi_ctx *ctx, void *base);
+void acpi_dmar_drhd_fixup(struct acpi_ctx *ctx, void *base);
 
 /**
  * acpi_create_dmar() - Create a DMA Remapping Reporting (DMAR) table
@@ -687,14 +692,12 @@ void acpi_dmar_drhd_fixup(unsigned long base, unsigned long current);
  * @return 0 if OK, -ve on error
  */
 int acpi_create_dmar(struct acpi_dmar *dmar, enum dmar_flags flags);
-unsigned long acpi_create_dmar_ds_pci_br(unsigned long current, u8 bus,
-	u8 dev, u8 fn);
-unsigned long acpi_create_dmar_ds_pci(unsigned long current, u8 bus,
-	u8 dev, u8 fn);
-unsigned long acpi_create_dmar_ds_ioapic(unsigned long current,
-	u8 enumeration_id, u8 bus, u8 dev, u8 fn);
-unsigned long acpi_create_dmar_ds_msi_hpet(unsigned long current,
-	u8 enumeration_id, u8 bus, u8 dev, u8 fn);
+int acpi_create_dmar_ds_pci_br(struct acpi_ctx *ctx, pci_dev_t bdf);
+int acpi_create_dmar_ds_pci(struct acpi_ctx *ctx, pci_dev_t bdf);
+int acpi_create_dmar_ds_ioapic(struct acpi_ctx *ctx, uint enumeration_id,
+			       pci_dev_t bdf);
+int acpi_create_dmar_ds_msi_hpet(struct acpi_ctx *ctx, uint enumeration_id,
+				 pci_dev_t bdf);
 int acpi_create_hpet(struct acpi_hpet *hpet);
 void acpi_create_dbg2(struct acpi_dbg2_header *dbg2,
 		      int port_type, int port_subtype,
@@ -726,7 +729,7 @@ void intel_acpi_fill_fadt(struct acpi_fadt *fadt);
 int soc_acpi_name(const struct udevice *dev, char *out_name);
 
 u8 acpi_checksum(u8 *table, u32 length);
-int intel_southbridge_write_acpi_tables(struct udevice *dev,
+int intel_southbridge_write_acpi_tables(const struct udevice *dev,
 					struct acpi_ctx *ctx);
 
 /**

@@ -313,6 +313,8 @@ void acpigen_write_dword(struct acpi_ctx *ctx, unsigned int data);
 void acpigen_write_qword(struct acpi_ctx *ctx, u64 data);
 void acpigen_write_integer(struct acpi_ctx *ctx, u64 data);
 void acpigen_write_string(struct acpi_ctx *ctx, const char *string);
+void acpigen_write_coreboot_hid(struct acpi_ctx *ctx,
+				enum coreboot_acpi_ids id);
 void acpigen_write_name(struct acpi_ctx *ctx, const char *name);
 void acpigen_write_name_zero(struct acpi_ctx *ctx, const char *name);
 void acpigen_write_name_one(struct acpi_ctx *ctx, const char *name);
@@ -454,16 +456,16 @@ int acpigen_write_indexfield(struct acpi_ctx *ctx, const char *idx, const char *
  */
 
 /* Generate ACPI AML code to return Rx value of GPIO in Local0. */
-int acpigen_soc_read_rx_gpio(struct acpi_ctx *ctx, unsigned int gpio_num);
+int acpigen_soc_read_rx_gpio(struct acpi_ctx *ctx, uint gpio_num);
 
 /* Generate ACPI AML code to return Tx value of GPIO in Local0. */
-int acpigen_soc_get_tx_gpio(struct acpi_ctx *ctx, unsigned int gpio_num);
+int acpigen_soc_get_tx_gpio(struct acpi_ctx *ctx, uint gpio_num);
 
 /* Generate ACPI AML code to set Tx value of GPIO to 1. */
-int acpigen_soc_set_tx_gpio(struct acpi_ctx *ctx, unsigned int gpio_num);
+int acpigen_soc_set_tx_gpio(struct acpi_ctx *ctx, uint gpio_num);
 
 /* Generate ACPI AML code to set Tx value of GPIO to 0. */
-int acpigen_soc_clear_tx_gpio(struct acpi_ctx *ctx, unsigned int gpio_num);
+int acpigen_soc_clear_tx_gpio(struct acpi_ctx *ctx, uint gpio_num);
 
 /*
  * Helper functions for enabling/disabling Tx GPIOs based on the GPIO
