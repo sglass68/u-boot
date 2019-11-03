@@ -1,0 +1,7 @@
+#
+# Intel PINCTRL drivers
+#
+
+if PINCTRL_INTEL
+
+endif
