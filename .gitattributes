@@ -2,3 +2,5 @@
 # Declare files that always have LF line endings on checkout
 * text eol=lf
 *mrc-cache binary
+*.ttf binary
+*.bmp binary
