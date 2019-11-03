@@ -486,12 +486,22 @@ config LOGLEVEL
 	    9 - debug hardware I/O
 
 config SPL_LOGLEVEL
-	int
+	int "loglevel for SPL"
 	default LOGLEVEL
+	help
+	  All Messages with a loglevel smaller than the console loglevel will
+	  be compiled in to SPL. See LOGLEVEL for a list of available log
+	  levels. Setting this to a value above 4 may increase the code size
+	  significantly.
 
 config TPL_LOGLEVEL
-	int
+	int "loglevel for TPL"
 	default LOGLEVEL
+	help
+	  All Messages with a loglevel smaller than the console loglevel will
+	  be compiled in to TPL. See LOGLEVEL for a list of available log
+	  levels. Setting this to a value above 4 may increase the code size
+	  significantly.
 
 config SILENT_CONSOLE
 	bool "Support a silent console"
