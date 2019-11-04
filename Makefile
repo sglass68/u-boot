@@ -926,7 +926,7 @@ ALL-$(CONFIG_EFI_APP) += u-boot-app.efi
 ALL-$(CONFIG_EFI_STUB) += u-boot-payload.efi
 
 ifneq ($(BUILD_ROM)$(CONFIG_BUILD_ROM),)
-ALL-$(CONFIG_X86_RESET_VECTOR) += u-boot.rom
+#ALL-$(CONFIG_X86_RESET_VECTOR) += u-boot.rom
 endif
 
 # Build a combined spl + u-boot image for sunxi

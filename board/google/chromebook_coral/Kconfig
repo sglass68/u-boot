@@ -1,7 +1,8 @@
-if TARGET_CHROMEBOOK_CORAL
+if TARGET_CHROMEBOOK_CORAL || TARGET_CHROMEOS_CORAL
 
 config SYS_BOARD
-	default "chromebook_coral"
+	default "chromebook_coral" if TARGET_CHROMEBOOK_CORAL
+	default "chromeos_coral" if TARGET_CHROMEOS_CORAL
 
 config SYS_VENDOR
 	default "google"
@@ -10,7 +11,8 @@ config SYS_SOC
 	default "apollolake"
 
 config SYS_CONFIG_NAME
-	default "chromebook_coral"
+	default "chromebook_coral" if TARGET_CHROMEBOOK_CORAL
+	default "chromeos_coral" if TARGET_CHROMEOS_CORAL
 
 config SYS_TEXT_BASE
 	default 0xffe00000

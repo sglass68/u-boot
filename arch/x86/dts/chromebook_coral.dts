@@ -198,7 +198,7 @@
 			early-regs = <IOMAP_SPI_BASE 0x1000>;
 			intel,hardware-seq = <1>;
 
-			spi-flash@0 {
+			fwstore_spi: spi-flash@0 {
 				#size-cells = <1>;
 				#address-cells = <1>;
 				u-boot,dm-pre-reloc;

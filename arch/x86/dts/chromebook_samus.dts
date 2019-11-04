@@ -12,7 +12,9 @@
 #ifdef CONFIG_CHROMEOS
 #include "chromeos-x86.dtsi"
 #include "flashmap-x86-ro.dtsi"
+/*
 #include "flashmap-8mb-rw.dtsi"
+*/
 #endif
 
 / {

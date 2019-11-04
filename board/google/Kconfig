@@ -74,6 +74,14 @@ config TARGET_CHROMEBOOK_CORAL
 	  various display options. OEMs products include Acer Chromebook 11
 	  (e.g. C732, CB11, CP311) and Lenovo Chromebook (100e, 300e, 500e).
 
+config TARGET_CHROMEOS_CORAL
+	bool "Chromium OS coral"
+	help
+	  This is a version of Coral which boots Chromium OS verified boot.
+	  See the instructions in doc/README.chromium for more information on
+	  how to build and run this. The Chromium OS interface code is located
+	  in the cros/ subdirectory.
+
 endchoice
 
 source "board/google/chromebook_coral/Kconfig"

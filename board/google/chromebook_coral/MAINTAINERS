@@ -4,3 +4,10 @@ S:	Maintained
 F:	board/google/chromebook_coral/
 F:	include/configs/chromebook_coral.h
 F:	configs/chromebook_coral_defconfig
+
+CHROMEOS CORAL BOARD
+M:	Simon Glass <sjg@chromium.org>
+S:	Maintained
+F:	board/google/chromebook_coral/
+F:	include/configs/chromeos_coral.h
+F:	configs/chromeos_coral_defconfig
