@@ -6,6 +6,8 @@ SUBLEVEL =
 EXTRAVERSION = -rc1
 NAME =
 
+.PRECIOUS: tpl/u-boot-tpl
+
 # *DOCUMENTATION*
 # To see a list of typical targets execute "make help"
 # More info can be located in ./README
@@ -1890,10 +1892,11 @@ spl/boot.bin: spl/u-boot-spl
 
 tpl/u-boot-tpl.bin: tpl/u-boot-tpl
 	@:
+	$(TPL_SIZE_CHECK)
+
 tpl/u-boot-tpl: tools prepare \
 		$(if $(CONFIG_OF_SEPARATE)$(CONFIG_OF_EMBED)$(CONFIG_OF_HOSTFILE)$(CONFIG_SPL_OF_PLATDATA),dts/dt.dtb)
 	$(Q)$(MAKE) obj=tpl -f $(srctree)/scripts/Makefile.spl all
-	$(TPL_SIZE_CHECK)
 
 TAG_SUBDIRS := $(patsubst %,$(srctree)/%,$(u-boot-dirs) include)
 
