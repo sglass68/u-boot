@@ -848,6 +848,8 @@ vboot:
 
 PLATFORM_LIBS += $(CURDIR)/include/generated/vboot/vboot_fw.a
 VBOOT_TARGET := vboot
+
+$(VBOOT_TARGET): $(u-boot-init)
 endif
 
 # Add vboot_reference lib
@@ -1716,7 +1718,6 @@ cmd_smap = \
 
 u-boot:	$(u-boot-init) $(u-boot-main) $(VBOOT_TARGET) u-boot.lds FORCE
 	+$(call if_changed,u-boot__)
-
 ifeq ($(CONFIG_KALLSYMS),y)
 	$(call cmd,smap)
 	$(call cmd,u-boot__) common/system_map.o

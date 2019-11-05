@@ -9,10 +9,3 @@ int arch_misc_init(void)
 {
 	return 0;
 }
-
-int board_run_command(const char *cmdline)
-{
-	printf("No command line\n");
-
-	return 0;
-}

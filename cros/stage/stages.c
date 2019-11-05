@@ -228,7 +228,7 @@ int vboot_run_auto(struct vboot_info *vboot, uint flags)
 void board_boot_order(u32 *spl_boot_list)
 {
 	spl_boot_list[0] = BOOT_DEVICE_CROS_VBOOT;
-	spl_boot_list[1] = BOOT_DEVICE_BOARD;
+	spl_boot_list[1] = BOOT_DEVICE_SPI_MMAP;
 }
 
 #ifdef CONFIG_TPL_BUILD
