@@ -6,6 +6,7 @@
 #include <common.h>
 #include <dm.h>
 #include <tpm-v1.h>
+#include <tpm-v2.h>
 
 static bool is_tpm1(struct udevice *dev)
 {
@@ -22,7 +23,7 @@ u32 tpm_startup(struct udevice *dev, enum tpm_startup_type mode)
 		return tpm2_startup(dev, mode);
 }
 
-u32 tpm1_resume(struct udevice *dev)
+u32 tpm_resume(struct udevice *dev)
 {
 	if (is_tpm1(dev))
 		return tpm1_startup(dev, TPM_ST_STATE);
@@ -30,20 +31,20 @@ u32 tpm1_resume(struct udevice *dev)
 		return tpm2_startup(dev, TPM_ST_STATE);
 }
 
-u32 tpm1_self_test_full(struct udevice *dev)
+u32 tpm_self_test_full(struct udevice *dev)
 {
-	const u8 command[10] = {
-		0x0, 0xc1, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0x50,
-	};
-	return tpm_sendrecv_command(dev, command, NULL, NULL);
+	if (is_tpm1(dev))
+		return tpm1_self_test_full(dev);
+	else
+		return tpm2_self_test(dev, TPMI_YES);
 }
 
-u32 tpm1_continue_self_test(struct udevice *dev)
+u32 tpm_continue_self_test(struct udevice *dev)
 {
-	const u8 command[10] = {
-		0x0, 0xc1, 0x0, 0x0, 0x0, 0xa, 0x0, 0x0, 0x0, 0x53,
-	};
-	return tpm_sendrecv_command(dev, command, NULL, NULL);
+	if (is_tpm1(dev))
+		return tpm1_continue_self_test(dev);
+	else
+		return tpm2_self_test(dev, TPMI_NO);
 }
 
 u32 tpm1_clear_and_reenable(struct udevice *dev)

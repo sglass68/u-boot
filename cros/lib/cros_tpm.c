@@ -13,8 +13,7 @@
 #include <common.h>
 #include <log.h>
 #include <tpm-common.h>
-#include <tpm-v1.h>
-#include <tpm-v2.h>
+#include <tpm_api.h>
 #include <cros/nvdata.h>
 #include <cros/cros_common.h>
 #include <cros/vboot.h>
