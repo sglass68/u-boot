@@ -1,55 +1,33 @@
 // SPDX-License-Identifier: GPL-2.0+
 /*
- * Copyright (c) 2013 The Chromium OS Authors.
- * Coypright (c) 2013 Guntermann & Drunck GmbH
+ * Copyright 2019 Google LLC
  */
-
-#define LOG_CATEGORY UCLASS_TPM
 
 #include <common.h>
 #include <dm.h>
-#include <asm/unaligned.h>
-#include <u-boot/sha1.h>
-#include <tpm-common.h>
 #include <tpm-v1.h>
-#include "tpm-utils.h"
 
-#ifdef CONFIG_TPM_AUTH_SESSIONS
-
-#ifndef CONFIG_SHA1
-#error "TPM_AUTH_SESSIONS require SHA1 to be configured, too"
-#endif /* !CONFIG_SHA1 */
-
-struct session_data {
-	int		valid;
-	u32	handle;
-	u8		nonce_even[DIGEST_LENGTH];
-	u8		nonce_odd[DIGEST_LENGTH];
-};
-
-static struct session_data oiap_session = {0, };
-
-#endif /* CONFIG_TPM_AUTH_SESSIONS */
-
-u32 tpm1_startup(struct udevice *dev, enum tpm_startup_type mode)
+static bool is_tpm1(struct udevice *dev)
 {
-	const u8 command[12] = {
-		0x0, 0xc1, 0x0, 0x0, 0x0, 0xc, 0x0, 0x0, 0x0, 0x99, 0x0, 0x0,
-	};
-	const size_t mode_offset = 10;
-	u8 buf[COMMAND_BUFFER_SIZE];
+	struct tpm_chip_priv *priv = dev_get_uclass_priv(dev);
 
-	if (pack_byte_string(buf, sizeof(buf), "sw",
-			     0, command, sizeof(command),
-			     mode_offset, mode))
-		return TPM_LIB_ERROR;
+	return priv->version == TPM_V1;
+}
 
-	return tpm_sendrecv_command(dev, buf, NULL, NULL);
+u32 tpm_startup(struct udevice *dev, enum tpm_startup_type mode)
+{
+	if (is_tpm1(dev))
+		return tpm1_startup(dev, mode);
+	else
+		return tpm2_startup(dev, mode);
 }
 
 u32 tpm1_resume(struct udevice *dev)
 {
-	return tpm_startup(dev, TPM_ST_STATE);
+	if (is_tpm1(dev))
+		return tpm1_startup(dev, TPM_ST_STATE);
+	else
+		return tpm2_startup(dev, TPM_ST_STATE);
 }
 
 u32 tpm1_self_test_full(struct udevice *dev)
@@ -179,7 +157,7 @@ u32 tpm1_nv_read_value(struct udevice *dev, u32 index, void *data, u32 count)
 }
 
 u32 tpm1_nv_write_value(struct udevice *dev, u32 index, const void *data,
-		       u32 length)
+			u32 length)
 {
 	const u8 command[256] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0xcd,
@@ -215,7 +193,7 @@ u32 tpm1_set_global_lock(struct udevice *dev)
 }
 
 u32 tpm1_extend(struct udevice *dev, u32 index, const void *in_digest,
-	       void *out_digest)
+		void *out_digest)
 {
 	const u8 command[34] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0x22, 0x0, 0x0, 0x0, 0x14,
@@ -374,7 +352,7 @@ u32 tpm1_physical_set_deactivated(struct udevice *dev, u8 state)
 }
 
 u32 tpm1_get_capability(struct udevice *dev, u32 cap_area, u32 sub_cap,
-		       void *cap, size_t count)
+			void *cap, size_t count)
 {
 	const u8 command[22] = {
 		0x0, 0xc1,		/* TPM_TAG */
@@ -414,7 +392,7 @@ u32 tpm1_get_capability(struct udevice *dev, u32 cap_area, u32 sub_cap,
 }
 
 u32 tpm1_get_permanent_flags(struct udevice *dev,
-			    struct tpm_permanent_flags *pflags)
+			     struct tpm_permanent_flags *pflags)
 {
 	const u8 command[22] = {
 		0x0, 0xc1,		/* TPM_TAG */
@@ -702,8 +680,8 @@ u32 tpm1_oiap(struct udevice *dev, u32 *auth_handle)
 }
 
 u32 tpm1_load_key2_oiap(struct udevice *dev, u32 parent_handle, const void *key,
-		       size_t key_length, const void *parent_key_usage_auth,
-		       u32 *key_handle)
+			size_t key_length, const void *parent_key_usage_auth,
+			u32 *key_handle)
 {
 	const u8 command[14] = {
 		0x00, 0xc2,		/* TPM_TAG */
@@ -768,8 +746,8 @@ u32 tpm1_load_key2_oiap(struct udevice *dev, u32 parent_handle, const void *key,
 }
 
 u32 tpm1_get_pub_key_oiap(struct udevice *dev, u32 key_handle,
-			 const void *usage_auth, void *pubkey,
-			 size_t *pubkey_len)
+			  const void *usage_auth, void *pubkey,
+			  size_t *pubkey_len)
 {
 	const u8 command[14] = {
 		0x00, 0xc2,		/* TPM_TAG */
@@ -834,7 +812,7 @@ u32 tpm1_get_pub_key_oiap(struct udevice *dev, u32 key_handle,
 
 #ifdef CONFIG_TPM_LOAD_KEY_BY_SHA1
 u32 tpm1_find_key_sha1(struct udevice *dev, const u8 auth[20],
-		      const u8 pubkey_digest[20], u32 *handle)
+		       const u8 pubkey_digest[20], u32 *handle)
 {
 	u16 key_count;
 	u32 key_handles[10];
