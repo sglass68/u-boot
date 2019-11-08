@@ -1,0 +1,12 @@
+These are data files used by verified boot. In most cases they are test files
+and not suitable for actually use.
+
+devkeys - developer keys taken from Chromium OS, used for self-signed images
+locales - locate information for verified boot (2018 vintage). The list of
+          locales is in 'locales'. The .bin files contain images and test for
+          each locale. The font.bin file contains font images. The vbgfx.bin
+          file contains generic images used by all locales. The file format is
+          a coreboot archive, a very simple list of names files stored one
+          after the other. See cb_archive.h
+bmpblk.bin - empty file simulating a bitmap block file
+ecrw.bin   - empty file simulating a Chromium OS EC image

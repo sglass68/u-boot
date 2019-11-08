@@ -37,7 +37,7 @@ struct vboot_stage stages[] = {
 	[VBOOT_STAGE_VER_FINISH] = {"ver5_finishfw", vboot_ver5_finish_fw,},
 	[VBOOT_STAGE_VER_JUMP] = {"ver_jump", vboot_ver6_jump_fw,},
 #endif
-#if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_SPL_BUILD)
+#if !defined(CONFIG_SPL_BUILD) || !defined(CONFIG_TPL_BUILD)
 	/* SPL stage: Sets up SDRAM and jumps to U-Boot proper */
 	[VBOOT_STAGE_SPL_INIT] = {"spl_init", vboot_spl_init,},
 	[VBOOT_STAGE_SPL_JUMP_U_BOOT] =
@@ -228,7 +228,11 @@ int vboot_run_auto(struct vboot_info *vboot, uint flags)
 void board_boot_order(u32 *spl_boot_list)
 {
 	spl_boot_list[0] = BOOT_DEVICE_CROS_VBOOT;
+#ifdef CONFIG_X86
 	spl_boot_list[1] = BOOT_DEVICE_SPI_MMAP;
+#else
+	spl_boot_list[1] = BOOT_DEVICE_BOARD;
+#endif
 }
 
 #ifdef CONFIG_TPL_BUILD
