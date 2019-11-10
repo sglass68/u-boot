@@ -134,6 +134,32 @@ static u32 safe_define_space(struct udevice *tpm, u32 index, u32 perm, u32 size)
 	}
 }
 
+static uint32_t set_space(struct udevice *tpm, uint index, uint attr,
+			  uint size, const u8 *nv_policy, size_t nv_policy_size)
+{
+	uint32_t rv;
+
+	rv = tpm2_nv_define_space(tpm, index, size, attr, nv_policy,
+				  nv_policy_size);
+	if (rv == TPM2_RC_NV_DEFINED) {
+		/*
+		 * Continue with writing: it may be defined, but not written
+		 * to. In that case a subsequent tlcl_read() would still return
+		 * TPM_E_BADINDEX on TPM 2.0. The cases when some non-firmware
+		 * space is defined while the firmware space is not there
+		 * should be rare (interrupted initialization), so no big harm
+		 * in writing once again even if it was written already.
+		 */
+		log_debug("%#x space already exists\n", index);
+		rv = TPM_SUCCESS;
+	}
+
+	if (rv != TPM_SUCCESS)
+		return rv;
+
+	return 0;
+}
+
 static int tpm_secdata_setup(struct udevice *dev, uint index, uint attr,
 			     uint size, const u8 *nv_policy,
 			     int nv_policy_size)
@@ -141,7 +167,11 @@ static int tpm_secdata_setup(struct udevice *dev, uint index, uint attr,
 	struct udevice *tpm = dev_get_parent(dev);
 	int ret;
 
-	ret = safe_define_space(tpm, index, attr, size);
+	if (IS_ENABLED(CONFIG_TPM_V1) && tpm_get_version(dev) == TPM_V1)
+		ret = safe_define_space(tpm, index, attr, size);
+	else if (IS_ENABLED(CONFIG_TPM_V2) )
+		ret = set_space(dev, index, attr, size, nv_policy,
+				nv_policy_size);
 	if (ret != TPM_SUCCESS) {
 		log_err("Failed to setup secdata (err=%x)\n", ret);
 		return -EIO;

@@ -240,11 +240,22 @@ int cros_tpm_factory_initialise(struct vboot_info *vboot)
 	if (ret)
 		return -EIO;
 
-	ret = version == TPM_V1 ?
-		v1_factory_initialise_tpm(vboot) :
-		v2_factory_initialise_tpm(vboot);
+	ret = -ENOSYS;
+	switch (version) {
+	case TPM_V1:
+		if (IS_ENABLED(CONFIG_TPM_V1))
+			ret = v1_factory_initialise_tpm(vboot);
+		break;
+	case TPM_V2:
+		if (IS_ENABLED(CONFIG_TPM_V1))
+			ret = v1_factory_initialise_tpm(vboot);
+		break;
+		if (IS_ENABLED(CONFIG_TPM_V2))
+			ret = v2_factory_initialise_tpm(vboot);
+		break;
 	if (ret)
 		return ret;
+	}
 
 	log_debug("TPM: factory initialisation successful\n");
 
@@ -381,6 +392,8 @@ static u32 do_setup(struct vboot_info *vboot, bool s3flag)
 	}
 
 	if (tpm_get_version(vboot->tpm) == TPM_V1) {
+		if (!IS_ENABLED(CONFIG_TPM_V1))
+			return log_msg_ret("tpm_v1", -ENOSYS);
 		ret = tpm1_invoke_state_machine(vboot, vboot->tpm);
 		if (ret != TPM_SUCCESS)
 			return ret;
