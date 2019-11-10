@@ -46,9 +46,10 @@ u32 tpm2_self_test(struct udevice *dev, enum tpm2_yes_no full_test)
 u32 tpm2_clear(struct udevice *dev, u32 handle, const char *pw,
 	       const ssize_t pw_sz)
 {
+	uint offset = 27;
 	u8 command_v2[COMMAND_BUFFER_SIZE] = {
 		tpm_u16(TPM2_ST_SESSIONS),	/* TAG */
-		tpm_u32(27 + pw_sz),		/* Length */
+		tpm_u32(offset + pw_sz),	/* Length */
 		tpm_u32(TPM2_CC_CLEAR),		/* Command code */
 
 		/* HANDLE */
@@ -63,7 +64,6 @@ u32 tpm2_clear(struct udevice *dev, u32 handle, const char *pw,
 		tpm_u16(pw_sz),			/* Size of <hmac/password> */
 		/* STRING(pw)			   <hmac/password> (if any) */
 	};
-	unsigned int offset = 27;
 	int ret;
 
 	/*
@@ -170,7 +170,6 @@ u32 tpm2_pcr_extend(struct udevice *dev, u32 index, const uint8_t *digest)
 	 */
 	ret = pack_byte_string(command_v2, sizeof(command_v2), "s",
 			       offset, digest, TPM2_DIGEST_LEN);
-	offset += TPM2_DIGEST_LEN;
 	if (ret)
 		return TPM_LIB_ERROR;
 
@@ -213,6 +212,42 @@ u32 tpm2_nv_read_value(struct udevice *dev, u32 index, void *data, u32 count)
 		return TPM_LIB_ERROR;
 
 	return 0;
+}
+
+u32 tpm2_nv_write_value(struct udevice *dev, u32 index, const void *data,
+			u32 count)
+{
+	uint offset = 10 + 8 + 9;
+	u8 command_v2[COMMAND_BUFFER_SIZE] = {
+		/* header 10 bytes */
+		tpm_u16(TPM2_ST_SESSIONS),	/* TAG */
+		tpm_u32(offset + count + 2),	/* Length */
+		tpm_u32(TPM2_CC_NV_READ),	/* Command code */
+
+		/* handles 8 bytes */
+		tpm_u32(TPM2_RH_PLATFORM),	/* Primary platform seed */
+		tpm_u32(index),			/* Password authorisation */
+
+		/* AUTH_SESSION */
+		tpm_u32(9),			/* Authorization size */
+		tpm_u32(TPM2_RS_PW),		/* Session handle */
+		tpm_u16(0),			/* Size of <nonce> */
+						/* <nonce> (if any) */
+		0,				/* Attributes: Cont/Excl/Rst */
+		tpm_u16(0),			/* Size of <hmac/password> */
+						/* <hmac/password> (if any) */
+	};
+	size_t response_len = COMMAND_BUFFER_SIZE;
+	u8 response[COMMAND_BUFFER_SIZE];
+	int ret;
+
+	ret = pack_byte_string(command_v2, sizeof(command_v2), "sw",
+			       offset, data, count,
+			       offset + count, 0);
+	if (ret)
+		return TPM_LIB_ERROR;
+
+	return tpm_sendrecv_command(dev, command_v2, response, &response_len);
 }
 
 u32 tpm2_pcr_read_full(struct udevice *dev, u32 idx, unsigned int idx_min_sz,

@@ -104,13 +104,16 @@ u32 tpm_set_global_lock(struct udevice *dev)
 	return tpm_nv_write_value(dev, TPM_NV_INDEX_0, NULL, 0);
 }
 
-u32 tpm_extend(struct udevice *dev, u32 index, const void *in_digest,
-	       void *out_digest)
+u32 tpm_pcr_extend(struct udevice *dev, u32 index, const void *in_digest,
+		   void *out_digest)
 {
-	if (is_tpm1(dev))
-		return tpm1_extend(dev, index, in_digest, out_digest);
-	else
-		return tpm2_extend(dev, index, in_digest, out_digest);
+	if (is_tpm1(dev)) {
+		return tpm1_pcr_extend(dev, index, in_digest, out_digest);
+	} else {
+		if (out_digest)
+			return -EINVAL;
+		return tpm2_pcr_extend(dev, index, in_digest);
+	}
 }
 
 u32 tpm_pcr_read(struct udevice *dev, u32 index, void *data, size_t count)
@@ -118,23 +121,30 @@ u32 tpm_pcr_read(struct udevice *dev, u32 index, void *data, size_t count)
 	if (is_tpm1(dev))
 		return tpm1_pcr_read(dev, index, data, count);
 	else
-		return tpm2_pcr_read(dev, index, data, count);
+		return -ENOSYS;
 }
 
 u32 tpm_tsc_physical_presence(struct udevice *dev, u16 presence)
 {
 	if (is_tpm1(dev))
 		return tpm1_tsc_physical_presence(dev, presence);
+
+	/*
+	 * Nothing to do on TPM2 for this; use platform hierarchy availability
+	 * instead.
+	 */
 	else
-		return tpm2_tsc_physical_presence(dev, presence);
+		return 0;
 }
 
 u32 tpm_finalise_physical_presence(struct udevice *dev)
 {
 	if (is_tpm1(dev))
 		return tpm1_finalise_physical_presence(dev);
+
+	/* Nothing needs to be done with tpm2 */
 	else
-		return tpm2_finalise_physical_presence(dev);
+		return 0;
 }
 
 u32 tpm_read_pubek(struct udevice *dev, void *data, size_t count)
@@ -142,7 +152,7 @@ u32 tpm_read_pubek(struct udevice *dev, void *data, size_t count)
 	if (is_tpm1(dev))
 		return tpm1_read_pubek(dev, data, count);
 	else
-		return tpm2_read_pubek(dev, data, count);
+		return -ENOSYS; /* not implemented yet */
 }
 
 u32 tpm_force_clear(struct udevice *dev)
@@ -150,31 +160,36 @@ u32 tpm_force_clear(struct udevice *dev)
 	if (is_tpm1(dev))
 		return tpm1_force_clear(dev);
 	else
-		return tpm2_force_clear(dev);
+		return tpm2_clear(dev, TPM2_RH_PLATFORM, NULL, 0);
 }
 
 u32 tpm_physical_enable(struct udevice *dev)
 {
 	if (is_tpm1(dev))
 		return tpm1_physical_enable(dev);
+
+	/* Nothing needs to be done with tpm2 */
 	else
-		return tpm2_physical_enable(dev);
+		return 0;
 }
 
 u32 tpm_physical_disable(struct udevice *dev)
 {
 	if (is_tpm1(dev))
 		return tpm1_physical_disable(dev);
+
+	/* Nothing needs to be done with tpm2 */
 	else
-		return tpm2_physical_disable(dev);
+		return 0;
 }
 
 u32 tpm_physical_set_deactivated(struct udevice *dev, u8 state)
 {
 	if (is_tpm1(dev))
 		return tpm1_physical_set_deactivated(dev, state);
+	/* Nothing needs to be done with tpm2 */
 	else
-		return tpm2_physical_set_deactivated(dev, state);
+		return 0;
 }
 
 u32 tpm_get_capability(struct udevice *dev, u32 cap_area, u32 sub_cap,
@@ -191,7 +206,7 @@ u32 tpm_get_permissions(struct udevice *dev, u32 index, u32 *perm)
 	if (is_tpm1(dev))
 		return tpm1_get_permissions(dev, index, perm);
 	else
-		return tpm2_get_permissions(dev, index, perm);
+		return -ENOSYS; /* not implemented yet */
 }
 
 u32 tpm_get_random(struct udevice *dev, void *data, u32 count)
@@ -199,5 +214,5 @@ u32 tpm_get_random(struct udevice *dev, void *data, u32 count)
 	if (is_tpm1(dev))
 		return tpm1_get_random(dev, data, count);
 	else
-		return tpm2_get_random(dev, data, count);
+		return -ENOSYS; /* not implemented yet */
 }

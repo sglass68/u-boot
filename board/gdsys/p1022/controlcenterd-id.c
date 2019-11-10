@@ -712,8 +712,8 @@ do_bin_func:
 	}
 
 	if (dst_reg && dst_modified && IS_PCR_HREG(dst_spec)) {
-		hre_tpm_err = tpm_extend(tpm, HREG_IDX(dst_spec),
-					 dst_reg->digest, dst_reg->digest);
+		hre_tpm_err = tpm_pcr_extend(tpm, HREG_IDX(dst_spec),
+					     dst_reg->digest, dst_reg->digest);
 		if (hre_tpm_err) {
 			hre_err = HRE_E_TPM_FAILURE;
 			return NULL;

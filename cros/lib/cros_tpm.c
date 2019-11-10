@@ -86,7 +86,7 @@ static u32 extend_pcr(struct vboot_info *vboot, int pcr,
 	if (size < TPM_PCR_MINIMUM_DIGEST_SIZE)
 		return VB2_ERROR_UNKNOWN;
 
-	return tpm_extend(vboot->tpm, pcr, buffer, out);
+	return tpm_pcr_extend(vboot->tpm, pcr, buffer, out);
 }
 
 int cros_tpm_extend_pcrs(struct vboot_info *vboot)

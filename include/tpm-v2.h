@@ -249,20 +249,6 @@ u32 tpm2_pcr_extend(struct udevice *dev, u32 index, const uint8_t *digest);
 u32 tpm2_nv_read_value(struct udevice *dev, u32 index, void *data, u32 count);
 u32 tpm2_nv_write_value(struct udevice *dev, u32 index, const void *data,
 			u32 count);
-u32 tpm2_extend(struct udevice *dev, u32 index, const void *in_digest,
-		void *out_digest);
-u32 tpm2_pcr_read(struct udevice *dev, u32 index, void *data, size_t count);
-u32 tpm2_tsc_physical_presence(struct udevice *dev, u16 presence);
-u32 tpm2_finalise_physical_presence(struct udevice *dev);
-u32 tpm2_read_pubek(struct udevice *dev, void *data, size_t count);
-u32 tpm2_force_clear(struct udevice *dev);
-u32 tpm2_physical_enable(struct udevice *dev);
-u32 tpm2_physical_disable(struct udevice *dev);
-u32 tpm2_physical_set_deactivated(struct udevice *dev, u8 state);
-u32 tpm2_get_capability(struct udevice *dev, u32 cap_area, u32 sub_cap,
-			void *cap, size_t count);
-u32 tpm2_get_permissions(struct udevice *dev, u32 index, u32 *perm);
-u32 tpm2_get_random(struct udevice *dev, void *data, u32 count);
 
 /**
  * Issue a TPM2_PCR_Read command.

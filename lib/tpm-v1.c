@@ -202,8 +202,8 @@ u32 tpm1_nv_write_value(struct udevice *dev, u32 index, const void *data,
 	return 0;
 }
 
-u32 tpm1_extend(struct udevice *dev, u32 index, const void *in_digest,
-	       void *out_digest)
+u32 tpm1_pcr_extend(struct udevice *dev, u32 index, const void *in_digest,
+		    void *out_digest)
 {
 	const u8 command[34] = {
 		0x0, 0xc1, 0x0, 0x0, 0x0, 0x22, 0x0, 0x0, 0x0, 0x14,

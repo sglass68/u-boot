@@ -130,7 +130,7 @@ static int do_tpm_extend(cmd_tbl_t *cmdtp, int flag, int argc,
 		return CMD_RET_FAILURE;
 	}
 
-	rc = tpm_extend(dev, index, in_digest, out_digest);
+	rc = tpm_pcr_extend(dev, index, in_digest, out_digest);
 	if (!rc) {
 		puts("PCR value after execution of the command:\n");
 		print_byte_string(out_digest, sizeof(out_digest));

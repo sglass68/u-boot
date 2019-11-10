@@ -89,7 +89,7 @@ static int test_early_extend(struct udevice *dev)
 	tpm_init(dev);
 	TPM_CHECK(tpm_startup(dev, TPM_ST_CLEAR));
 	TPM_CHECK(tpm_continue_self_test(dev));
-	TPM_CHECK(tpm_extend(dev, 1, value_in, value_out));
+	TPM_CHECK(tpm_pcr_extend(dev, 1, value_in, value_out));
 	printf("done\n");
 	return 0;
 }
@@ -433,7 +433,7 @@ static int test_timing(struct udevice *dev)
 		   100);
 	TTPM_CHECK(tpm_nv_read_value(dev, INDEX0, (uint8_t *)&x, sizeof(x)),
 		   100);
-	TTPM_CHECK(tpm_extend(dev, 0, in, out), 200);
+	TTPM_CHECK(tpm_pcr_extend(dev, 0, in, out), 200);
 	TTPM_CHECK(tpm_set_global_lock(dev), 50);
 	TTPM_CHECK(tpm_tsc_physical_presence(dev, PHYS_PRESENCE), 100);
 	printf("done\n");

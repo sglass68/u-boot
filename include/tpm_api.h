@@ -87,8 +87,8 @@ u32 tpm_nv_write_value(struct udevice *dev, u32 index, const void *data,
  *			command
  * @return return code of the operation
  */
-u32 tpm_extend(struct udevice *dev, u32 index, const void *in_digest,
-	       void *out_digest);
+u32 tpm_pcr_extend(struct udevice *dev, u32 index, const void *in_digest,
+		   void *out_digest);
 
 /**
  * Issue a TPM_PCRRead command.
