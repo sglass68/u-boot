@@ -6,9 +6,10 @@
 #include <common.h>
 #include <env.h>
 #include <malloc.h>
-#include <asm/unaligned.h>
+#include <tpm_api.h>
 #include <tpm-common.h>
 #include <tpm-v1.h>
+#include <asm/unaligned.h>
 #include "tpm-user-utils.h"
 
 static int do_tpm_startup(cmd_tbl_t *cmdtp, int flag, int argc,
@@ -54,7 +55,7 @@ static int do_tpm_nv_define_space(cmd_tbl_t *cmdtp, int flag, int argc,
 	perm = simple_strtoul(argv[2], NULL, 0);
 	size = simple_strtoul(argv[3], NULL, 0);
 
-	return report_return_code(tpm_nv_define_space(dev, index, perm, size));
+	return report_return_code(tpm1_nv_define_space(dev, index, perm, size));
 }
 
 static int do_tpm_nv_read_value(cmd_tbl_t *cmdtp, int flag, int argc,
@@ -303,7 +304,7 @@ static int do_tpm_nv_define(cmd_tbl_t *cmdtp, int flag, int argc,
 	index = simple_strtoul(argv[2], NULL, 0);
 	perm = simple_strtoul(argv[3], NULL, 0);
 
-	return report_return_code(tpm_nv_define_space(dev, index, perm, size));
+	return report_return_code(tpm1_nv_define_space(dev, index, perm, size));
 }
 
 static int do_tpm_nv_read(cmd_tbl_t *cmdtp, int flag, int argc,

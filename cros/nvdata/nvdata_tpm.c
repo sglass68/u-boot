@@ -123,12 +123,12 @@ static u32 safe_define_space(struct udevice *tpm, u32 index, u32 perm, u32 size)
 {
 	u32 result;
 
-	result = tpm_nv_define_space(tpm, index, perm, size);
+	result = tpm1_nv_define_space(tpm, index, perm, size);
 	if (result == TPM_MAXNVWRITES) {
 		result = tpm_clear_and_reenable(tpm);
 		if (result != TPM_SUCCESS)
 			return result;
-		return tpm_nv_define_space(tpm, index, perm, size);
+		return tpm1_nv_define_space(tpm, index, perm, size);
 	} else {
 		return result;
 	}

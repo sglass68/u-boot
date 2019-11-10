@@ -573,14 +573,6 @@ u32 tpm1_finalise_physical_presence(struct udevice *dev);
 u32 tpm1_nv_set_locked(struct udevice *dev);
 
 /**
- * tpm_set_global_lock() - set the global lock
- *
- * @param dev		TPM device
- * @return return code of the operation (0 = success)
- */
-u32 tpm1_set_global_lock(struct udevice *dev);
-
-/**
  * tpm_resume() - start up the TPM from resume (after suspend)
  *
  * @param dev		TPM device

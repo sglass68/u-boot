@@ -49,7 +49,7 @@ u32 tpm1_startup(struct udevice *dev, enum tpm_startup_type mode)
 
 u32 tpm1_resume(struct udevice *dev)
 {
-	return tpm_startup(dev, TPM_ST_STATE);
+	return tpm1_startup(dev, TPM_ST_STATE);
 }
 
 u32 tpm1_self_test_full(struct udevice *dev)
@@ -73,24 +73,22 @@ u32 tpm1_clear_and_reenable(struct udevice *dev)
 	u32 ret;
 
 	log_info("TPM: Clear and re-enable\n");
-	ret = tpm_force_clear(dev);
+	ret = tpm1_force_clear(dev);
 	if (ret != TPM_SUCCESS) {
 		log_err("Can't initiate a force clear\n");
 		return ret;
 	}
 
-	if (tpm_get_version(dev) == TPM_V1) {
-		ret = tpm_physical_enable(dev);
-		if (ret != TPM_SUCCESS) {
-			log_err("TPM: Can't set enabled state\n");
-			return ret;
-		}
+	ret = tpm1_physical_enable(dev);
+	if (ret != TPM_SUCCESS) {
+		log_err("TPM: Can't set enabled state\n");
+		return ret;
+	}
 
-		ret = tpm_physical_set_deactivated(dev, 0);
-		if (ret != TPM_SUCCESS) {
-			log_err("TPM: Can't set deactivated state\n");
-			return ret;
-		}
+	ret = tpm1_physical_set_deactivated(dev, 0);
+	if (ret != TPM_SUCCESS) {
+		log_err("TPM: Can't set deactivated state\n");
+		return ret;
 	}
 
 	return TPM_SUCCESS;
@@ -137,11 +135,6 @@ u32 tpm1_nv_define_space(struct udevice *dev, u32 index, u32 perm, u32 size)
 		return TPM_LIB_ERROR;
 
 	return tpm_sendrecv_command(dev, buf, NULL, NULL);
-}
-
-u32 tpm1_nv_set_locked(struct udevice *dev)
-{
-	return tpm_nv_define_space(dev, TPM_NV_INDEX_LOCK, 0, 0);
 }
 
 u32 tpm1_nv_read_value(struct udevice *dev, u32 index, void *data, u32 count)
@@ -207,11 +200,6 @@ u32 tpm1_nv_write_value(struct udevice *dev, u32 index, const void *data,
 		return err;
 
 	return 0;
-}
-
-u32 tpm1_set_global_lock(struct udevice *dev)
-{
-	return tpm_nv_write_value(dev, TPM_NV_INDEX_0, NULL, 0);
 }
 
 u32 tpm1_extend(struct udevice *dev, u32 index, const void *in_digest,

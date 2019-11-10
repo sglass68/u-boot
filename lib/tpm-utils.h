@@ -42,6 +42,11 @@ int pack_byte_string(u8 *str, size_t size, const char *format, ...);
  * series of offsets and pointers (for type byte string there are also
  * lengths).
  *
+ * b: <offset> <u8 *>
+ * w: <offset> <u16 *>
+ * d: <offset> <u32 *>
+ * s: <offset> <char *> <u32 len>
+ *
  * @param str		output string
  * @param size		size of output string
  * @param format	format string

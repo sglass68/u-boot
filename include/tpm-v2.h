@@ -53,9 +53,9 @@ enum tpm2_startup_types {
 enum tpm2_handles {
 	TPM2_RH_OWNER		= 0x40000001,
 	TPM2_RS_PW		= 0x40000009,
-	TPM2_RH_LOCKOUT		= 0x4000000A,
-	TPM2_RH_ENDORSEMENT	= 0x4000000B,
-	TPM2_RH_PLATFORM	= 0x4000000C,
+	TPM2_RH_LOCKOUT		= 0x4000000a,
+	TPM2_RH_ENDORSEMENT	= 0x4000000b,
+	TPM2_RH_PLATFORM	= 0x4000000c,
 };
 
 /**
@@ -80,12 +80,13 @@ enum tpm2_command_codes {
 	TPM2_CC_CLEAR		= 0x0126,
 	TPM2_CC_CLEARCONTROL	= 0x0127,
 	TPM2_CC_HIERCHANGEAUTH	= 0x0129,
-	TPM2_CC_PCR_SETAUTHPOL	= 0x012C,
+	TPM2_CC_NV_DEFINE_SPACE	= 0x012a,
+	TPM2_CC_PCR_SETAUTHPOL	= 0x012c,
 	TPM2_CC_DAM_RESET	= 0x0139,
-	TPM2_CC_DAM_PARAMETERS	= 0x013A,
-	TPM2_CC_NV_READ         = 0x014E,
-	TPM2_CC_GET_CAPABILITY	= 0x017A,
-	TPM2_CC_PCR_READ	= 0x017E,
+	TPM2_CC_DAM_PARAMETERS	= 0x013a,
+	TPM2_CC_NV_READ         = 0x014e,
+	TPM2_CC_GET_CAPABILITY	= 0x017a,
+	TPM2_CC_PCR_READ	= 0x017e,
 	TPM2_CC_PCR_EXTEND	= 0x0182,
 	TPM2_CC_PCR_SETAUTHVAL	= 0x0183,
 };
@@ -95,13 +96,13 @@ enum tpm2_command_codes {
  */
 enum tpm2_return_codes {
 	TPM2_RC_SUCCESS		= 0x0000,
-	TPM2_RC_BAD_TAG		= 0x001E,
+	TPM2_RC_BAD_TAG		= 0x001e,
 	TPM2_RC_FMT1		= 0x0080,
 	TPM2_RC_HASH		= TPM2_RC_FMT1 + 0x0003,
 	TPM2_RC_VALUE		= TPM2_RC_FMT1 + 0x0004,
 	TPM2_RC_SIZE		= TPM2_RC_FMT1 + 0x0015,
 	TPM2_RC_BAD_AUTH	= TPM2_RC_FMT1 + 0x0022,
-	TPM2_RC_HANDLE		= TPM2_RC_FMT1 + 0x000B,
+	TPM2_RC_HANDLE		= TPM2_RC_FMT1 + 0x000b,
 	TPM2_RC_VER1		= 0x0100,
 	TPM2_RC_INITIALIZE	= TPM2_RC_VER1 + 0x0000,
 	TPM2_RC_FAILURE		= TPM2_RC_VER1 + 0x0001,
@@ -112,7 +113,7 @@ enum tpm2_return_codes {
 	TPM2_RC_AUTH_CONTEXT	= TPM2_RC_VER1 + 0x0045,
 	TPM2_RC_NEEDS_TEST	= TPM2_RC_VER1 + 0x0053,
 	TPM2_RC_WARN		= 0x0900,
-	TPM2_RC_TESTING		= TPM2_RC_WARN + 0x000A,
+	TPM2_RC_TESTING		= TPM2_RC_WARN + 0x000a,
 	TPM2_RC_REFERENCE_H0	= TPM2_RC_WARN + 0x0010,
 	TPM2_RC_LOCKOUT		= TPM2_RC_WARN + 0x0021,
 };
@@ -121,10 +122,10 @@ enum tpm2_return_codes {
  * TPM2 algorithms.
  */
 enum tpm2_algorithms {
-	TPM2_ALG_XOR		= 0x0A,
-	TPM2_ALG_SHA256		= 0x0B,
-	TPM2_ALG_SHA384		= 0x0C,
-	TPM2_ALG_SHA512		= 0x0D,
+	TPM2_ALG_XOR		= 0x0a,
+	TPM2_ALG_SHA256		= 0x0b,
+	TPM2_ALG_SHA384		= 0x0c,
+	TPM2_ALG_SHA512		= 0x0d,
 	TPM2_ALG_NULL		= 0x10,
 };
 
@@ -225,6 +226,15 @@ u32 tpm2_self_test(struct udevice *dev, enum tpm2_yes_no full_test);
 u32 tpm2_clear(struct udevice *dev, u32 handle, const char *pw,
 	       const ssize_t pw_sz);
 
+u32 tpm2_force_clear(struct udevice *dev);
+
+/**
+ * enum tpm_index_attrs
+ */
+u32 tpm2_nv_define_space(struct udevice *dev, u32 space_index,
+			 size_t space_size, u32 nv_attributes,
+			 const uint8_t *nv_policy, size_t nv_policy_size);
+
 /**
  * Issue a TPM2_PCR_Extend command.
  *
@@ -235,6 +245,24 @@ u32 tpm2_clear(struct udevice *dev, u32 handle, const char *pw,
  * @return code of the operation
  */
 u32 tpm2_pcr_extend(struct udevice *dev, u32 index, const uint8_t *digest);
+
+u32 tpm2_nv_read_value(struct udevice *dev, u32 index, void *data, u32 count);
+u32 tpm2_nv_write_value(struct udevice *dev, u32 index, const void *data,
+			u32 count);
+u32 tpm2_extend(struct udevice *dev, u32 index, const void *in_digest,
+		void *out_digest);
+u32 tpm2_pcr_read(struct udevice *dev, u32 index, void *data, size_t count);
+u32 tpm2_tsc_physical_presence(struct udevice *dev, u16 presence);
+u32 tpm2_finalise_physical_presence(struct udevice *dev);
+u32 tpm2_read_pubek(struct udevice *dev, void *data, size_t count);
+u32 tpm2_force_clear(struct udevice *dev);
+u32 tpm2_physical_enable(struct udevice *dev);
+u32 tpm2_physical_disable(struct udevice *dev);
+u32 tpm2_physical_set_deactivated(struct udevice *dev, u8 state);
+u32 tpm2_get_capability(struct udevice *dev, u32 cap_area, u32 sub_cap,
+			void *cap, size_t count);
+u32 tpm2_get_permissions(struct udevice *dev, u32 index, u32 *perm);
+u32 tpm2_get_random(struct udevice *dev, void *data, u32 count);
 
 /**
  * Issue a TPM2_PCR_Read command.
@@ -247,8 +275,8 @@ u32 tpm2_pcr_extend(struct udevice *dev, u32 index, const uint8_t *digest);
  *
  * @return code of the operation
  */
-u32 tpm2_pcr_read(struct udevice *dev, u32 idx, unsigned int idx_min_sz,
-		  void *data, unsigned int *updates);
+u32 tpm2_pcr_read_full(struct udevice *dev, u32 idx, unsigned int idx_min_sz,
+		       void *data, unsigned int *updates);
 
 /**
  * Issue a TPM2_GetCapability command.  This implementation is limited

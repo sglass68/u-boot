@@ -149,7 +149,8 @@ static int do_tpm_pcr_read(cmd_tbl_t *cmdtp, int flag, int argc,
 
 	data = map_sysmem(simple_strtoul(argv[2], NULL, 0), 0);
 
-	rc = tpm2_pcr_read(dev, index, priv->pcr_select_min, data, &updates);
+	rc = tpm2_pcr_read_full(dev, index, priv->pcr_select_min, data,
+				&updates);
 	if (!rc) {
 		printf("PCR #%u content (%u known updates):\n", index, updates);
 		print_byte_string(data, TPM2_DIGEST_LEN);

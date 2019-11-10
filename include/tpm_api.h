@@ -234,16 +234,6 @@ u32 tpm_get_pub_key_oiap(struct udevice *dev, u32 key_handle,
 			 size_t *pubkey_len);
 
 /**
- * Get the TPM permanent flags value
- *
- * @param dev		TPM device
- * @param pflags	Place to put permanent flags
- * @return return code of the operation
- */
-u32 tpm_get_permanent_flags(struct udevice *dev,
-			    struct tpm_permanent_flags *pflags);
-
-/**
  * Get the TPM permissions
  *
  * @param dev		TPM device

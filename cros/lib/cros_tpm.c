@@ -170,7 +170,7 @@ static int v1_factory_initialise_tpm(struct vboot_info *vboot)
 	struct tpm_permanent_flags pflags;
 	int ret;
 
-	ret = tpm_get_permanent_flags(vboot->tpm, &pflags);
+	ret = tpm1_get_permanent_flags(vboot->tpm, &pflags);
 	if (ret != TPM_SUCCESS)
 		return -EIO;
 
@@ -255,7 +255,7 @@ static u32 tpm_get_flags(struct udevice *dev, bool *disablep,
 			 bool *deactivatedp, bool *nvlockedp)
 {
 	struct tpm_permanent_flags pflags;
-	u32 ret = tpm_get_permanent_flags(dev, &pflags);
+	u32 ret = tpm1_get_permanent_flags(dev, &pflags);
 
 	if (ret == TPM_SUCCESS) {
 		if (disablep)
