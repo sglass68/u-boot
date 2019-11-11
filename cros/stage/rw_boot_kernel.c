@@ -232,7 +232,7 @@ static int boot_kernel(struct vboot_info *vboot,
 		device_remove(dev, DM_REMOVE_NORMAL);
 
 #ifdef CONFIG_X86
-	vboot_update_acpi(vboot);
+// 	vboot_update_acpi(vboot);
 
 	params = (struct boot_params *)(uintptr_t)
 		(kparams->bootloader_address - CROS_PARAMS_SIZE);

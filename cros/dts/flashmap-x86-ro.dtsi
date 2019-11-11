@@ -22,14 +22,6 @@
 	pad-byte = <0xff>;
 	size = <CONFIG_ROM_SIZE>;
 	compatible = "chromeos,flashmap";
-#ifdef CONFIG_HAVE_INTEL_ME
-	intel-descriptor {
-		filename = CONFIG_FLASH_DESCRIPTOR_FILE;
-	};
-	intel-me {
-		filename = CONFIG_INTEL_ME_FILE;
-	};
-#endif
 	/* ---- Section: Vital-product data (VPD) ---- */
 	read-only-vpd {
 		offset = <0xffe00000>;
@@ -49,6 +41,37 @@
 		label-prefix = "ro-";
 		sort-by-offset;
 		read-only;
+#if defined(CONFIG_HAVE_INTEL_ME) || defined(CONFIG_FSP_VERSION2)
+		intel-descriptor {
+			filename = CONFIG_FLASH_DESCRIPTOR_FILE;
+		};
+#endif
+#ifdef CONFIG_FSP_VERSION2
+		intel-ifwi {
+			filename = CONFIG_IFWI_INPUT_FILE;
+			convert-fit;
+
+			section {
+				size = <0x8000>;
+				ifwi-replace;
+				ifwi-subpart = "IBBP";
+				ifwi-entry = "IBBL";
+				u-boot-tpl {
+				};
+				x86-start16-tpl {
+					offset = <0x7800>;
+				};
+				x86-reset16-tpl {
+					offset = <0x7ff0>;
+				};
+			};
+		};
+#endif
+#ifdef CONFIG_HAVE_INTEL_ME
+intel-me {
+	filename = CONFIG_INTEL_ME_FILE;
+};
+#endif
 		fmap {
 			offset = <(0xffe10000 - 0xffe10000)>;
 			size = <0x800>;
@@ -102,11 +125,13 @@
 		};
 #endif
 
+#ifdef CONFIG_HAVE_MICROCODE
 		u-boot-tpl-with-ucode-ptr {
 			offset = <(CONFIG_TPL_TEXT_BASE - 0xffe10000)>;
 		};
 		u-boot-tpl-dtb-with-ucode {
 		};
+#endif
 		spl-rec {
 			type = "u-boot-spl";
 			offset = <(CONFIG_SPL_TEXT_BASE - 0xffe10000)>;
