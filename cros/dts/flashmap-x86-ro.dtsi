@@ -113,20 +113,6 @@ intel-me {
 		u-boot-ucode {
 		};
 
-#ifdef CONFIG_TPL
-		x86-start16-tpl {
-			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
-		};
-#elif defined(CONFIG_SPL)
-		x86-start16-spl {
-			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
-		};
-#else
-		x86-start16 {
-			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
-		};
-#endif
-
 #ifdef CONFIG_HAVE_MICROCODE
 		u-boot-tpl-with-ucode-ptr {
 			offset = <(CONFIG_TPL_TEXT_BASE - RO_BASE)>;
@@ -154,6 +140,28 @@ intel-me {
 #ifdef CONFIG_HAVE_REFCODE
 		intel-refcode {
 			offset = <(CONFIG_X86_REFCODE_ADDR - RO_BASE)>;
+		};
+#endif
+#ifdef CONFIG_TPL
+		x86-start16-tpl {
+			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
+		};
+		x86-reset16-tpl {
+			offset = <CONFIG_RESET_VEC_LOC>;
+		};
+#elif defined(CONFIG_SPL)
+		x86-start16-spl {
+			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
+		};
+		x86-reset16-spl {
+			offset = <CONFIG_RESET_VEC_LOC>;
+		};
+#else
+		x86-start16 {
+			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
+		};
+		x86-reset16 {
+			offset = <CONFIG_RESET_VEC_LOC>;
 		};
 #endif
 	};
