@@ -26,8 +26,8 @@ struct vboot_stage {
  * selection process. We only build in the code that is actually needed by each
  * stage.
  */
-struct vboot_stage stages[] = {
-#if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_TPL_BUILD)
+struct vboot_stage stages[VBOOT_STAGE_COUNT] = {
+#if !defined(CONFIG_SPL_BUILD) || defined(CONFIG_VPL_BUILD)
 	/* Verification stage: figures out which firmware to run */
 	[VBOOT_STAGE_VER_INIT] = {"ver_init", vboot_ver_init},
 	[VBOOT_STAGE_VER1_VBINIT] = {"ver1_vbinit", vboot_ver1_vbinit},
@@ -225,6 +225,7 @@ int vboot_run_auto(struct vboot_info *vboot, uint flags)
 	return vboot_run_stages(vboot, stage, flags);
 }
 
+#if 0
 void board_boot_order(u32 *spl_boot_list)
 {
 	spl_boot_list[0] = BOOT_DEVICE_CROS_VBOOT;
@@ -234,8 +235,9 @@ void board_boot_order(u32 *spl_boot_list)
 	spl_boot_list[1] = BOOT_DEVICE_BOARD;
 #endif
 }
+#endif
 
-#ifdef CONFIG_TPL_BUILD
+#ifdef CONFIG_VPL_BUILD
 static int cros_load_image_tpl(struct spl_image_info *spl_image,
 			       struct spl_boot_device *bootdev)
 {
@@ -252,6 +254,8 @@ static int cros_load_image_tpl(struct spl_image_info *spl_image,
 }
 SPL_LOAD_IMAGE_METHOD("chromium_vboot_tpl", 0, BOOT_DEVICE_CROS_VBOOT,
 		      cros_load_image_tpl);
+
+#elif defined(CONFIG_TPL_BUILD)
 
 #elif defined(CONFIG_SPL_BUILD)
 static int cros_load_image_spl(struct spl_image_info *spl_image,

@@ -134,10 +134,13 @@ static int apl_hostbridge_ofdata_to_platdata(struct udevice *dev)
 		return log_msg_ret("Cannot get host-bridge PCI address", root);
 	plat->bdf = root;
 
-	ret = pinctrl_read_pads(pinctrl, dev_ofnode(dev), "early-pads",
-				&plat->early_pads, &plat->early_pads_count);
-	if (ret)
-		return log_msg_ret("early-pads", ret);
+	if (spl_phase() != PHASE_VPL) {
+		ret = pinctrl_read_pads(pinctrl, dev_ofnode(dev), "early-pads",
+					&plat->early_pads,
+					&plat->early_pads_count);
+		if (ret)
+			return log_msg_ret("early-pads", ret);
+	}
 #else
 	struct dtd_intel_apl_hostbridge *dtplat = &plat->dtplat;
 	int size;

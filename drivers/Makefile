@@ -30,6 +30,7 @@ obj-$(CONFIG_$(SPL_TPL_)MPC8XXX_INIT_DDR_SUPPORT) += ddr/fsl/
 obj-$(CONFIG_$(SPL_TPL_)ACPI_PMC) += power/acpi_pmc/
 
 ifndef CONFIG_TPL_BUILD
+ifndef CONFIG_VPL_BUILD
 ifdef CONFIG_SPL_BUILD
 
 obj-$(CONFIG_SPL_BOOTCOUNT_LIMIT) += bootcount/
@@ -62,6 +63,7 @@ obj-$(CONFIG_HAVE_BLOCK_DEVICE) += block/
 obj-$(CONFIG_SPL_FPGA_SUPPORT) += fpga/
 obj-$(CONFIG_SPL_THERMAL) += thermal/
 
+endif
 endif
 endif
 

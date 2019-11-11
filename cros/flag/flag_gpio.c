@@ -31,12 +31,16 @@ static int flag_gpio_read(struct udevice *dev)
 
 static int flag_gpio_probe(struct udevice *dev)
 {
+#if CONFIG_IS_ENABLED(OF_PLATDATA)
+	printf("%s: fix\n", __func__);
+#else
 	struct flag_gpio_priv *priv = dev_get_priv(dev);
 	int ret;
 
 	ret = gpio_request_by_name(dev, "gpio", 0, &priv->desc, GPIOD_IS_IN);
 	if (ret)
 		return ret;
+#endif
 #ifdef CONFIG_SANDBOX
 	u32 value;
 

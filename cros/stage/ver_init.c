@@ -56,10 +56,11 @@ int vboot_ver_init(struct vboot_info *vboot)
 
 	bootstage_mark(BOOTSTAGE_VBOOT_START);
 
+#ifndef TODO
 	ret = vboot_load_config(vboot);
 	if (ret)
 		return log_msg_ret("Cannot load config", ret);
-
+#endif
 	/* Set up context and work buffer */
 	ret = vb2_init_blob(blob, vboot->work_buffer_size);
 	if (ret)
@@ -97,10 +98,12 @@ int vboot_ver_init(struct vboot_info *vboot)
 #endif
 	print_buffer(0, ctx->nvdata, 1, sizeof(ctx->nvdata), 0);
 
+#ifndef TODO
 	ret = cros_ofnode_flashmap(&vboot->fmap);
 	if (ret)
 		return log_msg_ret("failed to decode fmap\n", ret);
 	cros_ofnode_dump_fmap(&vboot->fmap);
+#endif
 	ret = uclass_first_device_err(UCLASS_CROS_FWSTORE, &vboot->fwstore);
 	if (ret)
 		return log_msg_ret("Cannot set up fwstore", ret);

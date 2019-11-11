@@ -1,9 +1,12 @@
-menu "SPL / TPL"
+menu "SPL / TPL / VPL"
 
 config SUPPORT_SPL
 	bool
 
 config SUPPORT_TPL
+	bool
+
+config SUPPORT_VPL
 	bool
 
 config SPL_DFU_NO_RESET
@@ -1464,6 +1467,68 @@ config TPL_YMODEM_SUPPORT
 	  with a checksum to ensure correctness.
 
 endif # TPL
+
+config VPL
+	bool
+	depends on SUPPORT_SPL
+	prompt "Enable VPL"
+	help
+	  If you want to build VPL as well as the normal image, TPL and SPL,
+	  say Y.
+
+if VPL
+
+config VPL_LIBCOMMON_SUPPORT
+	bool "Support common libraries"
+	default y if SPL_LIBCOMMON_SUPPORT
+	help
+	  Enable support for common U-Boot libraries within VPL. See
+	  SPL_LIBCOMMON_SUPPORT for details.
+
+config VPL_LIBGENERIC_SUPPORT
+	bool "Support generic libraries"
+	default y if SPL_LIBGENERIC_SUPPORT
+	help
+	  Enable support for generic U-Boot libraries within VPL. These
+	  libraries include generic code to deal with device tree, hashing,
+	  printf(), compression and the like. This option is enabled on many
+	  boards. Enable this option to build the code in lib/ as part of an
+	  SPL build.
+
+config VPL_DRIVERS_MISC_SUPPORT
+	bool "Support misc drivers"
+	default y if TPL_DRIVERS_MISC_SUPPORT
+	help
+	  Enable miscellaneous drivers in VPL. These drivers perform various
+	  tasks that don't fall nicely into other categories, Enable this
+	  option to build the drivers in drivers/misc as part of an VPL
+	  build, for those that support building in VPL (not all drivers do).
+
+config VPL_PCI
+	bool "Support PCI drivers"
+	default y if SPL_PCI
+	help
+	  Enable support for PCI in VPL. For platforms that need PCI to boot,
+	  or must perform some init using PCI in VPL, this provides the
+	  necessary driver support. This enables the drivers in drivers/pci
+	  as part of a VPL build.
+
+config VPL_SERIAL_SUPPORT
+	bool "Support serial"
+	default y if TPL_SERIAL_SUPPORT
+	select VPL_PRINTF
+	select VPL_STRTO
+	help
+	  Enable support for serial in VPL. See SPL_SERIAL_SUPPORT for
+	  details.
+
+config VPL_TEXT_BASE
+	hex "VPL Text Base"
+	default 0x0
+	help
+	  The address in memory that VPL will be running from.
+
+endif
 
 config SPL_AT91_MCK_BYPASS
 	bool "Use external clock signal as a source of main clock for AT91 platforms"

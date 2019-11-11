@@ -35,6 +35,16 @@ config TPL_DM
 	  CONFIG_SPL_SYS_MALLOC_F_LEN for more details on how to enable it.
 	  Disable this for very small implementations.
 
+config VPL_DM
+	bool "Enable Driver Model for VPL"
+	depends on DM && VPL
+	default y if SPL_DM
+	help
+	  Enable driver model in VPL. You will need to provide a
+	  suitable malloc() implementation. If you are not using the
+	  full malloc() enabled by CONFIG_SYS_SPL_MALLOC_START,
+	  consider using CONFIG_SYS_MALLOC_SIMPLE.
+
 config DM_WARN
 	bool "Enable warnings in driver model"
 	depends on DM

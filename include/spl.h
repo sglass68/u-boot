@@ -51,6 +51,7 @@ static inline bool u_boot_first_phase(void)
 
 enum u_boot_phase {
 	PHASE_TPL,	/* Running in TPL */
+	PHASE_VPL,	/* Running in VPL */
 	PHASE_SPL,	/* Running in SPL */
 	PHASE_BOARD_F,	/* Running in U-Boot before relocation */
 	PHASE_BOARD_R,	/* Running in U-Boot after relocation */
@@ -103,7 +104,9 @@ static inline enum u_boot_phase spl_phase(void)
 {
 #ifdef CONFIG_TPL_BUILD
 	return PHASE_TPL;
-#elif CONFIG_SPL_BUILD
+#elif defined(CONFIG_VPL_BUILD)
+	return PHASE_VPL;
+#elif defined(CONFIG_SPL_BUILD)
 	return PHASE_SPL;
 #else
 	DECLARE_GLOBAL_DATA_PTR;

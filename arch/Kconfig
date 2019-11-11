@@ -146,6 +146,7 @@ config X86
 	bool "x86 architecture"
 	select SUPPORT_SPL
 	select SUPPORT_TPL
+	select SUPPORT_VPL
 	select CREATE_ARCH_SYMLINK
 	select DM
 	select DM_PCI

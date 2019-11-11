@@ -181,6 +181,19 @@ config TPL_SYS_MALLOC_F_LEN
 	depends on SYS_MALLOC_F && TPL
 	default SYS_MALLOC_F_LEN
 	help
+	  In TPL memory is very limited on many platforms. Still,
+	  we can provide a small malloc() pool if needed. Driver model in
+	  particular needs this to operate, so that it can allocate the
+	  initial serial device and any others that are needed.
+
+	  It is possible to enable CONFIG_SYS_SPL_MALLOC_START to start a new
+	  malloc() region in SDRAM once it is inited.
+
+config VPL_SYS_MALLOC_F_LEN
+	hex "Size of malloc() pool in VPL before relocation"
+	depends on SYS_MALLOC_F && VPL
+	default SYS_MALLOC_F_LEN
+	help
 	  Before relocation, memory is very limited on many platforms. Still,
 	  we can provide a small malloc() pool if needed. Driver model in
 	  particular needs this to operate, so that it can allocate the

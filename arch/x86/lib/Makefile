@@ -50,7 +50,7 @@ obj-$(CONFIG_FSP_VERSION1) += fsp1/
 obj-$(CONFIG_FSP_VERSION2) += fsp2/
 
 ifdef CONFIG_SPL_BUILD
-ifdef CONFIG_TPL_BUILD
+ifneq ($(CONFIG_TPL_BUILD)$(CONFIG_VPL_BUILD),)
 obj-y += tpl.o
 else
 obj-y += spl.o

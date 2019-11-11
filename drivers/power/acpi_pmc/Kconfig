@@ -24,6 +24,15 @@ config TPL_ACPI_PMC
 	  resume, powering off the system and enabling/disabling the reset
 	  mechanism.
 
+config VPL_ACPI_PMC
+	bool "Power Manager (x86 PMC) support in VPL"
+	default y if ACPI_PMC
+	help
+	  Enable support for an x86-style power-management controller which
+	  provides features including checking whether the system started from
+	  resume, powering off the system and enabling/disabling the reset
+	  mechanism.
+
 config ACPI_PMC_SANDBOX
 	bool "Test power manager (PMC) for sandbox"
 	depends on ACPI_PMC && SANDBOX

@@ -10,6 +10,8 @@
 #ifndef _OS_CONFIG_H
 #define _OS_CONFIG_H
 
+#define TODO
+
 #include <configs/chromeos.h>
 
 #include <configs/chromebook_coral.h>

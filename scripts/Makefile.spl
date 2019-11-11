@@ -25,20 +25,32 @@ include $(srctree)/scripts/Kbuild.include
 KBUILD_CPPFLAGS += -DCONFIG_SPL_BUILD
 ifeq ($(CONFIG_TPL_BUILD),y)
 KBUILD_CPPFLAGS += -DCONFIG_TPL_BUILD
+else
+ifeq ($(CONFIG_VPL_BUILD),y)
+KBUILD_CPPFLAGS += -DCONFIG_VPL_BUILD
+endif
 endif
 
+ifeq ($(CONFIG_VPL_BUILD),y)
+SPL_BIN := u-boot-vpl
+else
 ifeq ($(CONFIG_TPL_BUILD),y)
 SPL_BIN := u-boot-tpl
 else
 SPL_BIN := u-boot-spl
 endif
+endif
 
 ifdef CONFIG_SPL_BUILD
 SPL_ := SPL_
+ifeq ($(CONFIG_VPL_BUILD),y)
+SPL_TPL_ := VPL_
+else
 ifeq ($(CONFIG_TPL_BUILD),y)
 SPL_TPL_ := TPL_
 else
 SPL_TPL_ := SPL_
+endif
 endif
 else
 SPL_ :=
@@ -49,6 +61,9 @@ ifeq ($(obj)$(CONFIG_SUPPORT_SPL),spl)
 $(error You cannot build SPL without enabling CONFIG_SUPPORT_SPL)
 endif
 ifeq ($(obj)$(CONFIG_SUPPORT_TPL),tpl)
+$(error You cannot build TPL without enabling CONFIG_SUPPORT_TPL)
+endif
+ifeq ($(obj)$(CONFIG_SUPPORT_VPL),vpl)
 $(error You cannot build TPL without enabling CONFIG_SUPPORT_TPL)
 endif
 
@@ -74,13 +89,10 @@ libs-$(HAVE_VENDOR_COMMON_LIB) += board/$(VENDOR)/common/
 libs-$(CONFIG_SPL_FRAMEWORK) += common/spl/
 libs-y += common/init/
 
-# Special handling for a few options which support SPL/TPL
-ifeq ($(CONFIG_TPL_BUILD),y)
-libs-$(CONFIG_TPL_LIBCOMMON_SUPPORT) += common/ cmd/ env/
-libs-$(CONFIG_TPL_LIBGENERIC_SUPPORT) += lib/
-else
-libs-$(CONFIG_SPL_LIBCOMMON_SUPPORT) += common/ cmd/ env/
-libs-$(CONFIG_SPL_LIBGENERIC_SUPPORT) += lib/
+# Special handling for a few options which support SPL/TPL/VPL
+libs-$(CONFIG_$(SPL_TPL_)LIBCOMMON_SUPPORT) += common/ cmd/ env/
+libs-$(CONFIG_$(SPL_TPL_)LIBGENERIC_SUPPORT) += lib/
+ifeq ($(CONFIG_TPL_BUILD)$(CONFIG_VPL_BUILD),)
 ifdef CONFIG_SPL_FRAMEWORK
 libs-$(CONFIG_PARTITIONS) += disk/
 endif
@@ -150,7 +162,7 @@ LDPPFLAGS += \
 	  sed -ne 's/GNU ld version \([0-9][0-9]*\)\.\([0-9][0-9]*\).*/-DLD_MAJOR=\1 -DLD_MINOR=\2/p')
 
 # Turn various CONFIG symbols into IMAGE symbols for easy reuse of
-# the scripts between SPL and TPL.
+# the scripts between SPL, TPL and VPL.
 ifneq ($(CONFIG_$(SPL_TPL_)MAX_SIZE),)
 LDPPFLAGS += -DIMAGE_MAX_SIZE=$(CONFIG_$(SPL_TPL_)MAX_SIZE)
 endif
@@ -230,12 +242,14 @@ ifeq ($(CONFIG_SYS_SOC),"at91")
 ALL-y	+= $(obj)/boot.bin
 endif
 
+ifndef CONFIG_VPL_BUILD
 ifdef CONFIG_TPL_BUILD
 ALL-$(CONFIG_TPL_X86_16BIT_INIT) += $(obj)/u-boot-x86-start16-tpl.bin \
 	$(obj)/u-boot-x86-reset16-tpl.bin
 else
 ALL-$(CONFIG_SPL_X86_16BIT_INIT) += $(obj)/u-boot-x86-start16-spl.bin \
 	$(obj)/u-boot-x86-reset16-spl.bin
+endif
 endif
 
 ALL-$(CONFIG_ARCH_ZYNQ)		+= $(obj)/boot.bin
@@ -362,7 +376,7 @@ LDFLAGS_$(SPL_BIN) += -T u-boot-spl.lds $(LDFLAGS_FINAL)
 # Avoid 'Not enough room for program headers' error on binutils 2.28 onwards.
 LDFLAGS_$(SPL_BIN) += $(call ld-option, --no-dynamic-linker)
 
-# Pick the best-match (i.e. SPL_TEXT_BASE for SPL, TPL_TEXT_BASE for TPL)
+# Pick the best-match (e.g. SPL_TEXT_BASE for SPL, TPL_TEXT_BASE for TPL)
 ifneq ($(CONFIG_$(SPL_TPL_)TEXT_BASE),)
 LDFLAGS_$(SPL_BIN) += -Ttext $(CONFIG_$(SPL_TPL_)TEXT_BASE)
 endif

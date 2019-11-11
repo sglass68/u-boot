@@ -520,11 +520,9 @@ enum {
 	LONG_TIMEOUT_MS		= 2000,
 };
 
-static int cr50_i2c_probe(struct udevice *dev)
+static int cr50_i2c_ofdata_to_platdata(struct udevice *dev)
 {
 	struct tpm_chip_priv *upriv = dev_get_uclass_priv(dev);
-	struct cr50_priv *priv = dev_get_priv(dev);
-	int ret;
 
 	upriv->version = TPM_V2;
 	upriv->duration_ms[TPM_SHORT] = SHORT_TIMEOUT_MS;
@@ -535,13 +533,23 @@ static int cr50_i2c_probe(struct udevice *dev)
 	upriv->pcr_count = 32;
 	upriv->pcr_select_min = 2;
 
+#if !CONFIG_IS_ENABLED(OF_PLATDATA)
+	struct cr50_priv *priv = dev_get_priv(dev);
+	int ret;
+
 	/* Optional GPIO to track when cr50 is ready */
 	ret = gpio_request_by_name(dev, "ready-gpio", 0, &priv->ready_gpio,
 				   GPIOD_IS_IN);
 	if (ret)
 		debug("Warning: Cr50 does not have a ready-gpio (err=%d)\n",
 		      ret);
+#endif
 
+	return 0;
+}
+
+static int cr50_i2c_probe(struct udevice *dev)
+{
 	return 0;
 }
 
@@ -563,6 +571,7 @@ U_BOOT_DRIVER(cr50_i2c) = {
 	.id     = UCLASS_TPM,
 	.of_match = cr50_i2c_ids,
 	.ops    = &cr50_i2c_ops,
+	.ofdata_to_platdata	= cr50_i2c_ofdata_to_platdata,
 	.probe	= cr50_i2c_probe,
 	.priv_auto_alloc_size = sizeof(struct cr50_priv),
 };

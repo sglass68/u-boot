@@ -31,8 +31,12 @@ static int designware_i2c_pci_probe(struct udevice *dev)
 	struct dw_i2c *priv = dev_get_priv(dev);
 
 	/* Save base address from PCI BAR */
+#if CONFIG_IS_ENABLED(OF_PLATDATA)
+	printf("%s: fix\n", __func__);
+#else
 	priv->regs = (struct i2c_regs *)
 		dm_pci_map_bar(dev, PCI_BASE_ADDRESS_0, PCI_REGION_MEM);
+#endif
 	if (IS_ENABLED(CONFIG_INTEL_BAYTRAIL))
 		/* Use BayTrail specific timing values */
 		priv->scl_sda_cfg = &byt_config;

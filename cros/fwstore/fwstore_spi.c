@@ -176,6 +176,9 @@ static int fwstore_spi_get_sw_write_prot(struct udevice *dev)
 
 int fwstore_spi_probe(struct udevice *dev)
 {
+#if CONFIG_IS_ENABLED(OF_PLATDATA)
+	printf("%s: fix\n", __func__);
+#else
 	struct fwstore_spi_priv *priv = dev_get_priv(dev);
 	struct ofnode_phandle_args args;
 	int ret;
@@ -195,6 +198,7 @@ int fwstore_spi_probe(struct udevice *dev)
 			  dev->name, ofnode_get_name(args.node), ret);
 		return ret;
 	}
+#endif
 
 	return 0;
 }

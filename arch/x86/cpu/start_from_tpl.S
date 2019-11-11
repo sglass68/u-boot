@@ -48,3 +48,8 @@ die:
 	hlt
 	jmp	die
 	hlt
+
+.globl jump_to_spl
+.type jump_to_spl, @function
+jump_to_spl:
+	jmp	*%eax

@@ -7,10 +7,11 @@
 
 / {
 	chromeos-config {
+		compatible = "chromeos-config";
 		u-boot,dm-pre-reloc;
 		/* Kernel start address and size */
 		kernel-addr = <0x01008000 0x2000000>;
-
+		ec-software-sync;
 	};
 
 	chromeos {

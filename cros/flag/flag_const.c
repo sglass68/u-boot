@@ -34,6 +34,11 @@ static int flag_const_ofdata_to_platdata(struct udevice *dev)
 {
 	struct flag_const_priv *priv = dev_get_priv(dev);
 	u32 value;
+
+#if CONFIG_IS_ENABLED(OF_PLATDATA)
+	printf("%s: fix\n", __func__);
+	value = 0;
+#else
 	int ret;
 
 	ret = dev_read_u32(dev, "value", &value);
@@ -41,6 +46,7 @@ static int flag_const_ofdata_to_platdata(struct udevice *dev)
 		log_warning("Missing flag value in '%s'", dev->name);
 		return ret;
 	}
+#endif
 	priv->value = value != 0;
 
 	return 0;

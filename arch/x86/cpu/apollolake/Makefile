@@ -7,12 +7,15 @@ obj-$(CONFIG_SPL_BUILD) += spl.o
 obj-$(CONFIG_SPL_BUILD) += systemagent.o
 
 ifndef CONFIG_TPL_BUILD
+ifndef CONFIG_VPL_BUILD
 obj-y += cpu.o
 obj-y += punit.o
 ifdef CONFIG_SPL_BUILD
 obj-y += fsp_m.o
 endif
 endif
+endif
+
 ifndef CONFIG_SPL_BUILD
 obj-y += fsp_s.o
 endif
