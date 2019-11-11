@@ -120,6 +120,17 @@ intel-me {
 		u-boot-tpl-dtb-with-ucode {
 		};
 #endif
+#ifdef CONFIG_FSP_VERSION2
+		intel-fsp-m {
+			filename = CONFIG_FSP_FILE_M;
+		};
+		intel-fsp-s {
+			filename = CONFIG_FSP_FILE_S;
+		};
+		intel-vbt {
+			filename = CONFIG_FSP_FILE_VBT;
+		};
+#endif
 		spl-rec {
 			type = "u-boot-spl";
 			offset = <(CONFIG_X86_OFFSET_SPL - RO_BASE)>;
