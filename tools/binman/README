@@ -984,6 +984,7 @@ Some ideas:
 - Support for ARM Trusted Firmware (ATF)
 - Detect invalid properties in nodes
 - Sort the fdtmap by offset
+- Allow symbols to be found anywhere in the image
 
 --
 Simon Glass <sjg@chromium.org>

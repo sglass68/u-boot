@@ -26,7 +26,7 @@
 	compatible = "chromeos,flashmap";
 	/* ---- Section: Vital-product data (VPD) ---- */
 	read-only-vpd {
-		offset = <0xff400000>;
+		offset = <0xff800000>;
 		type = "section";
 		label-prefix = "ro-";
 		read-only;
@@ -36,6 +36,8 @@
 			type = "fill";
 			fill-value = [ff];
 		};
+	};
+	fdtmap {
 	};
 	read-only {
 		u-boot,dm-pre-reloc;
@@ -103,7 +105,7 @@ intel-me {
 		boot-rec {
 /*			offset = <(0xffed0000 - RO_BASE)>;*/
 			u-boot,dm-pre-reloc;
-			type = "u-boot-with-ucode-ptr";
+			type = "u-boot";
 			hash {
 				u-boot,dm-pre-reloc;
 				algo = "sha256";

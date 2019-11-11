@@ -290,7 +290,7 @@ class Entry_section(Entry):
                 return entry.GetData()
         source_entry.Raise("Cannot find entry for node '%s'" % node.name)
 
-    def LookupSymbol(self, sym_name, optional, msg):
+    def LookupSymbol(self, sym_name, optional, msg, entries=None):
         """Look up a symbol in an ELF file
 
         Looks up a symbol in an ELF file. Only entry types which come from an
@@ -324,18 +324,20 @@ class Entry_section(Entry):
                              (msg, sym_name))
         entry_name, prop_name = m.groups()
         entry_name = entry_name.replace('_', '-')
-        entry = self._entries.get(entry_name)
+        if not entries:
+            entries = self._entries
+        entry = entries.get(entry_name)
         if not entry:
             if entry_name.endswith('-any'):
                 root = entry_name[:-4]
-                for name in self._entries:
+                for name in entries:
                     if name.startswith(root):
                         rest = name[len(root):]
                         if rest in ['', '-img', '-nodtb']:
-                            entry = self._entries[name]
+                            entry = entries[name]
         if not entry:
             err = ("%s: Entry '%s' not found in list (%s)" %
-                   (msg, entry_name, ','.join(self._entries.keys())))
+                   (msg, entry_name, ','.join(entries.keys())))
             if optional:
                 print('Warning: %s' % err, file=sys.stderr)
                 return None

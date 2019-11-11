@@ -12,7 +12,7 @@
 #ifdef CONFIG_CHROMEOS
 #include "chromeos-x86.dtsi"
 #include "flashmap-x86-ro.dtsi"
-#include "flashmap-16mb-rw.dtsi"
+#include "flashmap-16mb-x86-rw.dtsi"
 #endif
 
 #include <asm/intel_pinctrl_defs.h>
