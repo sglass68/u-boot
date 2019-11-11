@@ -26,7 +26,7 @@
 	compatible = "chromeos,flashmap";
 	/* ---- Section: Vital-product data (VPD) ---- */
 	read-only-vpd {
-		offset = <0xffe00000>;
+		offset = <0xff400000>;
 		type = "section";
 		label-prefix = "ro-";
 		read-only;
@@ -43,6 +43,7 @@
 		label-prefix = "ro-";
 		sort-by-offset;
 		read-only;
+		offset = <0xff000000>;
 #if defined(CONFIG_HAVE_INTEL_ME) || defined(CONFIG_FSP_VERSION2)
 		intel-descriptor {
 			filename = CONFIG_FLASH_DESCRIPTOR_FILE;
@@ -75,7 +76,7 @@ intel-me {
 };
 #endif
 		fmap {
-			offset = <(0xffe10000 - RO_BASE)>;
+			offset = <(0xff200000 - RO_BASE)>;
 			size = <0x800>;
 		};
 		firmware-id {
@@ -100,7 +101,7 @@ intel-me {
 			align = <0x40>;
 		};
 		boot-rec {
-			offset = <(0xffed0000 - RO_BASE)>;
+/*			offset = <(0xffed0000 - RO_BASE)>;*/
 			u-boot,dm-pre-reloc;
 			type = "u-boot-with-ucode-ptr";
 			hash {
@@ -133,7 +134,7 @@ intel-me {
 #endif
 		spl-rec {
 			type = "u-boot-spl";
-			offset = <(CONFIG_X86_OFFSET_SPL - RO_BASE)>;
+/*			offset = <(CONFIG_X86_OFFSET_SPL - RO_BASE)>;*/
 		};
 		u-boot-spl-dtb {
 		};
@@ -153,27 +154,29 @@ intel-me {
 			offset = <(CONFIG_X86_REFCODE_ADDR - RO_BASE)>;
 		};
 #endif
+#ifndef CONFIG_FSP_VERSION2
 #ifdef CONFIG_TPL
 		x86-start16-tpl {
 			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
 		};
 		x86-reset16-tpl {
-			offset = <CONFIG_RESET_VEC_LOC>;
+			offset = <(CONFIG_RESET_VEC_LOC - RO_BASE)>;
 		};
 #elif defined(CONFIG_SPL)
 		x86-start16-spl {
 			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
 		};
 		x86-reset16-spl {
-			offset = <CONFIG_RESET_VEC_LOC>;
+			offset = <(CONFIG_RESET_VEC_LOC - RO_BASE)>;
 		};
 #else
 		x86-start16 {
 			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
 		};
 		x86-reset16 {
-			offset = <CONFIG_RESET_VEC_LOC>;
+			offset = <(CONFIG_RESET_VEC_LOC - RO_BASE)>;
 		};
+#endif
 #endif
 	};
 };
