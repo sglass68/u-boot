@@ -14,6 +14,8 @@
 	};
 };
 
+#define RO_BASE		0xff000000
+
 &chromeos {
 	filename = "image.bin";
 	u-boot,dm-pre-reloc;
@@ -73,7 +75,7 @@ intel-me {
 };
 #endif
 		fmap {
-			offset = <(0xffe10000 - 0xffe10000)>;
+			offset = <(0xffe10000 - RO_BASE)>;
 			size = <0x800>;
 		};
 		firmware-id {
@@ -98,7 +100,7 @@ intel-me {
 			align = <0x40>;
 		};
 		boot-rec {
-			offset = <(0xffed0000 - 0xffe10000)>;
+			offset = <(0xffed0000 - RO_BASE)>;
 			u-boot,dm-pre-reloc;
 			type = "u-boot-with-ucode-ptr";
 			hash {
@@ -113,45 +115,45 @@ intel-me {
 
 #ifdef CONFIG_TPL
 		x86-start16-tpl {
-			offset = <(CONFIG_SYS_X86_START16 - 0xffe10000)>;
+			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
 		};
 #elif defined(CONFIG_SPL)
 		x86-start16-spl {
-			offset = <(CONFIG_SYS_X86_START16 - 0xffe10000)>;
+			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
 		};
 #else
 		x86-start16 {
-			offset = <(CONFIG_SYS_X86_START16 - 0xffe10000)>;
+			offset = <(CONFIG_SYS_X86_START16 - RO_BASE)>;
 		};
 #endif
 
 #ifdef CONFIG_HAVE_MICROCODE
 		u-boot-tpl-with-ucode-ptr {
-			offset = <(CONFIG_TPL_TEXT_BASE - 0xffe10000)>;
+			offset = <(CONFIG_TPL_TEXT_BASE - RO_BASE)>;
 		};
 		u-boot-tpl-dtb-with-ucode {
 		};
 #endif
 		spl-rec {
 			type = "u-boot-spl";
-			offset = <(CONFIG_SPL_TEXT_BASE - 0xffe10000)>;
+			offset = <(CONFIG_X86_OFFSET_SPL - RO_BASE)>;
 		};
 		u-boot-spl-dtb {
 		};
 #ifdef CONFIG_HAVE_MRC
 		intel-mrc {
-			offset = <(CONFIG_X86_MRC_ADDR - 0xffe10000)>;
+			offset = <(CONFIG_X86_MRC_ADDR - RO_BASE)>;
 		};
 #endif
 #ifdef CONFIG_HAVE_VGA_BIOS
 		intel-vga {
 			filename = CONFIG_VGA_BIOS_FILE;
-			offset = <(CONFIG_VGA_BIOS_ADDR - 0xffe10000)>;
+			offset = <(CONFIG_VGA_BIOS_ADDR - RO_BASE)>;
 		};
 #endif
 #ifdef CONFIG_HAVE_REFCODE
 		intel-refcode {
-			offset = <(CONFIG_X86_REFCODE_ADDR - 0xffe10000)>;
+			offset = <(CONFIG_X86_REFCODE_ADDR - RO_BASE)>;
 		};
 #endif
 	};
