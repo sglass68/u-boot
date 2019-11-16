@@ -60,6 +60,7 @@ static int bloblist_addrec(uint tag, int size, struct bloblist_rec **recp)
 
 	new_alloced = hdr->alloced + sizeof(*rec) +
 			ALIGN(size, BLOBLIST_ALIGN);
+	printf("new_alloced=%x, hdr->size=%x\n", new_alloced, hdr->size);
 	if (new_alloced >= hdr->size) {
 		log(LOGC_BLOBLIST, LOGL_ERR,
 		    "Failed to allocate %x bytes size=%x, need size>=%x\n",

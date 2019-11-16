@@ -249,7 +249,11 @@ static int cros_load_image_vpl(struct spl_image_info *spl_image,
 		return ret;
 	vboot->spl_image = spl_image;
 
-	return vboot_run_auto(vboot, 0);
+	ret = vboot_run_auto(vboot, 0);
+	if (ret)
+		printf("VPL error %d\n", ret);
+
+	return 0;
 }
 SPL_LOAD_IMAGE_METHOD("chromium_vboot_vpl", 0, BOOT_DEVICE_CROS_VBOOT,
 		      cros_load_image_vpl);

@@ -682,6 +682,15 @@ config TPL_LOG
 	  discarded if not needed. Logging supports various categories and
 	  levels of severity.
 
+config VPL_LOG
+	bool "Enable logging support in VPL"
+	depends on LOG
+	help
+	  This enables support for logging of status and debug messages. These
+	  can be displayed on the console, recorded in a memory buffer, or
+	  discarded if not needed. Logging supports various categories and
+	  levels of severity.
+
 config LOG_MAX_LEVEL
 	int "Maximum log level to record"
 	depends on LOG
@@ -742,6 +751,26 @@ config TPL_LOG_MAX_LEVEL
 	    8 - debug content
 	    9 - debug hardware I/O
 
+config VPL_LOG_MAX_LEVEL
+	int "Maximum log level to record in VPL"
+	depends on VPL_LOG
+	default 3
+	help
+	  This selects the maximum log level that will be recorded. Any value
+	  higher than this will be ignored. If possible log statements below
+	  this level will be discarded at build time. Levels:
+
+	    0 - emergency
+	    1 - alert
+	    2 - critical
+	    3 - error
+	    4 - warning
+	    5 - note
+	    6 - info
+	    7 - debug
+	    8 - debug content
+	    9 - debug hardware I/O
+
 config LOG_DEFAULT_LEVEL
 	int "Default logging level to display"
 	default 6
@@ -785,6 +814,16 @@ config SPL_LOG_CONSOLE
 config TPL_LOG_CONSOLE
 	bool "Allow log output to the console in TPL"
 	depends on TPL_LOG
+	default y
+	help
+	  Enables a log driver which writes log records to the console.
+	  Generally the console is the serial port or LCD display. Only the
+	  log message is shown - other details like level, category, file and
+	  line number are omitted.
+
+config VPL_LOG_CONSOLE
+	bool "Allow log output to the console in VPL"
+	depends on VPL_LOG
 	default y
 	help
 	  Enables a log driver which writes log records to the console.
