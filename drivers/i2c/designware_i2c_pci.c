@@ -48,8 +48,15 @@ static int designware_i2c_pci_ofdata_to_platdata(struct udevice *dev)
 		dm_pci_write_config32(dev, PCI_COMMAND, PCI_COMMAND_MEMORY |
 				      PCI_COMMAND_MASTER);
 	}
-	priv->regs = (struct i2c_regs *)
-		dm_pci_map_bar(dev, PCI_BASE_ADDRESS_0, PCI_REGION_MEM);
+
+	if (!CONFIG_IS_ENABLED(OF_TRANSLATE)) {
+		priv->regs = (struct i2c_regs *)
+			dm_pci_read_bar32(dev, 0);
+	} else {
+		priv->regs = (struct i2c_regs *)
+			dm_pci_map_bar(dev, PCI_BASE_ADDRESS_0, PCI_REGION_MEM);
+	}
+	printf("regs=%p\n", priv->regs);
 
 	/* Save base address from PCI BAR */
 	if (IS_ENABLED(CONFIG_INTEL_BAYTRAIL))
@@ -71,7 +78,6 @@ static int designware_i2c_pci_probe(struct udevice *dev)
 
 static int designware_i2c_pci_bind(struct udevice *dev)
 {
-	static int num_cards;
 	char name[20];
 
 	/*
@@ -82,9 +88,13 @@ static int designware_i2c_pci_bind(struct udevice *dev)
 	 * using this driver is impossible for PCIe I2C devices.
 	 * This can be removed, once a better (correct) way for this
 	 * is found and implemented.
+	 *
+	 * TODO(sjg@chromium.org): Perhaps if uclasses had platdata this would
+	 * be possible. We cannot use static data in drivers since they may be
+	 * used in SPL or before relocation.
 	 */
-	dev->req_seq = num_cards;
-	sprintf(name, "i2c_designware#%u", num_cards++);
+	dev->req_seq = gd->arch.dw_i2c_num_cards++;
+	sprintf(name, "i2c_designware#%u", dev->req_seq);
 	device_set_name(dev, name);
 
 	return 0;
