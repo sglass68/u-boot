@@ -250,37 +250,6 @@ config P2SB
 	  Peripheral Channel Register? (PCR) API is provided to access those
 	  devices - see pcr_readl(), etc.
 
-config SPL_P2SB
-	bool "Intel Primary-to-Sideband Bus in SPL"
-	depends on SPL && (X86 || SANDBOX)
-	help
-	  The Primary-to-Sideband bus is used to access various peripherals
-	  through memory-mapped I/O in a large chunk of PCI space. The space is
-	  segmented into different channels and peripherals are accessed by
-	  device-specific means within those channels. Devices should be added
-	  in the device tree as subnodes of the p2sb.
-
-config TPL_P2SB
-	bool "Intel Primary-to-Sideband Bus in TPL"
-	depends on TPL && (X86 || SANDBOX)
-	help
-	  The Primary-to-Sideband bus is used to access various peripherals
-	  through memory-mapped I/O in a large chunk of PCI space. The space is
-	  segmented into different channels and peripherals are accessed by
-	  device-specific means within those channels. Devices should be added
-	  in the device tree as subnodes of the p2sb.
-
-config VPL_P2SB
-	bool "Intel Primary-to-Sideband Bus in VPL"
-	depends on VPL && (X86 || SANDBOX)
-	default y if TPL_P2SB
-	help
-	  The Primary-to-Sideband bus is used to access various peripherals
-	  through memory-mapped I/O in a large chunk of PCI space. The space is
-	  segmented into different channels and peripherals are accessed by
-	  device-specific means within those channels. Devices should be added
-	  in the device tree as subnodes of the p2sb.
-
 config PWRSEQ
 	bool "Enable power-sequencing drivers"
 	depends on DM

@@ -3,6 +3,7 @@
  * Copyright (c) 2014 Google, Inc
  * Written by Simon Glass <sjg@chromium.org>
  */
+#define DEBUG
 
 #include <common.h>
 #include <dm.h>
@@ -1220,17 +1221,22 @@ static int _dm_pci_bus_to_phys(struct udevice *ctlr,
 	for (i = 0; i < hose->region_count; i++) {
 		res = &hose->regions[i];
 
+		printf("%d: type\n", i);
 		if (((res->flags ^ flags) & PCI_REGION_TYPE) != 0)
 			continue;
 
+		printf("%d: mask\n", i);
 		if (res->flags & skip_mask)
 			continue;
 
+		printf("%d: addr %x, start %x, size %x\n", i,
+			bus_addr, res->bus_start, res->size);
 		if (bus_addr >= res->bus_start &&
 		    (bus_addr - res->bus_start) < res->size) {
 			*pa = (bus_addr - res->bus_start + res->phys_start);
 			return 0;
 		}
+		printf("%d: bad\n", i);
 	}
 
 	return 1;

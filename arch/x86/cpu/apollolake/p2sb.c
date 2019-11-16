@@ -110,7 +110,8 @@ int apl_p2sb_ofdata_to_platdata(struct udevice *dev)
 	} else {
 		plat->mmio_base = dev_read_addr_pci(dev);
 		/* Don't set BDF since it should not be used */
-		if (plat->mmio_base == FDT_ADDR_T_NONE)
+		printf("p2sb mmio_base %x\n", plat->mmio_base);
+		if (!plat->mmio_base || plat->mmio_base == FDT_ADDR_T_NONE)
 			return -EINVAL;
 	}
 #else

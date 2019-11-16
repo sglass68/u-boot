@@ -486,6 +486,7 @@ static int cr50_i2c_open(struct udevice *dev)
 	ret = request_locality(dev, 0);
 	if (ret)
 		return ret;
+i2c speed?
 
 	/* Read four bytes from DID_VID register */
 	ret = cr50_i2c_read(dev, tpm_did_vid(0), (u8 *)&vendor, 4);

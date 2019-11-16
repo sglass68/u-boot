@@ -202,6 +202,7 @@ fdt_addr_t devfdt_get_addr_pci(struct udevice *dev)
 		u32 bar;
 		int ret;
 
+		printf("- try\n");
 		ret = ofnode_read_pci_addr(dev_ofnode(dev), FDT_PCI_SPACE_MEM32,
 					   "reg", &pci_addr);
 		if (ret) {
