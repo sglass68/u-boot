@@ -77,6 +77,8 @@ intel-me {
 	filename = CONFIG_INTEL_ME_FILE;
 };
 #endif
+		u-boot-vpl {
+		};
 		fmap {
 			offset = <(0xff200000 - RO_BASE)>;
 			size = <0x800>;

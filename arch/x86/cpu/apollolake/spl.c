@@ -22,6 +22,8 @@
  */
 #define SAFETY_MARGIN	0x4000
 
+binman_sym_declare(ulong, u_boot_vpl, image_pos);
+binman_sym_declare(ulong, u_boot_vpl, size);
 binman_sym_declare(ulong, u_boot_spl, image_pos);
 binman_sym_declare(ulong, u_boot_spl, size);
 /* U-Boot image_pos is declared by common/spl/spl.c */
@@ -29,6 +31,9 @@ binman_sym_declare(ulong, u_boot_any, size);
 
 static ulong get_image_pos(void)
 {
+	if (IS_ENABLED(CONFIG_CHROMEOS))
+		return binman_sym(ulong, u_boot_vpl, image_pos);
+
 	return spl_phase() == PHASE_TPL ?
 		binman_sym(ulong, u_boot_spl, image_pos) :
 		binman_sym(ulong, u_boot_any, image_pos);
@@ -36,6 +41,9 @@ static ulong get_image_pos(void)
 
 static ulong get_image_size(void)
 {
+	if (IS_ENABLED(CONFIG_CHROMEOS))
+		return binman_sym(ulong, u_boot_vpl, size);
+
 	return spl_phase() == PHASE_TPL ?
 		binman_sym(ulong, u_boot_spl, size) :
 		binman_sym(ulong, u_boot_any, size);
@@ -54,8 +62,11 @@ static int rom_load_image(struct spl_image_info *spl_image,
 	int ret;
 
 	spl_image->size = CONFIG_SYS_MONITOR_LEN;  /* We don't know SPL size */
-	spl_image->entry_point = spl_phase() == PHASE_TPL ?
-		CONFIG_SPL_TEXT_BASE : CONFIG_SYS_TEXT_BASE;
+	if (IS_ENABLED(CONFIG_CHROMEOS))
+		spl_image->entry_point = CONFIG_VPL_TEXT_BASE;
+	else
+		spl_image->entry_point = spl_phase() == PHASE_TPL ?
+			CONFIG_SPL_TEXT_BASE : CONFIG_SYS_TEXT_BASE;
 	spl_image->load_addr = spl_image->entry_point;
 	spl_image->os = IH_OS_U_BOOT;
 	spl_image->name = "U-Boot";
