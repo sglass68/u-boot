@@ -229,7 +229,7 @@
 		};
 
 		i2c_2: i2c2@16,2 {
-			compatible = "snps,designware-i2c-pci";
+			compatible = "intel,apl-i2c", "snps,designware-i2c-pci";
 			reg = <0x0200b210 0 0 0 0>;
 			early-regs = <IOMAP_I2C2_BASE 0x1000>;
 			u-boot,dm-pre-reloc;
@@ -240,6 +240,7 @@
 				reg = <0x50>;
 				compatible = "google,cr50";
 				u-boot,i2c-offset-len = <0>;
+				ready-gpio = <&gpio GPIO_28 GPIO_ACTIVE_LOW>;
 			};
 		};
 

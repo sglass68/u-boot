@@ -36,7 +36,6 @@ static int designware_i2c_pci_ofdata_to_platdata(struct udevice *dev)
 		u32 base;
 		int ret;
 
-		printf("VPL: i2c setup\n");
 		ret = dev_read_u32(dev, "early-regs", &base);
 		if (ret)
 			return log_msg_ret("early-regs", ret);
@@ -56,7 +55,6 @@ static int designware_i2c_pci_ofdata_to_platdata(struct udevice *dev)
 		priv->regs = (struct i2c_regs *)
 			dm_pci_map_bar(dev, PCI_BASE_ADDRESS_0, PCI_REGION_MEM);
 	}
-	printf("regs=%p\n", priv->regs);
 
 	/* Save base address from PCI BAR */
 	if (IS_ENABLED(CONFIG_INTEL_BAYTRAIL))
@@ -71,10 +69,10 @@ static int designware_i2c_pci_probe(struct udevice *dev)
 	struct dw_i2c *priv = dev_get_priv(dev);
 
 	if (dev_get_driver_data(dev) == INTEL_APL) {
-		lpss_reset_release(priv->regs);
-
 		/* Ensure controller is in D0 state */
 		lpss_set_power_state(dev, STATE_D0);
+
+		lpss_reset_release(priv->regs);
 	}
 
 	return designware_i2c_probe(dev);
@@ -98,7 +96,6 @@ static int designware_i2c_pci_bind(struct udevice *dev)
 	 * used in SPL or before relocation.
 	 */
 	dev->req_seq = gd->arch.dw_i2c_num_cards++;
-	sprintf(name, "i2c_designware#%u", dev->req_seq);
 	device_set_name(dev, name);
 
 	return 0;
@@ -106,6 +103,7 @@ static int designware_i2c_pci_bind(struct udevice *dev)
 
 static const struct udevice_id designware_i2c_pci_ids[] = {
 	{ .compatible = "snps,designware-i2c-pci" },
+	{ .compatible = "intel,apl-i2c", INTEL_APL },
 	{ }
 };
 
