@@ -26,20 +26,42 @@ static struct dw_scl_sda_cfg byt_config = {
 /* Have a weak function for now - possibly should be a new uclass */
 __weak void lpss_reset_release(void *regs);
 
-static int designware_i2c_pci_probe(struct udevice *dev)
+static int designware_i2c_pci_ofdata_to_platdata(struct udevice *dev)
 {
 	struct dw_i2c *priv = dev_get_priv(dev);
 
-	/* Save base address from PCI BAR */
 #if CONFIG_IS_ENABLED(OF_PLATDATA)
-	printf("%s: fix\n", __func__);
+	const struct dtd_snps_designware_i2c_pci *dtplat;
+	pci_dev_t bdf;
+	ulong base;
+
+	dtplat = dev_get_platdata(dev);
+	bdf = pci_ofplat_get_devfn(dtplat->reg[0]);
+	base = dtplat->early_regs[0];
+
+	/* Set i2c base address */
+	pci_x86_write_config(bdf, PCI_BASE_ADDRESS_0, base, PCI_SIZE_32);
+
+	/* Enable memory access and bus master */
+	pci_x86_write_config(bdf, PCI_COMMAND, PCI_COMMAND_MEMORY |
+			     PCI_COMMAND_MASTER, PCI_SIZE_32);
+	priv->regs = (struct i2c_regs *)base;
 #else
 	priv->regs = (struct i2c_regs *)
 		dm_pci_map_bar(dev, PCI_BASE_ADDRESS_0, PCI_REGION_MEM);
 #endif
+
+	/* Save base address from PCI BAR */
 	if (IS_ENABLED(CONFIG_INTEL_BAYTRAIL))
 		/* Use BayTrail specific timing values */
 		priv->scl_sda_cfg = &byt_config;
+
+	return 0;
+}
+
+static int designware_i2c_pci_probe(struct udevice *dev)
+{
+	struct dw_i2c *priv = dev_get_priv(dev);
 
 	if (dev_get_driver_data(dev) == INTEL_APL)
 		lpss_reset_release(priv->regs);
@@ -78,6 +100,7 @@ U_BOOT_DRIVER(i2c_designware_pci) = {
 	.id	= UCLASS_I2C,
 	.of_match = designware_i2c_pci_ids,
 	.bind	= designware_i2c_pci_bind,
+	.ofdata_to_platdata	= designware_i2c_pci_ofdata_to_platdata,
 	.probe	= designware_i2c_pci_probe,
 	.priv_auto_alloc_size = sizeof(struct dw_i2c),
 	.remove = designware_i2c_remove,

@@ -181,13 +181,13 @@ fefc000		 Top of CAR region
 fef96000	Stack for FSP-M
 fef40000 59000	FSP-M
 fef40000	VPL loaded here
-fef10000	SPL loaded here
+fef11000	SPL loaded here
+fef10000	CONFIG_BLOBLIST_ADDR
 fef10000	Stack top in TPL, SPL and U-Boot before relocation
 fef00000  1000	CONFIG_BOOTSTAGE_STASH_ADDR
 fef00000	Base of CAR region
 
    f0000	CONFIG_ROM_TABLE_ADDR
-  100000	CONFIG_BLOBLIST_ADDR
   120000	BSS (defined in u-boot-spl.lds)
   200000	FSP-S (which is run after U-Boot is relocated)
  1110000	CONFIG_SYS_TEXT_BASE

@@ -54,7 +54,6 @@ int vboot_ver_init(struct vboot_info *vboot)
 	blob = bloblist_add(BLOBLISTT_VBOOT_CTX, sizeof(struct vboot_blob));
 	if (!blob)
 		return log_msg_ret("Cannot set up vboot context", -ENOSPC);
-	printf("blob set up\n");
 
 	bootstage_mark(BOOTSTAGE_VBOOT_START);
 

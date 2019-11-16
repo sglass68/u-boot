@@ -215,6 +215,10 @@ static int arch_cpu_init_tpl(void)
 	if (ret)
 		return log_msg_ret("lpc", ret);
 
+	ret = uclass_first_device_err(UCLASS_I2C, &lpc);
+	if (ret)
+		return log_msg_ret("lpc", ret);
+
 	early_ec_init();
 
 	return 0;

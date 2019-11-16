@@ -679,11 +679,10 @@ int i2c_uclass_init(struct uclass *class)
 		return -ENOMEM;
 
 	/* Get the last allocated alias. */
-#if CONFIG_IS_ENABLED(OF_CONTROL) && !CONFIG_IS_ENABLED(OF_PLATDATA)
-	priv->max_id = dev_read_alias_highest_id("i2c");
-#else
-	priv->max_id = -1;
-#endif
+	if (CONFIG_IS_ENABLED(OF_CONTROL) && !CONFIG_IS_ENABLED(OF_PLATDATA))
+		priv->max_id = dev_read_alias_highest_id("i2c");
+	else
+		priv->max_id = -1;
 
 	debug("%s: highest alias id is %d\n", __func__, priv->max_id);
 

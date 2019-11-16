@@ -231,9 +231,12 @@
 		i2c_2: i2c2@16,2 {
 			compatible = "snps,designware-i2c-pci";
 			reg = <0x0200b210 0 0 0 0>;
+			early-regs = <IOMAP_I2C2_BASE 0x1000>;
+			u-boot,dm-pre-reloc;
 			#address-cells = <1>;
 			#size-cells = <0>;
 			tpm@50 {
+				u-boot,dm-pre-reloc;
 				reg = <0x50>;
 				compatible = "google,cr50";
 				u-boot,i2c-offset-len = <0>;

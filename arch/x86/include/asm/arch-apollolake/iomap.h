@@ -16,6 +16,8 @@
 #define IOMAP_P2SB_BAR		0xd0000000
 
 #define IOMAP_SPI_BASE		0xfe010000
+#define IOMAP_I2C2_BASE		(0xfe020000 + 2 * 0x1000)
+
 /*
  * Use UART2. To use UART1 you need to set '2' to '1', change device tree serial
  * node name and 'reg' property, and update CONFIG_DEBUG_UART_BASE.
