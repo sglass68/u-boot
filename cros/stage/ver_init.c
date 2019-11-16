@@ -73,6 +73,7 @@ int vboot_ver_init(struct vboot_info *vboot)
 	ret = uclass_first_device_err(UCLASS_TPM, &vboot->tpm);
 	if (ret)
 		return log_msg_ret("Cannot find TPM", ret);
+	printf("tpm=%s\n", vboot->tpm->name);
 	ret = cros_tpm_setup(vboot);
 	if (ret) {
 		log_err("TPM setup failed (err=%x)\n", ret);
@@ -129,7 +130,8 @@ int vboot_ver_init(struct vboot_info *vboot)
 	ret = cros_nvdata_read_walk(CROS_NV_SECDATA, ctx->secdata,
 				    sizeof(ctx->secdata));
 	if (ret == -ENOENT)
-		ret = cros_tpm_factory_initialise(vboot);
+		printf("SKIP factory init\n");
+// 		ret = cros_tpm_factory_initialise(vboot);
 	else if (ret)
 		return log_msg_ret("Cannot read secdata", ret);
 

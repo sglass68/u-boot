@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0
+// // SPDX-License-Identifier: GPL-2.0
 /*
  * Copyright (C) 2017 Intel Corp.
  * Copyright 2019 Google LLC
@@ -27,6 +27,7 @@
 #include <asm/arch/gpio.h>
 #include <asm/arch/itss.h>
 #include <dm/device-internal.h>
+#include <dt-bindings/gpio/gpio.h>
 
 #define GPIO_DW_SIZE(x)			(sizeof(u32) * (x))
 #define PAD_CFG_OFFSET(x, dw_num)	((x) + GPIO_DW_SIZE(dw_num))
@@ -153,6 +154,24 @@ static int pinctrl_get_device(uint pad, struct udevice **devp)
 	printf("pad %d not found\n", pad);
 
 	return -ENOTBLK;
+}
+
+int intel_pinctrl_get_pad(uint pad, struct udevice **devp, uint *offsetp)
+{
+	const struct pad_community *comm;
+	struct intel_pinctrl_priv *priv;
+	struct udevice *dev;
+	int ret;
+
+	ret = pinctrl_get_device(pad, &dev);
+	if (ret)
+		return log_msg_ret("pad", ret);
+	priv = dev_get_priv(dev);
+	comm = priv->comm;
+	*devp = dev;
+	*offsetp = relative_pad_in_comm(comm, pad);
+
+	return 0;
 }
 
 static int pinctrl_configure_owner(struct udevice *dev,
@@ -373,13 +392,13 @@ static int pinctrl_configure_pad(struct udevice *dev,
 }
 
 /**
- * get_config_reg_addr() - Get the address of the pin config registers
+ * intel_pinctrl_get_config_reg_addr() - Get address of the pin config registers
  *
  * @dev: Pinctrl device
  * @offset: GPIO offset within this device
  * @return register offset within the GPIO p2sb region
  */
-static u32 get_config_reg_addr(struct udevice *dev, uint offset)
+u32 intel_pinctrl_get_config_reg_addr(struct udevice *dev, uint offset)
 {
 	struct intel_pinctrl_priv *priv = dev_get_priv(dev);
 	const struct pad_community *comm = priv->comm;
@@ -393,83 +412,17 @@ static u32 get_config_reg_addr(struct udevice *dev, uint offset)
 }
 
 /**
- * get_config_reg() - Get the value of a GPIO register
+ * intel_pinctrl_get_config_reg() - Get the value of a GPIO register
  *
  * @dev: Pinctrl device
  * @offset: GPIO offset within this device
  * @return register value within the GPIO p2sb region
  */
-static u32 get_config_reg(struct udevice *dev, uint offset)
+u32 intel_pinctrl_get_config_reg(struct udevice *dev, uint offset)
 {
-	uint config_offset = get_config_reg_addr(dev, offset);
+	uint config_offset = intel_pinctrl_get_config_reg_addr(dev, offset);
 
 	return pcr_read32(dev, config_offset);
-}
-
-static int intel_gpio_direction_input(struct udevice *dev, uint offset)
-{
-	struct udevice *pinctrl = dev_get_parent(dev);
-	uint config_offset = get_config_reg_addr(pinctrl, offset);
-
-	pcr_clrsetbits32(dev, config_offset,
-			 PAD_CFG0_MODE_MASK | PAD_CFG0_TX_STATE |
-				  PAD_CFG0_RX_DISABLE,
-			 PAD_CFG0_MODE_GPIO | PAD_CFG0_TX_DISABLE);
-
-	return 0;
-}
-
-static int intel_gpio_direction_output(struct udevice *dev, uint offset,
-				       int value)
-{
-	struct udevice *pinctrl = dev_get_parent(dev);
-	uint config_offset = get_config_reg_addr(pinctrl, offset);
-
-	pcr_clrsetbits32(dev, config_offset,
-			 PAD_CFG0_MODE_MASK | PAD_CFG0_RX_STATE |
-				  PAD_CFG0_TX_DISABLE,
-			 PAD_CFG0_MODE_GPIO | PAD_CFG0_RX_DISABLE |
-				  (value ? PAD_CFG0_TX_STATE : 0));
-
-	return 0;
-}
-
-static int intel_gpio_get_function(struct udevice *dev, uint offset)
-{
-	struct udevice *pinctrl = dev_get_parent(dev);
-	uint mode, rx_tx;
-	u32 reg;
-
-	reg = get_config_reg(pinctrl, offset);
-	mode = (reg & PAD_CFG0_MODE_MASK) >> PAD_CFG0_MODE_SHIFT;
-	if (!mode) {
-		rx_tx = reg & (PAD_CFG0_TX_DISABLE | PAD_CFG0_RX_DISABLE);
-		if (rx_tx == PAD_CFG0_TX_DISABLE)
-			return GPIOF_INPUT;
-		else if (rx_tx == PAD_CFG0_RX_DISABLE)
-			return GPIOF_OUTPUT;
-	}
-
-	return GPIOF_FUNC;
-}
-
-static int intel_gpio_get_value(struct udevice *dev, uint offset)
-{
-	struct udevice *pinctrl = dev_get_parent(dev);
-	uint mode, rx_tx;
-	u32 reg;
-
-	reg = get_config_reg(pinctrl, offset);
-	mode = (reg & PAD_CFG0_MODE_MASK) >> PAD_CFG0_MODE_SHIFT;
-	if (!mode) {
-		rx_tx = reg & (PAD_CFG0_TX_DISABLE | PAD_CFG0_RX_DISABLE);
-		if (rx_tx == PAD_CFG0_TX_DISABLE)
-			return mode & PAD_CFG0_RX_STATE_BIT ? 1 : 0;
-		else if (rx_tx == PAD_CFG0_RX_DISABLE)
-			return mode & PAD_CFG0_TX_STATE_BIT ? 1 : 0;
-	}
-
-	return 0;
 }
 
 int pinctrl_route_gpe(struct udevice *itss, uint gpe0b, uint gpe0c, uint gpe0d)
@@ -648,7 +601,6 @@ int intel_pinctrl_ofdata_to_platdata(struct udevice *dev,
 {
 	struct p2sb_child_platdata *pplat = dev_get_parent_platdata(dev);
 	struct intel_pinctrl_priv *priv = dev_get_priv(dev);
-	struct udevice *gpio;
 	int ret;
 
 	if (!comm) {
@@ -660,19 +612,6 @@ int intel_pinctrl_ofdata_to_platdata(struct udevice *dev,
 		return log_msg_ret("Cannot find ITSS", ret);
 	priv->comm = comm;
 	priv->num_cfgs = num_cfgs;
-
-	/*
-	 * This should be bound in the pinctrl driver's bind() method, but that
-	 * is not possible since we don't have the community info yet. See
-	 * for example apl_pinctrl_ofdata_to_platdata().
-	 */
-	device_find_first_child(dev, &gpio);
-	if (!gpio) {
-		ret = device_bind(dev, DM_GET_DRIVER(intel_gpio), "gpio", NULL,
-				  -1, &gpio);
-		if (ret)
-			return log_msg_ret("GPIO bind", ret);
-	}
 
 	return 0;
 }
@@ -687,30 +626,4 @@ int intel_pinctrl_probe(struct udevice *dev)
 }
 
 const struct pinctrl_ops intel_pinctrl_ops = {
-};
-
-static int intel_gpio_probe(struct udevice *dev)
-{
-	struct gpio_dev_priv *upriv = dev_get_uclass_priv(dev);
-	struct intel_pinctrl_priv *pinctrl_priv = dev_get_priv(dev->parent);
-	const struct pad_community *comm = pinctrl_priv->comm;
-
-	upriv->gpio_count = comm->last_pad - comm->first_pad + 1;
-	upriv->bank_name = dev->name;
-
-	return 0;
-}
-
-const struct dm_gpio_ops intel_gpio_ops = {
-	.get_function	= intel_gpio_get_function,
-	.get_value	= intel_gpio_get_value,
-	.direction_input = intel_gpio_direction_input,
-	.direction_output = intel_gpio_direction_output,
-};
-
-U_BOOT_DRIVER(intel_gpio) = {
-	.name = "intel_gpio",
-	.id = UCLASS_GPIO,
-	.probe = intel_gpio_probe,
-	.ops = &intel_gpio_ops,
 };

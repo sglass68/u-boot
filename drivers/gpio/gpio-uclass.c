@@ -2,6 +2,7 @@
 /*
  * Copyright (c) 2013 Google, Inc
  */
+#define DEBUG
 
 #include <common.h>
 #include <dm.h>
@@ -820,17 +821,20 @@ static int gpio_request_tail(int ret, const char *nodename,
 		}
 	}
 	ret = gpio_find_and_xlate(desc, args);
+	printf("xlate ret=%d\n", ret);
 	if (ret) {
 		debug("%s: gpio_find_and_xlate failed\n", __func__);
 		goto err;
 	}
 	ret = dm_gpio_requestf(desc, add_index ? "%s.%s%d" : "%s.%s",
 			       nodename, list_name, index);
+	printf("req ret=%d\n", ret);
 	if (ret) {
 		debug("%s: dm_gpio_requestf failed\n", __func__);
 		goto err;
 	}
 	ret = dm_gpio_set_dir_flags(desc, flags | desc->flags);
+	printf("dir ret=%d\n", ret);
 	if (ret) {
 		debug("%s: dm_gpio_set_dir failed\n", __func__);
 		goto err;

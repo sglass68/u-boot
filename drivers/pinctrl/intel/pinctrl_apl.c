@@ -183,6 +183,9 @@ U_BOOT_DRIVER(apl_pinctrl_drv) = {
 	.of_match	= apl_gpio_ids,
 	.probe		= intel_pinctrl_probe,
 	.ops		= &intel_pinctrl_ops,
+#if !CONFIG_IS_ENABLED(OF_PLATDATA)
+	.bind		= dm_scan_fdt_dev,
+#endif
 	.ofdata_to_platdata = apl_pinctrl_ofdata_to_platdata,
 	.priv_auto_alloc_size = sizeof(struct intel_pinctrl_priv),
 	.platdata_auto_alloc_size = sizeof(struct apl_gpio_platdata),

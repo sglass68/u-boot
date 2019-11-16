@@ -261,4 +261,10 @@ int pinctrl_read_pads(struct udevice *dev, ofnode node, const char *prop,
  */
 int pinctrl_count_pads(struct udevice *dev, u32 *pads, int size);
 
+u32 intel_pinctrl_get_config_reg_addr(struct udevice *dev, uint offset);
+
+u32 intel_pinctrl_get_config_reg(struct udevice *dev, uint offset);
+
+int intel_pinctrl_get_pad(uint pad, struct udevice **devp, uint *offsetp);
+
 #endif

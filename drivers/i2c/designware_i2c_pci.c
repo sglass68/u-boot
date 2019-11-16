@@ -96,6 +96,7 @@ static int designware_i2c_pci_bind(struct udevice *dev)
 	 * used in SPL or before relocation.
 	 */
 	dev->req_seq = gd->arch.dw_i2c_num_cards++;
+	sprintf(name, "i2c_designware#%u", dev->req_seq);
 	device_set_name(dev, name);
 
 	return 0;

@@ -538,8 +538,10 @@ static int cr50_i2c_ofdata_to_platdata(struct udevice *dev)
 	int ret;
 
 	/* Optional GPIO to track when cr50 is ready */
+	printf("req\n");
 	ret = gpio_request_by_name(dev, "ready-gpio", 0, &priv->ready_gpio,
 				   GPIOD_IS_IN);
+	printf("ret = %d\n", ret);
 	if (ret)
 		debug("Warning: Cr50 does not have a ready-gpio (err=%d)\n",
 		      ret);

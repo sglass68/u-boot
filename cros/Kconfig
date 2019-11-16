@@ -126,6 +126,7 @@ config VPL_CHROMEOS
 	imply VPL_NVDATA_TPM
 # 	imply VPL_FWSTORE_SPI_FLASH
 	imply VPL_I2C_SUPPORT
+	imply VPL_PINCTRL
 
 config CROS_FULL
 	bool "Build full Chromium OS support"

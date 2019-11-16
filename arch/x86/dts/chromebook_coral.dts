@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 */
 /dts-v1/;
 
+#include <dt-bindings/gpio/gpio.h>
 #include <dt-bindings/gpio/x86-gpio.h>
 
 /include/ "skeleton.dtsi"
@@ -121,27 +122,36 @@
 			compatible = "intel,apl-p2sb";
 			early-regs = <IOMAP_P2SB_BAR 0x100000>;
 
-			gpio_n: n {
+			n {
 				compatible = "intel,apl-pinctrl";
+				u-boot,dm-pre-reloc;
 				intel,p2sb-port-id = <PID_GPIO_N>;
+				gpio_n: gpio-n {
+					compatible = "intel,apl-gpio";
+					u-boot,dm-pre-reloc;
+					#gpio-cells = <2>;
+				};
 			};
 
 			nw {
 				u-boot,dm-pre-reloc;
 				compatible = "intel,apl-pinctrl";
 				intel,p2sb-port-id = <PID_GPIO_NW>;
+				#gpio-cells = <2>;
 			};
 
 			w {
 				u-boot,dm-pre-reloc;
 				compatible = "intel,apl-pinctrl";
 				intel,p2sb-port-id = <PID_GPIO_W>;
+				#gpio-cells = <2>;
 			};
 
 			sw {
 				u-boot,dm-pre-reloc;
 				compatible = "intel,apl-pinctrl";
 				intel,p2sb-port-id = <PID_GPIO_SW>;
+				#gpio-cells = <2>;
 			};
 
 			itss {
@@ -240,7 +250,7 @@
 				reg = <0x50>;
 				compatible = "google,cr50";
 				u-boot,i2c-offset-len = <0>;
-				ready-gpio = <&gpio GPIO_28 GPIO_ACTIVE_LOW>;
+				ready-gpio = <&gpio_n GPIO_28 GPIO_ACTIVE_LOW>;
 			};
 		};
 
@@ -286,10 +296,6 @@
 		};
 	};
 
-};
-
-&gpio_n {
-	u-boot,dm-pre-reloc;
 };
 
 &host_bridge {
