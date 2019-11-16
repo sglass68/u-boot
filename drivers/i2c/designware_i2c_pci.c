@@ -70,8 +70,12 @@ static int designware_i2c_pci_probe(struct udevice *dev)
 {
 	struct dw_i2c *priv = dev_get_priv(dev);
 
-	if (dev_get_driver_data(dev) == INTEL_APL)
+	if (dev_get_driver_data(dev) == INTEL_APL) {
 		lpss_reset_release(priv->regs);
+
+		/* Ensure controller is in D0 state */
+		lpss_set_power_state(dev, STATE_D0);
+	}
 
 	return designware_i2c_probe(dev);
 }
