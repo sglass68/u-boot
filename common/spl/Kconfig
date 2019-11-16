@@ -1504,6 +1504,15 @@ config VPL_DRIVERS_MISC_SUPPORT
 	  option to build the drivers in drivers/misc as part of an VPL
 	  build, for those that support building in VPL (not all drivers do).
 
+config VPL_PCH_SUPPORT
+	bool "Support PCH drivers"
+	default y if TPL_PCH_SUPPORT
+	help
+	  Enable support for PCH (Platform Controller Hub) devices in VPL.
+	  These are used to set up GPIOs and the SPI peripheral early in
+	  boot. This enables the drivers in drivers/pch as part of a VPL
+	  build.
+
 config VPL_PCI
 	bool "Support PCI drivers"
 	default y if SPL_PCI
