@@ -5,7 +5,9 @@
  * Copyright 2019 Google Inc
  */
 
+#include <common.h>
 #include <dm.h>
+#include <spl.h>
 #include <asm/lpss.h>
 #include "designware_i2c.h"
 
@@ -30,26 +32,24 @@ static int designware_i2c_pci_ofdata_to_platdata(struct udevice *dev)
 {
 	struct dw_i2c *priv = dev_get_priv(dev);
 
-#if CONFIG_IS_ENABLED(OF_PLATDATA)
-	const struct dtd_snps_designware_i2c_pci *dtplat;
-	pci_dev_t bdf;
-	ulong base;
+	if (spl_phase() == PHASE_VPL) {
+		u32 base;
+		int ret;
 
-	dtplat = dev_get_platdata(dev);
-	bdf = pci_ofplat_get_devfn(dtplat->reg[0]);
-	base = dtplat->early_regs[0];
+		printf("VPL: i2c setup\n");
+		ret = dev_read_u32(dev, "early-regs", &base);
+		if (ret)
+			return log_msg_ret("early-regs", ret);
 
-	/* Set i2c base address */
-	pci_x86_write_config(bdf, PCI_BASE_ADDRESS_0, base, PCI_SIZE_32);
+		/* Set i2c base address */
+		dm_pci_write_config32(dev, PCI_BASE_ADDRESS_0, base);
 
-	/* Enable memory access and bus master */
-	pci_x86_write_config(bdf, PCI_COMMAND, PCI_COMMAND_MEMORY |
-			     PCI_COMMAND_MASTER, PCI_SIZE_32);
-	priv->regs = (struct i2c_regs *)base;
-#else
+		/* Enable memory access and bus master */
+		dm_pci_write_config32(dev, PCI_COMMAND, PCI_COMMAND_MEMORY |
+				      PCI_COMMAND_MASTER);
+	}
 	priv->regs = (struct i2c_regs *)
 		dm_pci_map_bar(dev, PCI_BASE_ADDRESS_0, PCI_REGION_MEM);
-#endif
 
 	/* Save base address from PCI BAR */
 	if (IS_ENABLED(CONFIG_INTEL_BAYTRAIL))
