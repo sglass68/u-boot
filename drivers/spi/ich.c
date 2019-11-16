@@ -633,7 +633,7 @@ static int ich_get_mmap_bus(struct udevice *bus, ulong *map_basep,
 	 * be called before the device is probed. Use the of-platdata directly
 	 * instead.
 	 */
-	spi_bdf = pci_x86_ofplat_get_devfn(plat->dtplat.reg[0]);
+	spi_bdf = pci_ofplat_get_devfn(plat->dtplat.reg[0]);
 #endif
 
 	return fast_spi_get_bios_mmap(spi_bdf, map_basep, map_sizep, offsetp);
@@ -884,7 +884,7 @@ static int ich_spi_ofdata_to_platdata(struct udevice *dev)
 #else
 	plat->ich_version = ICHV_APL;
 	plat->mmio_base = plat->dtplat.early_regs[0];
-	plat->bdf = pci_x86_ofplat_get_devfn(plat->dtplat.reg[0]);
+	plat->bdf = pci_ofplat_get_devfn(plat->dtplat.reg[0]);
 	plat->hwseq = plat->dtplat.intel_hardware_seq;
 #endif
 	debug("%s: mmio_base=%lx\n", __func__, plat->mmio_base);
