@@ -162,4 +162,16 @@
 			fill-value = [ff];
 		};
 	};
+
+	rw-mrc-cache {
+		type = "blob";
+		offset = <0xff8e0000>;
+		size = <0x10000>;
+		filename = "board/google/chromebook_coral/rw-mrc-cache";
+	};
+	rw-var-mrc-cache {
+		type = "blob";
+		size = <0x1000>;
+		filename = "board/google/chromebook_coral/rw-var-mrc-cache";
+	};
 };

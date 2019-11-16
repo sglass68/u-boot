@@ -207,12 +207,12 @@
 					 "jedec,spi-nor";
 				rw-mrc-cache {
 					label = "rw-mrc-cache";
-					reg = <0x003e0000 0x00010000>;
+					reg = <0x008e0000 0x00010000>;
 					u-boot,dm-pre-reloc;
 				};
 				rw-var-mrc-cache {
 					label = "rw-mrc-cache";
-					reg = <0x003f0000 0x0001000>;
+					reg = <0x008f0000 0x0001000>;
 					u-boot,dm-pre-reloc;
 				};
 			};
