@@ -37,7 +37,8 @@ struct vboot_stage stages[VBOOT_STAGE_COUNT] = {
 	[VBOOT_STAGE_VER_FINISH] = {"ver5_finishfw", vboot_ver5_finish_fw,},
 	[VBOOT_STAGE_VER_JUMP] = {"ver_jump", vboot_ver6_jump_fw,},
 #endif
-#if !defined(CONFIG_SPL_BUILD) || !defined(CONFIG_TPL_BUILD)
+#if !defined(CONFIG_SPL_BUILD) || \
+		(!defined(CONFIG_TPL_BUILD) && !defined(CONFIG_VPL_BUILD))
 	/* SPL stage: Sets up SDRAM and jumps to U-Boot proper */
 	[VBOOT_STAGE_SPL_INIT] = {"spl_init", vboot_spl_init,},
 	[VBOOT_STAGE_SPL_JUMP_U_BOOT] =
@@ -225,7 +226,6 @@ int vboot_run_auto(struct vboot_info *vboot, uint flags)
 	return vboot_run_stages(vboot, stage, flags);
 }
 
-#if 0
 void board_boot_order(u32 *spl_boot_list)
 {
 	spl_boot_list[0] = BOOT_DEVICE_CROS_VBOOT;
@@ -235,16 +235,15 @@ void board_boot_order(u32 *spl_boot_list)
 	spl_boot_list[1] = BOOT_DEVICE_BOARD;
 #endif
 }
-#endif
 
 #ifdef CONFIG_VPL_BUILD
-static int cros_load_image_tpl(struct spl_image_info *spl_image,
+static int cros_load_image_vpl(struct spl_image_info *spl_image,
 			       struct spl_boot_device *bootdev)
 {
 	struct vboot_info *vboot;
 	int ret;
 
-	printf("tpl: load image\n");
+	printf("vpl: load image\n");
 	ret = vboot_alloc(&vboot);
 	if (ret)
 		return ret;
@@ -252,8 +251,8 @@ static int cros_load_image_tpl(struct spl_image_info *spl_image,
 
 	return vboot_run_auto(vboot, 0);
 }
-SPL_LOAD_IMAGE_METHOD("chromium_vboot_tpl", 0, BOOT_DEVICE_CROS_VBOOT,
-		      cros_load_image_tpl);
+SPL_LOAD_IMAGE_METHOD("chromium_vboot_vpl", 0, BOOT_DEVICE_CROS_VBOOT,
+		      cros_load_image_vpl);
 
 #elif defined(CONFIG_TPL_BUILD)
 

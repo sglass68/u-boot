@@ -95,6 +95,38 @@ config TPL_CHROMEOS
 	imply TPL_NVDATA_TPM
 # 	imply TPL_FWSTORE_SPI_FLASH
 
+config VPL_CHROMEOS
+	bool "Enable Chromium OS verified boot support in VPL"
+	depends on CHROMEOS
+	select SUPPORT_VPL
+	imply VPL
+	imply VPL_LIBCOMMON_SUPPORT
+	imply VPL_LIBGENERIC_SUPPORT
+	imply VPL_LOG
+	imply VPL_BLOBLIST
+	imply VPL_SYS_MALLOC_SIMPLE
+	imply VPL_HASH_SUPPORT
+	imply VPL_GPIO_SUPPORT
+	imply VPL_BOARD_INIT
+	imply VPL_DRIVERS_MISC_SUPPORT
+# 	imply VPL_ENV_SUPPORT
+	imply VPL_SERIAL_SUPPORT
+# 	imply VPL_SPI_FLASH_SUPPORT
+# 	imply VPL_SPI_SUPPORT
+	imply VPL_REGMAP
+	imply VPL_SYSCON
+	imply VPL_OF_CONTROL
+	imply VPL_DM
+	imply VPL_INPUT
+	imply VPL_DM_KEYBOARD
+# 	imply VPL_CROS_EC_KEYB
+	imply VPL_CROS_EC
+	imply VPL_TIMER
+	imply VPL_TPM
+	imply VPL_NVDATA_TPM
+# 	imply VPL_FWSTORE_SPI_FLASH
+	imply VPL_I2C_SUPPORT
+
 config CROS_FULL
 	bool "Build full Chromium OS support"
 	default y

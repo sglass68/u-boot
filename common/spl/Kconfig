@@ -1504,6 +1504,25 @@ config VPL_DRIVERS_MISC_SUPPORT
 	  option to build the drivers in drivers/misc as part of an VPL
 	  build, for those that support building in VPL (not all drivers do).
 
+config VPL_GPIO_SUPPORT
+	bool "Support GPIO in VPL"
+	default y if SPL_GPIO_SUPPORT
+	help
+	  Enable support for GPIOs (General-purpose Input/Output) in VPL.
+	  GPIOs allow U-Boot to read the state of an input line (high or
+	  low) and set the state of an output line. This can be used to
+	  drive LEDs, control power to various system parts and read user
+	  input. GPIOs can be useful in TPL to enable a 'sign-of-life' LED,
+	  for example. Enable this option to build the drivers in
+	  drivers/gpio as part of an TPL build.
+
+config VPL_I2C_SUPPORT
+	bool "Support I2C in VPL"
+	default y if SPL_I2C_SUPPORT
+	help
+	  Enable support for the I2C bus in TPL. Vee SPL_I2C_SUPPORT for
+	  details.
+
 config VPL_PCH_SUPPORT
 	bool "Support PCH drivers"
 	default y if TPL_PCH_SUPPORT

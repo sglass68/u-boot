@@ -174,13 +174,17 @@ CPU performance is about 3500 DMIPS:
 Partial memory map
 ------------------
 
-fefc0000        Top of CAR region
+ffffffff	Top of ROM (and last byte of 32-bit address space)
+ffff8000	TPL loaded here (from IFWI)
+ff000000	Bottom of ROM
+fefc000		 Top of CAR region
 fef96000	Stack for FSP-M
 fef40000 59000	FSP-M
+fef40000	VPL loaded here
 fef10000	SPL loaded here
 fef10000	Stack top in TPL, SPL and U-Boot before relocation
 fef00000  1000	CONFIG_BOOTSTAGE_STASH_ADDR
-fef00000        Base of CAR region
+fef00000	Base of CAR region
 
    f0000	CONFIG_ROM_TABLE_ADDR
   100000	CONFIG_BLOBLIST_ADDR

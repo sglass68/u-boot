@@ -503,6 +503,15 @@ config TPL_LOGLEVEL
 	  levels. Setting this to a value above 4 may increase the code size
 	  significantly.
 
+config VPL_LOGLEVEL
+	int "loglevel for VPL"
+	default LOGLEVEL
+	help
+	  All Messages with a loglevel smaller than the console loglevel will
+	  be compiled in to VPL. See LOGLEVEL for a list of available log
+	  levels. Setting this to a value above 4 may increase the code size
+	  significantly.
+
 config SILENT_CONSOLE
 	bool "Support a silent console"
 	help
@@ -1031,6 +1040,14 @@ config TPL_BLOBLIST
 	default y if TPL
 	help
 	  This enables a bloblist in TPL. The bloblist is set up in TPL and
+	  passed to SPL and U-Boot proper.
+
+config VPL_BLOBLIST
+	bool "Support for a bloblist in VPL"
+	depends on BLOBLIST
+	default y if TPL_BLOBLIST
+	help
+	  This enables a bloblist in VPL. The bloblist is set up in VPL and
 	  passed to SPL and U-Boot proper.
 
 config BLOBLIST_SIZE

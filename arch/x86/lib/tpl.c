@@ -2,6 +2,7 @@
 /*
  * Copyright (c) 2018 Google, Inc
  */
+#define DEBUG
 
 #include <common.h>
 #include <debug_uart.h>
@@ -23,7 +24,7 @@ static int x86_tpl_init(void)
 {
 	int ret;
 
-	debug("%s starting\n", __func__);
+	debug("%s starting, phase %d\n", __func__, spl_phase());
 	ret = x86_cpu_init_tpl();
 	if (ret) {
 		debug("%s: x86_cpu_init_tpl() failed\n", __func__);
@@ -71,7 +72,7 @@ void board_init_f_r(void)
 
 u32 spl_boot_device(void)
 {
-	return IS_ENABLED(CONFIG_CHROMEOS) ? BOOT_DEVICE_CROS_VBOOT :
+	return CONFIG_IS_ENABLED(CHROMEOS) ? BOOT_DEVICE_CROS_VBOOT :
 		BOOT_DEVICE_SPI_MMAP;
 }
 
@@ -107,7 +108,12 @@ int spl_spi_load_image(void)
 
 void __noreturn jump_to_image_no_args(struct spl_image_info *spl_image)
 {
-	debug("Jumping to U-Boot SPL at %lx\n", (ulong)spl_image->entry_point);
+	if (IS_ENABLED(CONFIG_VPL))
+		debug("Jumping to U-Boot VPL at %lx\n",
+		      (ulong)spl_image->entry_point);
+	else
+		debug("Jumping to U-Boot SPL at %lx\n",
+		      (ulong)spl_image->entry_point);
 	jump_to_spl(spl_image->entry_point);
 	hang();
 }

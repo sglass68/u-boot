@@ -6,7 +6,7 @@
 obj-$(CONFIG_CHROMEOS) += stages.o
 
 # Verification stages (TPL)
-ifdef CONFIG_TPL_BUILD
+ifneq ($(CONFIG_TPL_BUILD)$(CONFIG_VPL_BUILD),)
 obj-$(CONFIG_CHROMEOS) += ver_init.o
 obj-$(CONFIG_CHROMEOS) += ver1_vbinit.o
 obj-$(CONFIG_CHROMEOS) += ver2_select_fw.o
