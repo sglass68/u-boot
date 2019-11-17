@@ -44,6 +44,7 @@ static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 	ulong timeout;
 	int i;
 
+#warning "Check this GPIO actually works"
 	if (!dm_gpio_is_valid(&priv->ready_gpio)) {
 		/* Fixed delay if interrupt not supported */
 		udelay(TIMEOUT_NO_IRQ_US);

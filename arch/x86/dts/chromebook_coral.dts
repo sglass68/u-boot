@@ -252,6 +252,10 @@
 				compatible = "google,cr50";
 				u-boot,i2c-offset-len = <0>;
 				ready-gpio = <&gpio_n GPIO_28 GPIO_ACTIVE_LOW>;
+				secdata {
+					u-boot,dm-pre-reloc;
+					compatible = "google,tpm-secdata";
+				};
 			};
 		};
 
@@ -836,4 +840,14 @@
 		PAD_CFG_GPI(GPIO_72, UP_20K, DEEP)	 /* GP_CAMERASB10 */
 		PAD_CFG_GPI(GPIO_73, UP_20K, DEEP)	 /* GP_CAMERASB11 */
 	>;
+};
+
+&rtc {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	nvdata {
+		u-boot,dm-pre-reloc;
+		compatible = "google,cmos-nvdata";
+		reg = <0x26>;
+	};
 };

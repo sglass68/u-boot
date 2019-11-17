@@ -53,17 +53,17 @@ int vboot_ver_init(struct vboot_info *vboot)
 	       (ulong)sizeof(*vboot), gd->bloblist);
 	blob = bloblist_add(BLOBLISTT_VBOOT_CTX, sizeof(struct vboot_blob));
 	if (!blob)
-		return log_msg_ret("Cannot set up vboot context", -ENOSPC);
+		return log_msg_ret("set up vboot context", -ENOSPC);
 
 	bootstage_mark(BOOTSTAGE_VBOOT_START);
 
 	ret = vboot_load_config(vboot);
 	if (ret)
-		return log_msg_ret("Cannot load config", ret);
+		return log_msg_ret("load config", ret);
 	/* Set up context and work buffer */
 	ret = vb2_init_blob(blob, vboot->work_buffer_size);
 	if (ret)
-		return log_msg_ret("Cannot set up work context", ret);
+		return log_msg_ret("set up work context", ret);
 	vboot->blob = blob;
 	ctx = &blob->ctx;
 	vboot->ctx = ctx;
@@ -72,22 +72,22 @@ int vboot_ver_init(struct vboot_info *vboot)
 
 	ret = uclass_first_device_err(UCLASS_TPM, &vboot->tpm);
 	if (ret)
-		return log_msg_ret("Cannot find TPM", ret);
+		return log_msg_ret("find TPM", ret);
 	ret = cros_tpm_setup(vboot);
 	if (ret) {
 		log_err("TPM setup failed (err=%x)\n", ret);
-		return -EIO;
+		return log_msg_ret("tpm_setup", -EIO);
 	}
 
 	/* initialise and read nvdata from non-volatile storage */
 	ret = uclass_first_device_err(UCLASS_CROS_NVDATA, &vboot->nvdata_dev);
 	if (ret)
-		return log_msg_ret("Cannot find nvdata", ret);
+		return log_msg_ret("find nvdata", ret);
 	/* TODO(sjg@chromium.org): Support full-size context */
 	ret = cros_nvdata_read_walk(CROS_NV_DATA, ctx->nvdata,
 				    EC_VBNV_BLOCK_SIZE);
 	if (ret)
-		return log_msg_ret("Cannot read nvdata", ret);
+		return log_msg_ret("read nvdata", ret);
 
 #if 0
 	/* Force legacy mode */
@@ -103,12 +103,12 @@ int vboot_ver_init(struct vboot_info *vboot)
 	cros_ofnode_dump_fmap(&vboot->fmap);
 	ret = uclass_first_device_err(UCLASS_CROS_FWSTORE, &vboot->fwstore);
 	if (ret)
-		return log_msg_ret("Cannot set up fwstore", ret);
+		return log_msg_ret("set up fwstore", ret);
 
 	if (CONFIG_IS_ENABLED(CROS_EC)) {
 		ret = uclass_get_device(UCLASS_CROS_EC, 0, &vboot->cros_ec);
 		if (ret)
-			return log_msg_ret("Cannot locate Chromium OS EC", ret);
+			return log_msg_ret("locate Chromium OS EC", ret);
 	}
 	/*
 	 * Set S3 resume flag if vboot should behave differently when selecting
@@ -132,7 +132,7 @@ int vboot_ver_init(struct vboot_info *vboot)
 		printf("SKIP factory init\n");
 // 		ret = cros_tpm_factory_initialise(vboot);
 	else if (ret)
-		return log_msg_ret("Cannot read secdata", ret);
+		return log_msg_ret("read secdata", ret);
 
 	bootstage_mark(BOOTSTAGE_VBOOT_END_TPMINIT);
 

@@ -33,7 +33,7 @@ static int get_location(enum cros_nvdata_index index)
 		/* We cannot handle these */
 		break;
 	}
-	log_err("Unsupported index %x\n", index);
+	log_info("Unsupported index %x\n", index);
 
 	return -1;
 }

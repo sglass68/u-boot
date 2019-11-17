@@ -1541,6 +1541,15 @@ config VPL_PCI
 	  necessary driver support. This enables the drivers in drivers/pci
 	  as part of a VPL build.
 
+config VPL_RTC_SUPPORT
+	bool "Support RTC drivers"
+	help
+	  Enable RTC (Real-time Clock) support in VPL. This includes support
+	  for reading and setting the time. Some RTC devices also have some
+	  non-volatile (battery-backed) memory which is accessible if
+	  needed. This enables the drivers in drivers/rtc as part of an VPL
+	  build.
+
 config VPL_SERIAL_SUPPORT
 	bool "Support serial"
 	default y if TPL_SERIAL_SUPPORT

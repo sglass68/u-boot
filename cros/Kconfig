@@ -7,7 +7,7 @@ config CHROMEOS
 	bool "Enable Chromium OS verified boot support"
 	select BINMAN
 	imply CHROMEOS_SPI
-	imply NVDATA_CROS_EC
+	imply NVDATA_CROS_EC if SANDBOX
 	imply NVDATA_TPM
 	imply CROS_FLAG
 	imply CROS_FLAG_GPIO
@@ -127,6 +127,7 @@ config VPL_CHROMEOS
 # 	imply VPL_FWSTORE_SPI_FLASH
 	imply VPL_I2C_SUPPORT
 	imply VPL_PINCTRL
+	imply VPL_NVDATA_CMOS if X86
 
 config CROS_FULL
 	bool "Build full Chromium OS support"

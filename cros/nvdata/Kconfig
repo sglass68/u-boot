@@ -32,12 +32,32 @@ config TPL_NVDATA_TPM
 	bool "Non-volatile data driver that uses the TPM in TPL"
 	help
 	  Enables support for storing NV data in the TPM within TPL. This must
-	  normally be enabled since TPL typically accesses the data to find
+	  normally be enabled if TPL typically accesses the data to find
+	  out what action to take - e.g. whether to jump to the A SPL or the B
+	  SPL.
+
+config VPL_NVDATA_TPM
+	bool "Non-volatile data driver that uses the TPM in VPL"
+	help
+	  Enables support for storing NV data in the TPM within VPL. This must
+	  normally be enabled since VPL typically accesses the data to find
 	  out what action to take - e.g. whether to jump to the A SPL or the B
 	  SPL.
 
 config NVDATA_CMOS
 	bool "Non-volatile data driver that uses CMOS RAM"
+	select DM_RTC
+	help
+	  For devices which have battery-backed CMOS RAM it is possible to
+	  store non-volatile data into this instead of the EC. This data is
+	  preserved so long as the Real-Time Clock (RTC) retains power.
+	  Typically this survives even an EC restart. This driver supports only
+	  the CROS_NV_DATA type.
+
+config VPL_NVDATA_CMOS
+	bool "Non-volatile data driver that uses CMOS RAM in VPL"
+	select VPL_DM_RTC
+	select VPL_RTC_SUPPORT
 	help
 	  For devices which have battery-backed CMOS RAM it is possible to
 	  store non-volatile data into this instead of the EC. This data is
