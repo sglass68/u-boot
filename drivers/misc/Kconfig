@@ -109,7 +109,6 @@ config TPL_CROS_EC
 config VPL_CROS_EC
 	bool "Enable Chrome OS EC in VPL"
 	depends on VPL
-	default y if SPL_CROS_EC
 	help
 	  Enable access to the Chrome OS EC in VPL. This is a separate
 	  microcontroller typically available on a SPI bus on Chromebooks. It
@@ -146,6 +145,15 @@ config SPL_CROS_EC_LPC
 
 config TPL_CROS_EC_LPC
 	bool "Enable Chrome OS EC LPC driver in TPL"
+	depends on CROS_EC
+	help
+	  Enable I2C access to the Chrome OS EC. This is used on x86
+	  Chromebooks such as link and falco. The keyboard is provided
+	  through a legacy port interface, so on x86 machines the main
+	  function of the EC is power and thermal management.
+
+config VPL_CROS_EC_LPC
+	bool "Enable Chrome OS EC LPC driver in VPL"
 	depends on CROS_EC
 	help
 	  Enable I2C access to the Chrome OS EC. This is used on x86

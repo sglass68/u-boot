@@ -77,13 +77,16 @@ intel-me {
 	filename = CONFIG_INTEL_ME_FILE;
 };
 #endif
-		u-boot-vpl {
+		u-boot-vpl-nodtb {
+		};
+		u-boot-vpl-dtb {
 		};
 		fmap {
 			offset = <(0xff200000 - RO_BASE)>;
 			size = <0x800>;
 		};
 		firmware-id {
+			u-boot,dm-pre-reloc;
 			size = <0x40>;
 			type = "text";
 			text-label = "frid";
@@ -136,7 +139,8 @@ intel-me {
 			filename = CONFIG_FSP_FILE_VBT;
 		};
 #endif
-		spl-rec {
+		u-boot-spl-rec {
+			u-boot,dm-pre-reloc;
 			type = "u-boot-spl";
 /*			offset = <(CONFIG_X86_OFFSET_SPL - RO_BASE)>;*/
 		};

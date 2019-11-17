@@ -94,8 +94,8 @@ int vboot_ver_init(struct vboot_info *vboot)
 	ctx->nvdata[VB2_NV_OFFS_HEADER] = VB2_NV_HEADER_SIGNATURE_V1;
 	ctx->nvdata[VB2_NV_OFFS_DEV] |= VB2_NV_DEV_FLAG_LEGACY;
 	vb2_nv_regen_crc(ctx);
-#endif
 	print_buffer(0, ctx->nvdata, 1, sizeof(ctx->nvdata), 0);
+#endif
 
 	ret = cros_ofnode_flashmap(&vboot->fmap);
 	if (ret)
@@ -133,6 +133,7 @@ int vboot_ver_init(struct vboot_info *vboot)
 // 		ret = cros_tpm_factory_initialise(vboot);
 	else if (ret)
 		return log_msg_ret("read secdata", ret);
+	print_buffer(0, ctx->secdata, 1, sizeof(ctx->secdata), 0);
 
 	bootstage_mark(BOOTSTAGE_VBOOT_END_TPMINIT);
 

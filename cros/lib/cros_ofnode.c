@@ -4,6 +4,7 @@
  */
 
 #define LOG_CATEGORY LOGC_VBOOT
+#define LOG_DEBUG
 
 #include <common.h>
 #include <errno.h>
@@ -27,7 +28,6 @@ ofnode cros_ofnode_config_node(void)
 
 /* These are the various flashmap nodes that we are interested in */
 enum section_t {
-	SECTION_BASE,		/* group section, no name: rw-a and rw-b */
 	SECTION_FIRMWARE_ID,
 	SECTION_BOOT,
 	SECTION_GBB,
@@ -47,9 +47,8 @@ enum section_t {
 
 /* Names for each section, preceded by ro-, rw-a- or rw-b- */
 static const char *section_name[SECTION_COUNT] = {
-	"",
 	"firmware-id",
-	"boot",
+	"u-boot",
 	"gbb",
 	"vblock",
 	"fmap",
@@ -57,9 +56,9 @@ static const char *section_name[SECTION_COUNT] = {
 	"ecro",
 	"pdrw",
 	"pdro",
-	"spl",
+	"u-boot-spl",
 	"boot-rec",
-	"spl-rec",
+	"u-boot-spl-rec",
 };
 
 /**
@@ -114,13 +113,6 @@ static int process_fmap_node(ofnode node, struct cros_fmap *config,
 	entry = NULL;
 
 	switch (section) {
-	case SECTION_BASE:
-		entry = &fw->all;
-		fw->block_offset = ofnode_read_u64_default(node, "block-offset",
-							   ~0ULL);
-		if (fw->block_offset == ~0ULL)
-			log_debug("Node '%s': bad block-offset\n", name);
-		break;
 	case SECTION_FIRMWARE_ID:
 		entry = &fw->firmware_id;
 		break;
@@ -175,7 +167,7 @@ static int process_fmap_node(ofnode node, struct cros_fmap *config,
 
 int cros_ofnode_flashmap(struct cros_fmap *config)
 {
-	struct fmap_entry entry;
+	struct fmap_entry base_entry;
 	ofnode node;
 	int ret;
 
@@ -186,19 +178,20 @@ int cros_ofnode_flashmap(struct cros_fmap *config)
 				   -EINVAL);
 
 	/* Read in the 'reg' property */
-	if (ofnode_read_fmap_entry(node, &entry))
-		return log_ret(-EINVAL);
-	config->flash_base = entry.offset;
+	if (ofnode_read_fmap_entry(node, &base_entry))
+		return log_msg_ret("size", -EINVAL);
+	config->flash_base = base_entry.offset;
 
 	ofnode_for_each_subnode(node, node) {
 		struct fmap_firmware_entry *fw;
+		struct fmap_entry *entry;
 		const char *name;
 		ofnode subnode;
 
 		name = ofnode_get_name(node);
 		if (strlen(name) < 5) {
 			log_debug("Node name '%s' is too short\n", name);
-			return log_ret(-EINVAL);
+			return log_msg_ret("short", -EINVAL);
 		}
 		fw = NULL;
 		if (!strcmp(name, "read-only")) {
@@ -211,6 +204,14 @@ int cros_ofnode_flashmap(struct cros_fmap *config)
 			log_debug("Ignoring section '%s'\n", name);
 			continue;
 		}
+		entry = &fw->all;
+		ret = ofnode_read_fmap_entry(node, entry);
+		if (ret)
+			return log_msg_ret(ofnode_get_name(node), ret);
+		fw->block_offset = ofnode_read_u64_default(node, "block-offset",
+							   ~0ULL);
+		if (fw->block_offset == ~0ULL)
+			log_debug("Node '%s': bad block-offset\n", name);
 		ofnode_for_each_subnode(subnode, node) {
 			ret = process_fmap_node(subnode, config, fw);
 			if (ret)

@@ -1559,6 +1559,22 @@ config VPL_SERIAL_SUPPORT
 	  Enable support for serial in VPL. See SPL_SERIAL_SUPPORT for
 	  details.
 
+config VPL_SPI_SUPPORT
+	bool "Support SPI drivers"
+	help
+	  Enable support for using SPI in VPL. See SPL_SPI_SUPPORT for
+	  details.
+
+config VPL_SPI_FLASH_SUPPORT
+	bool "Support SPI flash drivers"
+	help
+	  Enable support for using SPI flash in VPL, and loading U-Boot from
+	  SPI flash. SPI flash (Serial Peripheral Bus flash) is named after
+	  the SPI bus that is used to connect it to a system. It is a simple
+	  but fast bidirectional 4-wire bus (clock, chip select and two data
+	  lines). This enables the drivers in drivers/mtd/spi as part of an
+	  VPL build. This normally requires VPL_SPI_SUPPORT.
+
 config VPL_TEXT_BASE
 	hex "VPL Text Base"
 	default 0x0

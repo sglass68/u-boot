@@ -22,8 +22,8 @@
  */
 #define SAFETY_MARGIN	0x4000
 
-binman_sym_declare(ulong, u_boot_vpl, image_pos);
-binman_sym_declare(ulong, u_boot_vpl, size);
+binman_sym_declare(ulong, u_boot_vpl_any, image_pos);
+binman_sym_declare(ulong, u_boot_vpl_any, size);
 binman_sym_declare(ulong, u_boot_spl, image_pos);
 binman_sym_declare(ulong, u_boot_spl, size);
 /* U-Boot image_pos is declared by common/spl/spl.c */
@@ -32,7 +32,7 @@ binman_sym_declare(ulong, u_boot_any, size);
 static ulong get_image_pos(void)
 {
 	if (IS_ENABLED(CONFIG_CHROMEOS))
-		return binman_sym(ulong, u_boot_vpl, image_pos);
+		return binman_sym(ulong, u_boot_vpl_any, image_pos);
 
 	return spl_phase() == PHASE_TPL ?
 		binman_sym(ulong, u_boot_spl, image_pos) :
@@ -42,7 +42,7 @@ static ulong get_image_pos(void)
 static ulong get_image_size(void)
 {
 	if (IS_ENABLED(CONFIG_CHROMEOS))
-		return binman_sym(ulong, u_boot_vpl, size);
+		return binman_sym(ulong, u_boot_vpl_any, size);
 
 	return spl_phase() == PHASE_TPL ?
 		binman_sym(ulong, u_boot_spl, size) :

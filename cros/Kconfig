@@ -111,8 +111,8 @@ config VPL_CHROMEOS
 	imply VPL_DRIVERS_MISC_SUPPORT
 # 	imply VPL_ENV_SUPPORT
 	imply VPL_SERIAL_SUPPORT
-# 	imply VPL_SPI_FLASH_SUPPORT
-# 	imply VPL_SPI_SUPPORT
+	imply VPL_SPI_FLASH_SUPPORT
+	imply VPL_SPI_SUPPORT
 	imply VPL_REGMAP
 	imply VPL_SYSCON
 	imply VPL_OF_CONTROL
@@ -121,6 +121,7 @@ config VPL_CHROMEOS
 	imply VPL_DM_KEYBOARD
 # 	imply VPL_CROS_EC_KEYB
 	imply VPL_CROS_EC
+	imply VPL_CROS_EC_LPC if X86
 	imply VPL_TIMER
 	imply VPL_TPM
 	imply VPL_NVDATA_TPM
@@ -128,6 +129,7 @@ config VPL_CHROMEOS
 	imply VPL_I2C_SUPPORT
 	imply VPL_PINCTRL
 	imply VPL_NVDATA_CMOS if X86
+	imply VPL_FWSTORE_SPI_FLASH
 
 config CROS_FULL
 	bool "Build full Chromium OS support"

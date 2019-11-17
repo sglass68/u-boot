@@ -30,6 +30,15 @@ config TPL_FWSTORE_SPI_FLASH
 	  and a read-write portion. The latter is used to store upgradeable
 	  parts of the firmware.
 
+config VPL_FWSTORE_SPI_FLASH
+	bool "Firmware storage driver that uses SPI flash in VPL"
+	help
+	  This provides a driver for firmware storage that uses SPI flash.
+	  The device typically has a read-only portion (controlled by a write-
+	  protect pin and block-protect pins in the SPI-flash status register)
+	  and a read-write portion. The latter is used to store upgradeable
+	  parts of the firmware.
+
 config FWSTORE_MMC
 	bool "Firmware storage driver that uses MMC"
 	help

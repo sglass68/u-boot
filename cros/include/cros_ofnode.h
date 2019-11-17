@@ -50,9 +50,6 @@ struct fmap_firmware_entry {
 	struct fmap_entry gbb;
 	struct fmap_entry fmap;
 
-	/* To be deprecated now that fmap_entry has this */
-	enum cros_compress_t compress;		/* Compression type */
-
 	/* U-Boot recovery */
 	struct fmap_entry spl_rec;
 	struct fmap_entry boot_rec;

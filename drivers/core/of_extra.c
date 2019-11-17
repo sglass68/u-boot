@@ -17,12 +17,12 @@ int ofnode_read_fmap_entry(ofnode node, struct fmap_entry *entry)
 	if (ofnode_read_u32(node, "image-pos", &entry->offset)) {
 		debug("Node '%s' has bad/missing 'image-pos' property\n",
 		      ofnode_get_name(node));
-		return log_ret(-ENOENT);
+		return log_msg_ret("image-pos", -ENOENT);
 	}
 	if (ofnode_read_u32(node, "size", &entry->length)) {
 		debug("Node '%s' has bad/missing 'size' property\n",
 		      ofnode_get_name(node));
-		return log_ret(-ENOENT);
+		return log_msg_ret("size", -ENOENT);
 	}
 	entry->used = ofnode_read_s32_default(node, "used", entry->length);
 	prop = ofnode_read_string(node, "compress");
@@ -30,8 +30,7 @@ int ofnode_read_fmap_entry(ofnode node, struct fmap_entry *entry)
 		if (!strcmp(prop, "lz4"))
 			entry->compress_algo = FMAP_COMPRESS_LZ4;
 		else
-			return log_msg_ret("Unknown compression algo",
-					   -EINVAL);
+			return log_msg_ret("compression algo", -EINVAL);
 	} else {
 		entry->compress_algo = FMAP_COMPRESS_NONE;
 	}
