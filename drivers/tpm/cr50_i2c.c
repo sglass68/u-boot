@@ -11,10 +11,12 @@
 #include <common.h>
 #include <dm.h>
 #include <i2c.h>
+#include <spl.h>
 #include <tpm-v2.h>
 #include <asm/gpio.h>
 
 enum {
+	TIMEOUT_INIT_MS		= 30000, /* Very long timeout for TPM init */
 	TIMEOUT_LONG_US		= 2 * 1000 * 1000,
 	TIMEOUT_SHORT_US	= 2 * 1000,
 	TIMEOUT_NO_IRQ_US	= 20 * 1000,
@@ -180,23 +182,6 @@ static inline u8 tpm_did_vid(u8 locality)
 	return 0x6 | (locality << 4);
 }
 
-static int check_locality(struct udevice *dev, int loc)
-{
-	u8 mask = TPM_ACCESS_VALID | TPM_ACCESS_ACTIVE_LOCALITY;
-	int ret;
-	u8 buf;
-
-	ret = cr50_i2c_read(dev, tpm_access(loc), &buf, 1);
-	if (ret)
-		return log_msg_ret("read", ret);
-
-	if ((buf & mask) == mask)
-		return loc;
-	printf("buf=%x, mask=%x\n", buf, mask);
-
-	return log_msg_ret("not allowed", -EPERM);
-}
-
 static int release_locality(struct udevice *dev, int force)
 {
 	struct cr50_priv *priv = dev_get_priv(dev);
@@ -217,40 +202,6 @@ static int release_locality(struct udevice *dev, int force)
 	priv->locality = 0;
 
 	return 0;
-}
-
-static int request_locality(struct udevice *dev, int loc)
-{
-	struct cr50_priv *priv = dev_get_priv(dev);
-	u8 buf = TPM_ACCESS_REQUEST_USE;
-	ulong timeout;
-	int ret;
-
-	ret = check_locality(dev, loc);
-	if (ret < 0)
-		return log_msg_ret("check1", ret);
-	else if (ret == loc)
-		return loc;
-
-	ret = cr50_i2c_write(dev, tpm_access(loc), &buf, 1);
-	if (ret)
-		return log_msg_ret("write", ret);
-
-	timeout = timer_get_us() + TIMEOUT_LONG_US;
-	while (timer_get_us() < timeout) {
-		ret = check_locality(dev, loc);
-		if (ret < 0)
-			return log_msg_ret("check2", ret);
-		if (ret == loc) {
-			priv->locality = loc;
-			log_debug("Set locality to %x\n", loc);
-			return loc;
-		}
-		udelay(TIMEOUT_SHORT_US);
-	}
-	printf("Request locality failed\n");
-
-	return log_msg_ret("req-fail", -ETIMEDOUT);
 }
 
 /* cr50 requires all 4 bytes of status register to be read */
@@ -468,6 +419,97 @@ out_err:
 	return -EIO;
 }
 
+/**
+ * process_reset() - Wait for the Cr50 to reset
+ *
+ * Cr50 processes reset requests asynchronously and consceivably could be busy
+ * executing a long command and not reacting to the reset pulse for a while.
+ *
+ * This function will make sure that the AP does not proceed with boot until
+ * TPM finished reset processing.
+ *
+ * @dev: Cr50 device
+ * @return 0 if OK, -EPERM if locality could not be taken
+ */
+static int process_reset(struct udevice *dev)
+{
+	const int loc = 0;
+	u8 access;
+	ulong start;
+
+	/*
+	 * Locality is released by TPM reset.
+	 *
+	 * If locality is taken at this point, this could be due to the fact
+	 * that the TPM is performing a long operation and has not processed
+	 * reset request yet. We'll wait up to CR50_TIMEOUT_INIT_MS and see if
+	 * it releases locality when reset is processed.
+	 */
+	start = get_timer(0);
+	do {
+		const u8 mask = TPM_ACCESS_VALID | TPM_ACCESS_ACTIVE_LOCALITY;
+		int ret;
+
+		ret = cr50_i2c_read(dev, tpm_access(loc),
+				    &access, sizeof(access));
+		if (ret || ((access & mask) == mask)) {
+			/*
+			 * Don't bombard the chip with traffic; let it keep
+			 * processing the command.
+			 */
+			mdelay(2);
+			continue;
+		}
+
+		printf("TPM ready after %ld ms\n", get_timer(start));
+
+		return 0;
+	} while (get_timer(start) < TIMEOUT_INIT_MS);
+
+	printf("TPM failed to reset after %ld ms, status: %#x\n",
+	       get_timer(start), access);
+
+	return -EPERM;
+}
+
+/*
+ * Locality could be already claimed (if this is a later coreboot stage and
+ * the RO did not release it), or not yet claimed, if this is verstage or the
+ * older RO did release it.
+ */
+static int claim_locality(struct udevice *dev, int loc)
+{
+	const u8 mask = TPM_ACCESS_VALID | TPM_ACCESS_ACTIVE_LOCALITY;
+	u8 access;
+	int ret;
+
+	ret = cr50_i2c_read(dev, tpm_access(loc), &access, sizeof(access));
+	if (ret)
+		return log_msg_ret("read1", ret);
+
+	if ((access & mask) == mask) {
+		log_warning("Locality already claimed\n");
+		return 0;
+	}
+
+	access = TPM_ACCESS_REQUEST_USE;
+	ret = cr50_i2c_write(dev, tpm_access(loc), &access, sizeof(access));
+	if (ret)
+		return log_msg_ret("write", ret);
+
+	ret = cr50_i2c_read(dev, tpm_access(loc), &access, sizeof(access));
+	if (ret)
+		return log_msg_ret("read2", ret);
+
+	if ((access & mask) != mask) {
+		log_err("Failed to claim locality\n");
+		return -EPERM;
+	}
+	log_info("Claimed locality %d\n", loc);
+
+	return 0;
+}
+
 static int cr50_i2c_get_desc(struct udevice *dev, char *buf, int size)
 {
 	struct dm_i2c_chip *chip = dev_get_parent_platdata(dev);
@@ -479,29 +521,19 @@ static int cr50_i2c_get_desc(struct udevice *dev, char *buf, int size)
 
 static int cr50_i2c_open(struct udevice *dev)
 {
-	struct cr50_priv *priv = dev_get_priv(dev);
 	char buf[80];
-	u32 vendor;
 	int ret;
 
-	ret = request_locality(dev, 0);
+	if (spl_phase() <= PHASE_VPL) {
+		ret = process_reset(dev);
+		if (ret)
+			return log_msg_ret("reset", ret);
+	}
+
+	ret = claim_locality(dev, 0);
 	if (ret)
-		return log_msg_ret("req_locality", ret);
+		return log_msg_ret("claim", ret);
 
-	/* Read four bytes from DID_VID register */
-	ret = cr50_i2c_read(dev, tpm_did_vid(0), (u8 *)&vendor, 4);
-	if (ret) {
-		release_locality(dev, 1);
-		return log_msg_ret("did/vid", ret);
-	}
-
-	if (vendor != CR50_DID_VID) {
-		printf("Vendor ID 0x%08x not recognised\n", vendor);
-		release_locality(dev, 1);
-		return log_msg_ret("vendor-id", -EXDEV);
-	}
-
-	priv->vendor = vendor;
 	cr50_i2c_get_desc(dev, buf, sizeof(buf));
 	log_debug("%s\n", buf);
 
@@ -551,8 +583,9 @@ static int cr50_i2c_ofdata_to_platdata(struct udevice *dev)
 
 static int cr50_i2c_probe(struct udevice *dev)
 {
-	ulong start;
+	struct cr50_priv *priv = dev_get_priv(dev);
 	u32 vendor = 0;
+	ulong start;
 
 	/*
 	 * 150ms should be enough to synchronize with the TPM even under the
@@ -575,6 +608,7 @@ static int cr50_i2c_probe(struct udevice *dev)
 		log_debug("DID_VID %08x not recognised\n", vendor);
 		return log_msg_ret("vendor-id", -EXDEV);
 	}
+	priv->vendor = vendor;
 
 	return 0;
 }
