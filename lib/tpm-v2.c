@@ -186,7 +186,7 @@ u32 tpm2_nv_read_value(struct udevice *dev, u32 index, void *data, u32 count)
 
 		/* handles 8 bytes */
 		tpm_u32(TPM2_RH_PLATFORM),	/* Primary platform seed */
-		tpm_u32(index),			/* Password authorisation */
+		tpm_u32(HR_NV_INDEX + index),	/* Password authorisation */
 
 		/* AUTH_SESSION */
 		tpm_u32(9),			/* Authorization size */
@@ -203,13 +203,22 @@ u32 tpm2_nv_read_value(struct udevice *dev, u32 index, void *data, u32 count)
 	size_t response_len = COMMAND_BUFFER_SIZE;
 	u8 response[COMMAND_BUFFER_SIZE];
 	int ret;
+	u16 tag;
+	u32 size, code;
 
+	printf("out:\n");
+	print_buffer(0, command_v2, 1, sizeof(command_v2), 0);
 	ret = tpm_sendrecv_command(dev, command_v2, response, &response_len);
+	printf("ret=%d\n", ret);
 	if (ret)
-		return ret;
-	if (unpack_byte_string(response, response_len, "s",
+		return log_msg_ret("read", ret);
+	printf("in:\n");
+	print_buffer(0, response, 1, response_len, 0);
+	if (unpack_byte_string(response, response_len, "wdds",
+			       0, &tag, 2, &size, 6, &code,
 			       10, data, response_len - 10))
 		return TPM_LIB_ERROR;
+	printf("tag=%x, size=%x, code=%x\n", tag, size, code);
 
 	return 0;
 }

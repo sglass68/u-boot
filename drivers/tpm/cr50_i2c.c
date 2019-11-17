@@ -278,7 +278,8 @@ static int cr50_i2c_recv(struct udevice *dev, u8 *buf, size_t buf_len)
 	if (buf_len < TPM_HEADER_SIZE)
 		return -E2BIG;
 
-	if (cr50_i2c_wait_burststs(dev, mask, &burstcnt, &status) < 0) {
+	ret = cr50_i2c_wait_burststs(dev, mask, &burstcnt, &status);
+	if (ret < 0) {
 		printf("First chunk not available\n");
 		goto out_err;
 	}
@@ -292,6 +293,7 @@ static int cr50_i2c_recv(struct udevice *dev, u8 *buf, size_t buf_len)
 	/* Determine expected data in the return buffer */
 	memcpy(&expected_buf, buf + TPM_CMD_COUNT_OFFSET, sizeof(expected_buf));
 	expected = be32_to_cpu(expected_buf);
+	printf("expected=%d\n", expected);
 	if (expected > buf_len) {
 		printf("Too much data: %zu > %zu\n",
 		       expected, buf_len);
@@ -302,8 +304,10 @@ static int cr50_i2c_recv(struct udevice *dev, u8 *buf, size_t buf_len)
 	current = burstcnt;
 	while (current < expected) {
 		/* Read updated burst count and check status */
-		if (cr50_i2c_wait_burststs(dev, mask, &burstcnt, &status) < 0)
+		if (cr50_i2c_wait_burststs(dev, mask, &burstcnt, &status) < 0) {
+			printf("- burst failure1\n");
 			goto out_err;
+			}
 
 		len = min(burstcnt, expected - current);
 		if (cr50_i2c_read(dev, addr, buf + current, len) != 0) {
@@ -314,8 +318,10 @@ static int cr50_i2c_recv(struct udevice *dev, u8 *buf, size_t buf_len)
 		current += len;
 	}
 
-	if (cr50_i2c_wait_burststs(dev, TPM_STS_VALID, &burstcnt, &status) < 0)
+	if (cr50_i2c_wait_burststs(dev, TPM_STS_VALID, &burstcnt, &status) < 0) {
+		printf("- burst failure2\n");
 		goto out_err;
+	}
 	if (status & TPM_STS_DATA_AVAIL) {
 		printf("Data still available\n");
 		goto out_err;
@@ -326,7 +332,7 @@ static int cr50_i2c_recv(struct udevice *dev, u8 *buf, size_t buf_len)
 out_err:
 	/* Abort current transaction if still pending */
 	ret = cr50_i2c_status(dev);
-	if (ret)
+	if (ret < 0)
 		return ret;
 	if (ret & TPM_STS_COMMAND_READY) {
 		ret = cr50_i2c_ready(dev);

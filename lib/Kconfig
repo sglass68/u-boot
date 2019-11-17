@@ -117,7 +117,7 @@ config SYS_HZ
 	  set to 1000.
 
 config SPL_USE_TINY_PRINTF
-	bool "Enable tiny printf() version"
+	bool "Enable tiny printf() version for SPL"
 	depends on SPL
 	default y
 	help
@@ -129,9 +129,20 @@ config SPL_USE_TINY_PRINTF
 	  The supported format specifiers are %c, %s, %u/%d and %x.
 
 config TPL_USE_TINY_PRINTF
-	bool "Enable tiny printf() version"
+	bool "Enable tiny printf() version for TPL"
 	depends on TPL
 	default y if SPL_USE_TINY_PRINTF
+	help
+	  This option enables a tiny, stripped down printf version.
+	  This should only be used in space limited environments,
+	  like SPL versions with hard memory limits. This version
+	  reduces the code size by about 2.5KiB on armv7.
+
+	  The supported format specifiers are %c, %s, %u/%d and %x.
+
+config VPL_USE_TINY_PRINTF
+	bool "Enable tiny printf() version for VPL"
+	depends on VPL
 	help
 	  This option enables a tiny, stripped down printf version.
 	  This should only be used in space limited environments,

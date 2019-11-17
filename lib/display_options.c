@@ -176,7 +176,7 @@ int print_buffer(ulong addr, const void *data, uint width, uint count,
 				x = lb.us[i] = *(volatile uint16_t *)data;
 			else
 				x = lb.uc[i] = *(volatile uint8_t *)data;
-#if defined(CONFIG_SPL_BUILD)
+#if CONFIG_IS_ENABLED(USE_TINY_PRINTF)
 			printf(" %x", (uint)x);
 #elif defined(CONFIG_SYS_SUPPORT_64BIT_DATA)
 			printf(" %0*llx", width * 2, (long long)x);
