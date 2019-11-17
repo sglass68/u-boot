@@ -188,12 +188,13 @@ static int check_locality(struct udevice *dev, int loc)
 
 	ret = cr50_i2c_read(dev, tpm_access(loc), &buf, 1);
 	if (ret)
-		return ret;
+		return log_msg_ret("read", ret);
 
 	if ((buf & mask) == mask)
 		return loc;
+	printf("buf=%x, mask=%x\n", buf, mask);
 
-	return -EPERM;
+	return log_msg_ret("not allowed", -EPERM);
 }
 
 static int release_locality(struct udevice *dev, int force)
@@ -227,19 +228,19 @@ static int request_locality(struct udevice *dev, int loc)
 
 	ret = check_locality(dev, loc);
 	if (ret < 0)
-		return ret;
+		return log_msg_ret("check1", ret);
 	else if (ret == loc)
 		return loc;
 
 	ret = cr50_i2c_write(dev, tpm_access(loc), &buf, 1);
 	if (ret)
-		return ret;
+		return log_msg_ret("write", ret);
 
 	timeout = timer_get_us() + TIMEOUT_LONG_US;
 	while (timer_get_us() < timeout) {
 		ret = check_locality(dev, loc);
 		if (ret < 0)
-			return ret;
+			return log_msg_ret("check2", ret);
 		if (ret == loc) {
 			priv->locality = loc;
 			log_debug("Set locality to %x\n", loc);
@@ -249,7 +250,7 @@ static int request_locality(struct udevice *dev, int loc)
 	}
 	printf("Request locality failed\n");
 
-	return -ETIMEDOUT;
+	return log_msg_ret("req-fail", -ETIMEDOUT);
 }
 
 /* cr50 requires all 4 bytes of status register to be read */
@@ -485,20 +486,19 @@ static int cr50_i2c_open(struct udevice *dev)
 
 	ret = request_locality(dev, 0);
 	if (ret)
-		return ret;
-i2c speed?
+		return log_msg_ret("req_locality", ret);
 
 	/* Read four bytes from DID_VID register */
 	ret = cr50_i2c_read(dev, tpm_did_vid(0), (u8 *)&vendor, 4);
 	if (ret) {
 		release_locality(dev, 1);
-		return ret;
+		return log_msg_ret("did/vid", ret);
 	}
 
 	if (vendor != CR50_DID_VID) {
-		printf("Vendor ID 0x%08x not recognized.\n", vendor);
+		printf("Vendor ID 0x%08x not recognised\n", vendor);
 		release_locality(dev, 1);
-		return -EXDEV;
+		return log_msg_ret("vendor-id", -EXDEV);
 	}
 
 	priv->vendor = vendor;
@@ -539,10 +539,8 @@ static int cr50_i2c_ofdata_to_platdata(struct udevice *dev)
 	int ret;
 
 	/* Optional GPIO to track when cr50 is ready */
-	printf("req\n");
 	ret = gpio_request_by_name(dev, "ready-gpio", 0, &priv->ready_gpio,
 				   GPIOD_IS_IN);
-	printf("ret = %d\n", ret);
 	if (ret)
 		debug("Warning: Cr50 does not have a ready-gpio (err=%d)\n",
 		      ret);
@@ -553,6 +551,31 @@ static int cr50_i2c_ofdata_to_platdata(struct udevice *dev)
 
 static int cr50_i2c_probe(struct udevice *dev)
 {
+	ulong start;
+	u32 vendor = 0;
+
+	/*
+	 * 150ms should be enough to synchronize with the TPM even under the
+	 * worst nested-reset-request conditions. In the vast majority of cases
+	 * there will be no wait at all.
+	 */
+	start = get_timer(0);
+	while (get_timer(start) < 150) {
+		int ret;
+
+		/* Exit once DID and VID verified */
+		ret = cr50_i2c_read(dev, tpm_did_vid(0), (u8 *)&vendor, 4);
+		if (!ret && vendor == CR50_DID_VID)
+			break;
+
+		/* TPM might be resetting; let's retry in a bit */
+		mdelay(10);
+	}
+	if (vendor != CR50_DID_VID) {
+		log_debug("DID_VID %08x not recognised\n", vendor);
+		return log_msg_ret("vendor-id", -EXDEV);
+	}
+
 	return 0;
 }
 

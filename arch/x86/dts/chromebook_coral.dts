@@ -88,7 +88,7 @@
 		#address-cells = <3>;
 		#size-cells = <2>;
 		u-boot,dm-pre-reloc;
-		ranges = <0x02000000 0x0 0xc0000000 0xc0000000 0 0x20000000
+		ranges = <0x02000000 0x0 0xc0000000 0xc0000000 0 0x10000000
 			0x42000000 0x0 0xb0000000 0xb0000000 0 0x10000000
 			0x01000000 0x0 0x1000 0x1000 0 0xefff>;
 		u-boot,skip-auto-config-until-reloc;
@@ -245,6 +245,7 @@
 			u-boot,dm-pre-reloc;
 			#address-cells = <1>;
 			#size-cells = <0>;
+			clock-frequency = <400000>;
 			tpm@50 {
 				u-boot,dm-pre-reloc;
 				reg = <0x50>;
@@ -341,6 +342,17 @@
 			(PAD_CFG0_MODE_GPIO | PAD_CFG0_LOGICAL_RESET_DEEP |
 				PAD_CFG0_RX_DISABLE | 0)
 			(PAD_CFG1_PULL_NONE | PAD_CFG1_IOSSTATE_TX_LAST_RXE)
+
+		/* LPC */
+		PAD_CFG_NF(LPC_ILB_SERIRQ, UP_20K, DEEP, NF1) /* LPC_SERIRQ */
+		PAD_CFG_NF(LPC_CLKOUT0, NONE, DEEP, NF1) /* LPC_CLKOUT0 */
+		PAD_CFG_NF(LPC_CLKOUT1, UP_20K, DEEP, NF1)
+		PAD_CFG_NF(LPC_AD0, UP_20K, DEEP, NF1)	 /* LPC_AD0 */
+		PAD_CFG_NF(LPC_AD1, UP_20K, DEEP, NF1)	 /* LPC_AD1 */
+		PAD_CFG_NF(LPC_AD2, UP_20K, DEEP, NF1)	 /* LPC_AD2 */
+		PAD_CFG_NF(LPC_AD3, UP_20K, DEEP, NF1)	 /* LPC_AD3 */
+		PAD_CFG_NF(LPC_CLKRUNB, UP_20K, DEEP, NF1) /* LPC_CLKRUN_N */
+		PAD_CFG_NF(LPC_FRAMEB, NATIVE, DEEP, NF1) /* LPC_FRAME_N */
 		>;
 
 	lpddr4-swizzle = /bits/ 8 <

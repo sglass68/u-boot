@@ -313,7 +313,6 @@ fdt_addr_t dev_read_addr_pci(struct udevice *dev)
 	ulong addr;
 
 	addr = dev_read_addr(dev);
-	printf("addr=%lx\n", addr);
 	if (addr == FDT_ADDR_T_NONE && !of_live_active())
 		addr = devfdt_get_addr_pci(dev);
 

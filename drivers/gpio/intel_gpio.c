@@ -22,17 +22,13 @@
 
 static int intel_gpio_direction_input(struct udevice *dev, uint offset)
 {
-	printf("%s: %s\n", __func__, dev->name);
 	struct udevice *pinctrl = dev_get_parent(dev);
-	printf("%s: p %s %x\n", __func__, pinctrl->name, offset);
 	uint config_offset = intel_pinctrl_get_config_reg_addr(pinctrl, offset);
 
-	printf("%s: o config_offset %x\n", __func__, config_offset);
 	pcr_clrsetbits32(pinctrl, config_offset,
 			 PAD_CFG0_MODE_MASK | PAD_CFG0_TX_STATE |
 				  PAD_CFG0_RX_DISABLE,
 			 PAD_CFG0_MODE_GPIO | PAD_CFG0_TX_DISABLE);
-	printf("done\n");
 
 	return 0;
 }
@@ -118,7 +114,6 @@ static int intel_gpio_xlate(struct udevice *orig_dev, struct gpio_desc *desc,
 	device_find_first_child(pinctrl, &dev);
 	if (!dev)
 		return log_msg_ret("no child", -ENOENT);
-	printf("gpio=%d, ret=%d, dev=%s, offset=%u\n", gpio, ret, dev->name, desc->offset);
 	desc->flags = args->args[1] & GPIO_ACTIVE_LOW ? GPIOD_ACTIVE_LOW : 0;
 	desc->dev = dev;
 

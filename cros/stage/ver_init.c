@@ -73,7 +73,6 @@ int vboot_ver_init(struct vboot_info *vboot)
 	ret = uclass_first_device_err(UCLASS_TPM, &vboot->tpm);
 	if (ret)
 		return log_msg_ret("Cannot find TPM", ret);
-	printf("tpm=%s\n", vboot->tpm->name);
 	ret = cros_tpm_setup(vboot);
 	if (ret) {
 		log_err("TPM setup failed (err=%x)\n", ret);

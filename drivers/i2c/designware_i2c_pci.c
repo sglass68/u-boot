@@ -48,12 +48,15 @@ static int designware_i2c_pci_ofdata_to_platdata(struct udevice *dev)
 				      PCI_COMMAND_MASTER);
 	}
 
-	printf("i2c start\n");
-	priv->regs = (struct i2c_regs *)
-			dm_pci_map_bar(dev, PCI_BASE_ADDRESS_0, PCI_REGION_MEM);
-	if (!priv->regs)
+	if (spl_phase() < PHASE_BOARD_F) {
+		/* Handle early, fixed mapping into a different address space */
 		priv->regs = (struct i2c_regs *)dm_pci_read_bar32(dev, 0);
-	printf("i2c done\n");
+	} else {
+		priv->regs = (struct i2c_regs *)
+			dm_pci_map_bar(dev, PCI_BASE_ADDRESS_0, PCI_REGION_MEM);
+	}
+	if (!priv->regs)
+		return -EINVAL;
 
 	/* Save base address from PCI BAR */
 	if (IS_ENABLED(CONFIG_INTEL_BAYTRAIL))

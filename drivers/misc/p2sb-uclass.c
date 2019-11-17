@@ -54,7 +54,6 @@ uint pcr_read32(struct udevice *dev, uint offset)
 	assert(IS_ALIGNED(offset, sizeof(uint32_t)));
 
 	ptr = _pcr_reg_address(dev, offset);
-	printf("%s: %x %p\n", dev->name, offset, ptr);
 	val = readl(ptr);
 	unmap_sysmem(ptr);
 
