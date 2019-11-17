@@ -14,6 +14,9 @@
 #include <spl.h>
 #include <tpm-v2.h>
 #include <asm/gpio.h>
+#include <asm/io.h>
+#include <asm/arch/iomap.h>
+#include <asm/arch/pm.h>
 
 enum {
 	TIMEOUT_INIT_MS		= 30000, /* Very long timeout for TPM init */
@@ -37,12 +40,47 @@ struct cr50_priv {
 	uint vendor;
 };
 
+#define ACPI_BASE_ADDRESS		0x400
+#define GPE0_STS(x)		(0x20 + (x * 4))
+
+/* Read and clear GPE status (defined in arch/acpi.h) */
+int acpi_get_gpe(int gpe)
+{
+	int bank;
+	uint32_t mask, sts;
+	ulong start;
+	int rc = 0;
+
+// 	if (gpe < 0 || gpe > GPE_MAX)
+// 		return -1;
+
+	bank = gpe / 32;
+	mask = 1 << (gpe % 32);
+
+	/* Wait up to 1ms for GPE status to clear */
+	start = get_timer(0);
+	do {
+		if (get_timer(start) > 1)
+			return rc;
+
+		sts = inl(ACPI_BASE_ADDRESS + GPE0_STS(bank));
+		if (sts & mask) {
+			outl(mask, ACPI_BASE_ADDRESS + GPE0_STS(bank));
+			rc = 1;
+		}
+	} while (sts & mask);
+
+	return rc;
+}
+
 /* Wait for interrupt to indicate TPM is ready */
 static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 {
 	struct cr50_priv *priv = dev_get_priv(dev);
 	ulong timeout;
 	int i;
+
+#define CONFIG_TPM_TIS_ACPI_INTERRUPT 60	/* GPE0_DW1_28 */
 
 #warning "Check this GPIO actually works"
 	if (!dm_gpio_is_valid(&priv->ready_gpio)) {
@@ -54,7 +92,8 @@ static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 	timeout = timer_get_us() + TIMEOUT_IRQ_US;
 
 	i = 0;
-	while (!dm_gpio_get_value(&priv->ready_gpio)) {
+	while (!acpi_get_gpe(CONFIG_TPM_TIS_ACPI_INTERRUPT)) {
+// 	while (!dm_gpio_get_value(&priv->ready_gpio)) {
 		i++;
 		if (timer_get_us() > timeout) {
 			printf("Timeout\n");
@@ -72,6 +111,7 @@ static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 static void cr50_i2c_clear_tpm_irq(struct udevice *dev)
 {
 	/* This is not really an interrupt, just a GPIO, so we can't clear it */
+	cr50_i2c_wait_tpm_ready(dev);
 }
 
 /*

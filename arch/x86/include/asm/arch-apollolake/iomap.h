@@ -7,9 +7,6 @@
 #ifndef _ASM_ARCH_IOMAP_H
 #define _ASM_ARCH_IOMAP_H
 
-#define TCO_BASE_ADDRESS	(ACPI_BASE_ADDRESS + 0x60)
-#define TCO_BASE_SIZE		0x20
-
 #define R_ACPI_PM1_TMR			0x8
 
 /* Put p2sb at 0xd0000000 in TPL */
