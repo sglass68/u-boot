@@ -77,7 +77,7 @@ int acpi_get_gpe(int gpe)
 static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 {
 	struct cr50_priv *priv = dev_get_priv(dev);
-	ulong timeout;
+	ulong timeout, base;
 	int i;
 
 #define CONFIG_TPM_TIS_ACPI_INTERRUPT 60	/* GPE0_DW1_28 */
@@ -89,13 +89,14 @@ static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 		return 0;
 	}
 
-	timeout = timer_get_us() + TIMEOUT_IRQ_US;
+	base = timer_get_us();
+	timeout = base + TIMEOUT_IRQ_US;
 
 	i = 0;
 	while (!acpi_get_gpe(CONFIG_TPM_TIS_ACPI_INTERRUPT)) {
 // 	while (!dm_gpio_get_value(&priv->ready_gpio)) {
 		i++;
-		if (timer_get_us() > timeout) {
+		if ((int)(timer_get_us() - timeout) >= 0) {
 			printf("Timeout on irq\n");
 			/*
 			 * Use this instead of -ETIMEDOUT which is used by i2c
@@ -103,6 +104,7 @@ static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 			return -ETIME;
 		}
 	}
+	printf("done in %uus\n", (int)(timer_get_us() - base));
 
 	return 0;
 }
@@ -253,8 +255,10 @@ static int cr50_i2c_status(struct udevice *dev)
 	int ret;
 
 	ret = cr50_i2c_read(dev, tpm_sts(priv->locality), buf, sizeof(buf));
-	if (ret)
+	if (ret) {
+		printf("%s: Failed to read status\n", __func__);
 		return ret;
+	}
 
 	return buf[0];
 }
@@ -282,6 +286,10 @@ static int cr50_i2c_wait_burststs(struct udevice *dev, u8 mask,
 	ulong timeout;
 	u32 buf;
 
+	/*
+	 * cr50 uses bytes 3:2 of status register for burst count and all 4
+	 * bytes must be read
+	 */
 	timeout = timer_get_us() + TIMEOUT_LONG_US;
 	while (timer_get_us() < timeout) {
 		if (cr50_i2c_read(dev, tpm_sts(priv->locality),
@@ -292,6 +300,7 @@ static int cr50_i2c_wait_burststs(struct udevice *dev, u8 mask,
 
 		*status = buf & 0xff;
 		*burst = le16_to_cpu((buf >> 8) & 0xffff);
+		printf("status %x, burst %x, mask %x\n", *status, *burst, mask);
 
 		if ((*status & mask) == mask &&
 		    *burst > 0 && *burst <= CR50_MAX_BUF_SIZE)
@@ -315,6 +324,7 @@ static int cr50_i2c_recv(struct udevice *dev, u8 *buf, size_t buf_len)
 	int status;
 	int ret;
 
+	debug("%s: len=%x\n", __func__, buf_len);
 	if (buf_len < TPM_HEADER_SIZE)
 		return -E2BIG;
 
@@ -366,6 +376,7 @@ static int cr50_i2c_recv(struct udevice *dev, u8 *buf, size_t buf_len)
 		printf("Data still available\n");
 		goto out_err;
 	}
+	printf("received %x\n", current);
 
 	return current;
 
@@ -393,10 +404,12 @@ static int cr50_i2c_send(struct udevice *dev, const u8 *buf, size_t len)
 	ulong timeout;
 	int ret;
 
+	debug("%s: len=%x\n", __func__, len);
+	print_buffer(0, buf, 1, len, 0);
 	timeout = timer_get_us() + TIMEOUT_LONG_US;
 	do {
 		ret = cr50_i2c_status(dev);
-		if (ret)
+		if (ret < 0)
 			goto out_err;
 		if (!(ret & TPM_STS_COMMAND_READY))
 			break;
@@ -449,15 +462,15 @@ static int cr50_i2c_send(struct udevice *dev, const u8 *buf, size_t len)
 		printf("Start command failed\n");
 		goto out_err;
 	}
+	printf("sent %x\n", sent);
+
 	return sent;
 
 out_err:
 	/* Abort current transaction if still pending */
 	ret = cr50_i2c_status(dev);
-	if (ret)
-		return ret;
 
-	if (ret & TPM_STS_COMMAND_READY) {
+	if (ret < 0 || (ret & TPM_STS_COMMAND_READY)) {
 		ret = cr50_i2c_ready(dev);
 		if (ret)
 			return ret;
