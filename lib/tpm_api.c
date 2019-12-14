@@ -16,10 +16,23 @@ static bool is_tpm1(struct udevice *dev)
 
 u32 tpm_startup(struct udevice *dev, enum tpm_startup_type mode)
 {
-	if (is_tpm1(dev))
+	if (is_tpm1(dev)) {
 		return tpm1_startup(dev, mode);
-	else
-		return tpm2_startup(dev, mode);
+	} else {
+		enum tpm2_startup_types type;
+
+		switch (mode) {
+		case TPM_ST_CLEAR:
+			type = TPM2_SU_CLEAR;
+			break;
+		case TPM_ST_STATE:
+			type = TPM2_SU_STATE;
+			break;
+		case TPM_ST_DEACTIVATED:
+			return -EINVAL;
+		}
+		return tpm2_startup(dev, type);
+	}
 }
 
 u32 tpm_resume(struct udevice *dev)

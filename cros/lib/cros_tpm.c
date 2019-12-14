@@ -347,7 +347,7 @@ static u32 do_setup(struct vboot_info *vboot, bool s3flag)
 {
 	u32 ret;
 
-	printf("Setting up TPM:\n");
+	printf("Setting up TPM (s3=%d):\n", s3flag);
 	ret = tpm_open(vboot->tpm);
 	if (ret != TPM_SUCCESS) {
 		log_err("TPM: Can't initialise\n");

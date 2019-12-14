@@ -20,6 +20,7 @@ u32 tpm2_startup(struct udevice *dev, enum tpm2_startup_types mode)
 	};
 	int ret;
 
+	printf("mode=%d\n", mode);
 	/*
 	 * Note TPM2_Startup command will return RC_SUCCESS the first time,
 	 * but will return RC_INITIALIZE otherwise.
