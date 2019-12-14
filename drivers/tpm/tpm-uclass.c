@@ -122,7 +122,7 @@ int tpm_xfer(struct udevice *dev, const uint8_t *sendbuf, size_t send_size,
 			break;
 		}
 	} while (ret);
-	printf("recv done\ %dn", ret);
+	printf("recv done %d\n", ret);
 
 	ret2 = ops->cleanup ? ops->cleanup(dev) : 0;
 

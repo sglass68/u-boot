@@ -96,7 +96,7 @@ static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 // 	while (!dm_gpio_get_value(&priv->ready_gpio)) {
 		i++;
 		if (timer_get_us() > timeout) {
-			printf("Timeout\n");
+			printf("Timeout on irq\n");
 			/*
 			 * Use this instead of -ETIMEDOUT which is used by i2c
 			 */
@@ -111,7 +111,7 @@ static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 static void cr50_i2c_clear_tpm_irq(struct udevice *dev)
 {
 	/* This is not really an interrupt, just a GPIO, so we can't clear it */
-	cr50_i2c_wait_tpm_ready(dev);
+	acpi_get_gpe(CONFIG_TPM_TIS_ACPI_INTERRUPT);
 }
 
 /*
