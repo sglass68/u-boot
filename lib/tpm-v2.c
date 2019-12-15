@@ -182,7 +182,7 @@ u32 tpm2_nv_read_value(struct udevice *dev, u32 index, void *data, u32 count)
 	u8 command_v2[COMMAND_BUFFER_SIZE] = {
 		/* header 10 bytes */
 		tpm_u16(TPM2_ST_SESSIONS),	/* TAG */
-		tpm_u32(10 + 8 + 9 + 4),	/* Length */
+		tpm_u32(10 + 8 + 4 + 9 + 4),	/* Length */
 		tpm_u32(TPM2_CC_NV_READ),	/* Command code */
 
 		/* handles 8 bytes */
