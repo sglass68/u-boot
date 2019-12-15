@@ -417,7 +417,7 @@ static int cr50_i2c_send(struct udevice *dev, const u8 *buf, size_t len)
 		ret = cr50_i2c_status(dev);
 		if (ret < 0)
 			goto out_err;
-		if (!(ret & TPM_STS_COMMAND_READY))
+		if (ret & TPM_STS_COMMAND_READY)
 			break;
 
 		if (timer_get_us() > timeout)
