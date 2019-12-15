@@ -104,7 +104,6 @@ static int cr50_i2c_wait_tpm_ready(struct udevice *dev)
 			return -ETIME;
 		}
 	}
-	printf("done in %uus\n", (int)(timer_get_us() - base));
 
 	return 0;
 }
@@ -285,7 +284,6 @@ static int cr50_i2c_wait_burststs(struct udevice *dev, u8 mask,
 	struct cr50_priv *priv = dev_get_priv(dev);
 	ulong timeout;
 	u32 buf;
-	int i = 0;
 
 	/*
 	 * cr50 uses bytes 3:2 of status register for burst count and all 4
@@ -301,18 +299,12 @@ static int cr50_i2c_wait_burststs(struct udevice *dev, u8 mask,
 
 		*status = buf & 0xff;
 		*burst = le16_to_cpu((buf >> 8) & 0xffff);
-		printf("status %x, burst %x, mask %x\n", *status, *burst, mask);
 
 		if ((*status & mask) == mask &&
 		    *burst > 0 && *burst <= CR50_MAX_BUF_SIZE)
 			return 0;
 
 		udelay(TIMEOUT_SHORT_US);
-		if (++i > 10) {
-			printf("stop\n");
-			while (1);
-		}
-
 	}
 
 	printf("Timeout reading burst and status\n");
@@ -349,10 +341,8 @@ static int cr50_i2c_recv(struct udevice *dev, u8 *buf, size_t buf_len)
 	/* Determine expected data in the return buffer */
 	memcpy(&expected_buf, buf + TPM_CMD_COUNT_OFFSET, sizeof(expected_buf));
 	expected = be32_to_cpu(expected_buf);
-	printf("expected=%d\n", expected);
 	if (expected > buf_len) {
-		printf("Too much data: %zu > %zu\n",
-		       expected, buf_len);
+		printf("Too much data: %zu > %zu\n", expected, buf_len);
 		goto out_err;
 	}
 
@@ -382,7 +372,6 @@ static int cr50_i2c_recv(struct udevice *dev, u8 *buf, size_t buf_len)
 		printf("Data still available\n");
 		goto out_err;
 	}
-	printf("received %x\n", current);
 
 	return current;
 
@@ -468,7 +457,6 @@ static int cr50_i2c_send(struct udevice *dev, const u8 *buf, size_t len)
 		printf("Start command failed\n");
 		goto out_err;
 	}
-	printf("sent %x, status %x\n", sent, status);
 
 	return sent;
 
@@ -484,9 +472,6 @@ out_err:
 
 	return -EIO;
 }
-
-// 	int (*xfer)(struct udevice *dev, const u8 *sendbuf, size_t send_size,
-// 		    u8 *recvbuf, size_t *recv_size);
 
 /**
  * process_reset() - Wait for the Cr50 to reset

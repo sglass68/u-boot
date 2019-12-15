@@ -233,12 +233,11 @@ static int dw_i2c_gen_config_rise_fall_time(struct i2c_regs *regs,
 	min_tlow_cnt = counts_from_time(&soc->freq, bus->min_tlow_ns);
 	min_thigh_cnt = counts_from_time(&soc->freq, bus->min_thigh_ns);
 
-	printf("dw_i2c: SoC %d/%d ns Bus: %d/%d ns\n",
-		soc->freq.ticks, soc->freq.ns, bus->freq.ticks, bus->freq.ns);
-	printf(
-"		dw_i2c: period %d rise %d fall %d tlow %d thigh %d spk %d\n",
-		period_cnt, rise_cnt, fall_cnt, min_tlow_cnt, min_thigh_cnt,
-		spk_cnt);
+	debug("dw_i2c: SoC %d/%d ns Bus: %d/%d ns\n",
+	      soc->freq.ticks, soc->freq.ns, bus->freq.ticks, bus->freq.ns);
+	debug("dw_i2c: period %d rise %d fall %d tlow %d thigh %d spk %d\n",
+	      period_cnt, rise_cnt, fall_cnt, min_tlow_cnt, min_thigh_cnt,
+	      spk_cnt);
 
 	/*
 	 * Back solve for hcnt and lcnt according to the following equations.
@@ -299,7 +298,6 @@ static unsigned int __dw_i2c_set_bus_speed(struct i2c_regs *i2c_base,
 	unsigned int ena;
 	int i2c_spd;
 
-	printf("bus_mhz = %d\n", bus_mhz);
 	/* Allow max speed if there is no config , or the config allows it */
 	if (speed >= I2C_MAX_SPEED &&
 	    (!scl_sda_cfg || scl_sda_cfg->has_max_speed))
@@ -333,8 +331,8 @@ static unsigned int __dw_i2c_set_bus_speed(struct i2c_regs *i2c_base,
 		cntl |= IC_CON_SPD_FS;
 		writel(cntl, &i2c_base->ic_con);
 		writel(config.sda_hold, &i2c_base->ic_sda_hold);
-		printf("now %d, %d, %d\n", config.scl_hcnt, config.scl_lcnt,
-		       config.sda_hold);
+		debug("now %d, %d, %d\n", config.scl_hcnt, config.scl_lcnt,
+		      config.sda_hold);
 		goto done;
 	}
 
@@ -375,7 +373,7 @@ static unsigned int __dw_i2c_set_bus_speed(struct i2c_regs *i2c_base,
 			hcnt = (bus_mhz * MIN_FS_SCL_HIGHTIME) / NANO_TO_MICRO;
 			lcnt = (bus_mhz * MIN_FS_SCL_LOWTIME) / NANO_TO_MICRO;
 		}
-		printf("was %d, %d\n", hcnt, lcnt);
+// 		printf("was %d, %d\n", hcnt, lcnt);
 #if 0
 		printf("was %d, %d\n", hcnt, lcnt);
 		hcnt = (bus_mhz * MIN_FS_SCL_HIGHTIME) / NANO_TO_MICRO;
@@ -559,9 +557,6 @@ static int __dw_i2c_read(struct i2c_regs *i2c_base, u8 dev, uint addr,
 
 	ret = i2c_xfer_finish(i2c_base);
 
-	printf("i2c_read: addr=%x, alen=%x:\n", addr, alen);
-	print_buffer(0, nbuffer, 1, nb, 0);
-
 	return ret;
 }
 
@@ -599,9 +594,6 @@ static int __dw_i2c_write(struct i2c_regs *i2c_base, u8 dev, uint addr,
 	debug("%s: fix addr_overflow: dev %02x addr %02x\n", __func__, dev,
 	      addr);
 #endif
-
-	printf("i2c_write: addr=%x, alen=%x:\n", addr, alen);
-	print_buffer(0, buffer, 1, len, 0);
 
 	if (i2c_xfer_init(i2c_base, dev, addr, alen))
 		return 1;
