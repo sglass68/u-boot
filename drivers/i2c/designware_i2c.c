@@ -502,8 +502,6 @@ static int __dw_i2c_read(struct i2c_regs *i2c_base, u8 dev, uint addr,
 {
 	unsigned long start_time_rx;
 	unsigned int active = 0;
-	int nb = len;
-	u8 *nbuffer = buffer;
 	int ret;
 
 #ifdef CONFIG_SYS_I2C_EEPROM_ADDR_OVERFLOW

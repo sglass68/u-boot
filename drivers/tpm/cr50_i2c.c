@@ -6,7 +6,6 @@
  */
 
 #define LOG_CATEGORY UCLASS_TPM
-#define LOG_DEBUG
 
 #include <common.h>
 #include <dm.h>
@@ -400,7 +399,6 @@ static int cr50_i2c_send(struct udevice *dev, const u8 *buf, size_t len)
 	int ret;
 
 	debug("%s: len=%x\n", __func__, len);
-	print_buffer(0, buf, 1, len, 0);
 	timeout = timer_get_us() + TIMEOUT_LONG_US;
 	do {
 		ret = cr50_i2c_status(dev);

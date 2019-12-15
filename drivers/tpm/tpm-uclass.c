@@ -80,8 +80,6 @@ int tpm_xfer(struct udevice *dev, const uint8_t *sendbuf, size_t send_size,
 	if (!ops->send || !ops->recv)
 		return -ENOSYS;
 
-	printf("here\n");
-
 	/* switch endianess: big->little */
 	count = get_unaligned_be32(sendbuf + TPM_CMD_COUNT_BYTE);
 	ordinal = get_unaligned_be32(sendbuf + TPM_CMD_ORDINAL_BYTE);
@@ -99,7 +97,6 @@ int tpm_xfer(struct udevice *dev, const uint8_t *sendbuf, size_t send_size,
 	ret = ops->send(dev, sendbuf, send_size);
 	if (ret < 0)
 		return ret;
-	printf("recv\n");
 
 	start = get_timer(0);
 	stop = tpm_tis_i2c_calc_ordinal_duration(priv, ordinal);
@@ -122,7 +119,6 @@ int tpm_xfer(struct udevice *dev, const uint8_t *sendbuf, size_t send_size,
 			break;
 		}
 	} while (ret);
-	printf("recv done %d\n", ret);
 
 	ret2 = ops->cleanup ? ops->cleanup(dev) : 0;
 

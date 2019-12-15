@@ -31,6 +31,7 @@
 static int vb2_init_blob(struct vboot_blob *blob, int work_buffer_size)
 {
 	struct vb2_context *ctx = &blob->ctx;
+	int ret;
 
 	/* initialise the vb2_context */
 	memset(blob, '\0', sizeof(*blob));
@@ -38,7 +39,9 @@ static int vb2_init_blob(struct vboot_blob *blob, int work_buffer_size)
 	ctx->workbuf = memalign(VBOOT_CONTEXT_ALIGN, ctx->workbuf_size);
 	if (!ctx->workbuf)
 		return -ENOMEM;
-	memset(ctx->workbuf, '\0', ctx->workbuf_size);
+	ret = vb2_init_context(ctx);
+	if (ret)
+		return log_msg_ret("init_context", ret);
 
 	return 0;
 }
@@ -128,11 +131,13 @@ int vboot_ver_init(struct vboot_info *vboot)
 	bootstage_mark(BOOTSTAGE_VBOOT_START_TPMINIT);
 	ret = cros_nvdata_read_walk(CROS_NV_SECDATA, ctx->secdata,
 				    sizeof(ctx->secdata));
+	printf("cros_nvdata_read_walk ret=%d\n", ret);
 	if (ret == -ENOENT)
 		printf("SKIP factory init\n");
 // 		ret = cros_tpm_factory_initialise(vboot);
 	else if (ret)
 		return log_msg_ret("read secdata", ret);
+	printf("secdata:\n");
 	print_buffer(0, ctx->secdata, 1, sizeof(ctx->secdata), 0);
 
 	bootstage_mark(BOOTSTAGE_VBOOT_END_TPMINIT);
