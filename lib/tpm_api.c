@@ -28,6 +28,7 @@ u32 tpm_startup(struct udevice *dev, enum tpm_startup_type mode)
 		case TPM_ST_STATE:
 			type = TPM2_SU_STATE;
 			break;
+		default:
 		case TPM_ST_DEACTIVATED:
 			return -EINVAL;
 		}

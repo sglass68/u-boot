@@ -504,6 +504,9 @@ static int __dw_i2c_read(struct i2c_regs *i2c_base, u8 dev, uint addr,
 {
 	unsigned long start_time_rx;
 	unsigned int active = 0;
+	int nb = len;
+	u8 *nbuffer = buffer;
+	int ret;
 
 #ifdef CONFIG_SYS_I2C_EEPROM_ADDR_OVERFLOW
 	/*
@@ -554,7 +557,12 @@ static int __dw_i2c_read(struct i2c_regs *i2c_base, u8 dev, uint addr,
 		}
 	}
 
-	return i2c_xfer_finish(i2c_base);
+	ret = i2c_xfer_finish(i2c_base);
+
+	printf("i2c_read: addr=%x, alen=%x:\n", addr, alen);
+	print_buffer(0, nbuffer, 1, nb, 0);
+
+	return ret;
 }
 
 /*
@@ -591,6 +599,9 @@ static int __dw_i2c_write(struct i2c_regs *i2c_base, u8 dev, uint addr,
 	debug("%s: fix addr_overflow: dev %02x addr %02x\n", __func__, dev,
 	      addr);
 #endif
+
+	printf("i2c_write: addr=%x, alen=%x:\n", addr, alen);
+	print_buffer(0, buffer, 1, len, 0);
 
 	if (i2c_xfer_init(i2c_base, dev, addr, alen))
 		return 1;

@@ -285,6 +285,7 @@ static int cr50_i2c_wait_burststs(struct udevice *dev, u8 mask,
 	struct cr50_priv *priv = dev_get_priv(dev);
 	ulong timeout;
 	u32 buf;
+	int i = 0;
 
 	/*
 	 * cr50 uses bytes 3:2 of status register for burst count and all 4
@@ -307,6 +308,11 @@ static int cr50_i2c_wait_burststs(struct udevice *dev, u8 mask,
 			return 0;
 
 		udelay(TIMEOUT_SHORT_US);
+		if (++i > 10) {
+			printf("stop\n");
+			while (1);
+		}
+
 	}
 
 	printf("Timeout reading burst and status\n");
@@ -462,7 +468,7 @@ static int cr50_i2c_send(struct udevice *dev, const u8 *buf, size_t len)
 		printf("Start command failed\n");
 		goto out_err;
 	}
-	printf("sent %x\n", sent);
+	printf("sent %x, status %x\n", sent, status);
 
 	return sent;
 
@@ -478,6 +484,9 @@ out_err:
 
 	return -EIO;
 }
+
+// 	int (*xfer)(struct udevice *dev, const u8 *sendbuf, size_t send_size,
+// 		    u8 *recvbuf, size_t *recv_size);
 
 /**
  * process_reset() - Wait for the Cr50 to reset
