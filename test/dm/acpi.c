@@ -15,6 +15,19 @@
 #include <test/ut.h>
 
 #define ACPI_TEST_DEV_NAME	"ABCD"
+#define BUF_SIZE		4096
+
+static int testacpi_write_tables(const struct udevice *dev,
+				 struct acpi_ctx *ctx)
+{
+	struct acpi_dmar *dmar;
+
+	dmar = (struct acpi_dmar *)ctx->current;
+	acpi_create_dmar(dmar, DMAR_INTR_REMAP);
+	ctx->current += sizeof(struct acpi_dmar);
+
+	return 0;
+}
 
 static int testacpi_get_name(const struct udevice *dev, char *out_name)
 {
@@ -23,6 +36,7 @@ static int testacpi_get_name(const struct udevice *dev, char *out_name)
 
 struct acpi_ops testacpi_ops = {
 	.get_name	= testacpi_get_name,
+	.write_tables	= testacpi_write_tables,
 };
 
 static const struct udevice_id testacpi_ids[] = {
@@ -109,3 +123,32 @@ static int dm_test_acpi_fill_header(struct unit_test_state *uts)
 	return 0;
 }
 DM_TEST(dm_test_acpi_fill_header, DM_TESTF_SCAN_PDATA | DM_TESTF_SCAN_FDT);
+
+/* Test ACPI write_tables() */
+static int dm_test_acpi_write_tables(struct unit_test_state *uts)
+{
+	struct acpi_dmar *dmar;
+	struct acpi_ctx ctx;
+	void *buf;
+
+	buf = malloc(BUF_SIZE);
+	ut_assertnonnull(buf);
+
+	ctx.current = buf;
+	ut_assertok(acpi_write_dev_tables(&ctx));
+	dmar = buf;
+
+	/*
+	 * We should have two dmar tables, one for each "denx,u-boot-acpi-test"
+	 * device
+	 */
+	ut_asserteq_ptr(dmar + 2, ctx.current);
+	ut_asserteq(DMAR_INTR_REMAP, dmar->flags);
+	ut_asserteq(32 - 1, dmar->host_address_width);
+
+	ut_asserteq(DMAR_INTR_REMAP, dmar[1].flags);
+	ut_asserteq(32 - 1, dmar[1].host_address_width);
+
+	return 0;
+}
+DM_TEST(dm_test_acpi_write_tables, DM_TESTF_SCAN_PDATA | DM_TESTF_SCAN_FDT);

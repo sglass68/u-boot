@@ -21,7 +21,16 @@
 
 #if !defined(__ACPI__)
 
-
+/**
+ * struct acpi_ctx - Context used for writing ACPI tables
+ *
+ * This contains a few useful pieces of information used when writing
+ *
+ * @current: Current address for writing
+ */
+struct acpi_ctx {
+	void *current;
+};
 
 /**
  * struct acpi_ops - ACPI operations supported by driver model
@@ -37,6 +46,15 @@ struct acpi_ops {
 	 *	other error
 	 */
 	int (*get_name)(const struct udevice *dev, char *out_name);
+
+	/**
+	 * write_tables() - Write out any tables required by this device
+	 *
+	 * @dev: Device to write
+	 * @ctx: ACPI context to use
+	 * @return 0 if OK, -ve on error
+	 */
+	int (*write_tables)(const struct udevice *dev, struct acpi_ctx *ctx);
 };
 
 #define device_get_acpi_ops(dev)	(dev->driver->acpi_ops)
@@ -70,6 +88,16 @@ int acpi_get_name(const struct udevice *dev, char *out_name);
  * @return 0 (always)
  */
 int acpi_return_name(char *out_name, const char *name);
+
+/**
+ * acpi_write_dev_tables() - Write ACPI tables required by devices
+ *
+ * This scans through all devices and tells them to write any tables they want
+ * to write.
+ *
+ * @return 0 if OK, -ve if any device returned an error
+ */
+int acpi_write_dev_tables(struct acpi_ctx *ctx);
 
 #endif /* __ACPI__ */
 

@@ -17,6 +17,7 @@
 #define OEM_ID			"U-BOOT"	/* U-Boot */
 #define OEM_TABLE_ID		"U-BOOTBL"	/* U-Boot Table */
 #define ASLC_ID			"INTL"		/* Intel ASL Compiler */
+#define ACPI_TABLE_CREATOR	OEM_TABLE_ID
 
 #define ACPI_RSDP_REV_ACPI_1_0	0
 #define ACPI_RSDP_REV_ACPI_2_0	2
