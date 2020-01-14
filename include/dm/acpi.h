@@ -19,6 +19,10 @@
 /* Length of an ACPI name string; this is 4 characters plus a nul terminator */
 #define ACPI_NAME_MAX	5
 
+#if !defined(__ACPI__)
+
+
+
 /**
  * struct acpi_ops - ACPI operations supported by driver model
  */
@@ -66,5 +70,7 @@ int acpi_get_name(const struct udevice *dev, char *out_name);
  * @return 0 (always)
  */
 int acpi_return_name(char *out_name, const char *name);
+
+#endif /* __ACPI__ */
 
 #endif
