@@ -8,7 +8,7 @@
 #include <cpu.h>
 #include <dm.h>
 #include <dm/uclass-internal.h>
-#include <asm/acpi_table.h>
+#include <acpi_table.h>
 #include <asm/io.h>
 #include <asm/tables.h>
 #include <asm/arch/global_nvs.h>

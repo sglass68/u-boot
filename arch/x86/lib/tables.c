@@ -8,7 +8,7 @@
 #include <asm/sfi.h>
 #include <asm/mpspec.h>
 #include <asm/tables.h>
-#include <asm/acpi_table.h>
+#include <acpi_table.h>
 #include <asm/coreboot_tables.h>
 
 /**

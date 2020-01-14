@@ -27,7 +27,7 @@
 #include <malloc.h>
 #include <syscon.h>
 #include <asm/acpi.h>
-#include <asm/acpi_table.h>
+#include <acpi_table.h>
 #include <asm/control_regs.h>
 #include <asm/coreboot_tables.h>
 #include <asm/cpu.h>
