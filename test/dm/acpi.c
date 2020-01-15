@@ -9,6 +9,9 @@
 #include <common.h>
 #include <acpi_table.h>
 #include <dm.h>
+#include <malloc.h>
+#include <mapmem.h>
+#include <tables_csum.h>
 #include <version.h>
 #include <dm/acpi.h>
 #include <dm/test.h>
@@ -138,9 +141,9 @@ static int dm_test_acpi_write_tables(struct unit_test_state *uts)
 	buf = malloc(BUF_SIZE);
 	ut_assertnonnull(buf);
 
-	ctx.current = buf;
+	acpi_setup_base_tables(&ctx, buf);
+	dmar = ctx.current;
 	ut_assertok(acpi_write_dev_tables(&ctx));
-	dmar = buf;
 
 	/*
 	 * We should have two dmar tables, one for each "denx,u-boot-acpi-test"
@@ -152,6 +155,11 @@ static int dm_test_acpi_write_tables(struct unit_test_state *uts)
 
 	ut_asserteq(DMAR_INTR_REMAP, dmar[1].flags);
 	ut_asserteq(32 - 1, dmar[1].host_address_width);
+
+	/* Check that the pointers were added correctly */
+	ut_asserteq(map_to_sysmem(dmar), ctx.rsdt->entry[0]);
+	ut_asserteq(map_to_sysmem(dmar + 1), ctx.rsdt->entry[1]);
+	ut_asserteq(0, ctx.rsdt->entry[2]);
 
 	return 0;
 }
@@ -184,3 +192,45 @@ static int dm_test_acpi_basic(struct unit_test_state *uts)
 	return 0;
 }
 DM_TEST(dm_test_acpi_basic, DM_TESTF_SCAN_PDATA | DM_TESTF_SCAN_FDT);
+
+/* Test acpi_setup_base_tables */
+static int dm_test_acpi_setup_base_tables(struct unit_test_state *uts)
+{
+	struct acpi_rsdp *rsdp;
+	struct acpi_rsdt *rsdt;
+	struct acpi_xsdt *xsdt;
+	struct acpi_ctx ctx;
+	void *buf, *end;
+
+	/* Use an unaligned address deliberately */
+	buf = memalign(64, BUF_SIZE);
+	ut_assertnonnull(buf);
+	acpi_setup_base_tables(&ctx, buf + 4);
+
+	rsdp = buf + 16;
+	ut_asserteq_ptr(rsdp, ctx.rsdp);
+	ut_assertok(memcmp(RSDP_SIG, rsdp->signature, sizeof(rsdp->signature)));
+	ut_asserteq(sizeof(*rsdp), rsdp->length);
+	ut_assertok(table_compute_checksum(rsdp, 20));
+	ut_assertok(table_compute_checksum(rsdp, sizeof(*rsdp)));
+
+	rsdt = PTR_ALIGN((void *)rsdp + sizeof(*rsdp), 16);
+	ut_asserteq_ptr(rsdt, ctx.rsdt);
+	ut_assertok(memcmp("RSDT", rsdt->header.signature, ACPI_NAME_LEN));
+	ut_asserteq(sizeof(*rsdt), rsdt->header.length);
+	ut_assertok(table_compute_checksum(rsdt, sizeof(*rsdt)));
+
+	xsdt = PTR_ALIGN((void *)rsdt + sizeof(*rsdt), 16);
+	ut_assertok(memcmp("XSDT", xsdt->header.signature, ACPI_NAME_LEN));
+	ut_asserteq(sizeof(*xsdt), xsdt->header.length);
+	ut_assertok(table_compute_checksum(xsdt, sizeof(*xsdt)));
+
+	end = PTR_ALIGN((void *)xsdt + sizeof(*xsdt), 64);
+	ut_asserteq_ptr(end, ctx.current);
+
+	ut_asserteq(map_to_sysmem(rsdt), rsdp->rsdt_address);
+	ut_asserteq(map_to_sysmem(xsdt), rsdp->xsdt_address);
+
+	return 0;
+}
+DM_TEST(dm_test_acpi_setup_base_tables, DM_TESTF_SCAN_PDATA | DM_TESTF_SCAN_FDT);

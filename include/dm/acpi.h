@@ -16,7 +16,10 @@
 #define acpi_ops_ptr(_ptr)
 #endif
 
-/* Length of an ACPI name string; this is 4 characters plus a nul terminator */
+/* Length of an ACPI name string, excluding nul terminator */
+#define ACPI_NAME_LEN	4
+
+/* Length of an ACPI name string including nul terminator */
 #define ACPI_NAME_MAX	5
 
 #if !defined(__ACPI__)
