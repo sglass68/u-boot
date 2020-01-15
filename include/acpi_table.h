@@ -21,6 +21,9 @@
 #define ACPI_RSDP_REV_ACPI_1_0	0
 #define ACPI_RSDP_REV_ACPI_2_0	2
 
+/* TODO(sjg@chromium.org): Figure out how to get compiler revision */
+#define ASL_REVISION	0
+
 #if !defined(__ACPI__)
 
 /*
@@ -352,6 +355,51 @@ struct acpi_csrt_shared_info {
 	u32 max_block_size;
 };
 
+enum dmar_type {
+	DMAR_DRHD = 0,
+	DMAR_RMRR = 1,
+	DMAR_ATSR = 2,
+	DMAR_RHSA = 3,
+	DMAR_ANDD = 4
+};
+
+enum {
+	DRHD_INCLUDE_PCI_ALL = 1
+};
+
+enum dmar_flags {
+	DMAR_INTR_REMAP			= 1 << 0,
+	DMAR_X2APIC_OPT_OUT		= 1 << 1,
+	DMA_CTRL_PLATFORM_OPT_IN_FLAG	= 1 << 2,
+};
+
+struct __packed dmar_entry {
+	u16 type;
+	u16 length;
+	u8 flags;
+	u8 reserved;
+	u16 segment;
+	u64 bar;
+};
+
+struct __packed dmar_rmrr_entry {
+	u16 type;
+	u16 length;
+	u16 reserved;
+	u16 segment;
+	u64 bar;
+	u64 limit;
+};
+
+/* DMAR (DMA Remapping Reporting Structure) */
+struct acpi_dmar {
+	struct acpi_table_header header;
+	u8 host_address_width;
+	u8 flags;
+	u8 reserved[10];
+	struct dmar_entry structure[0];
+} __packed;
+
 /* DBG2 definitions are partially used for SPCR interface_type */
 
 /* Types for port_type field */
@@ -443,6 +491,15 @@ enum acpi_tables {
  * @return version number that U-Boot generates
  */
 int acpi_get_table_revision(enum acpi_tables table);
+
+/**
+ * acpi_create_dmar() - Create a DMA Remapping Reporting (DMAR) table
+ *
+ * @dmar: Place to put the table
+ * @flags: DMAR flags to use
+ * @return 0 if OK, -ve on error
+ */
+int acpi_create_dmar(struct acpi_dmar *dmar, enum dmar_flags flags);
 
 #endif /* !__ACPI__*/
 
