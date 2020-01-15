@@ -146,6 +146,17 @@ static int do_acpi_list(cmd_tbl_t *cmdtp, int flag, int argc,
 	return 0;
 }
 
+static int do_acpi_items(cmd_tbl_t *cmdtp, int flag, int argc,
+			char *const argv[])
+{
+	bool dump;
+
+	dump = argc >= 2 && !strcmp("-d", argv[1]);
+	acpi_dump_items(dump);
+
+	return 0;
+}
+
 static int do_acpi_dump(cmd_tbl_t *cmdtp, int flag, int argc,
 			char *const argv[])
 {
@@ -153,8 +164,6 @@ static int do_acpi_dump(cmd_tbl_t *cmdtp, int flag, int argc,
 	char sig[ACPI_NAME_LEN];
 	int ret;
 
-	if (argc < 2)
-		return CMD_RET_USAGE;
 	name = argv[1];
 	if (strlen(name) != ACPI_NAME_LEN) {
 		printf("Table name '%s' must be four characters\n", name);
@@ -172,8 +181,10 @@ static int do_acpi_dump(cmd_tbl_t *cmdtp, int flag, int argc,
 
 static char acpi_help_text[] =
 	"list - list ACPI tables\n"
+	"acpi items [-d]  - List/dump each piece of ACPI data from devices\n"
 	"acpi dump <name> - Dump ACPI table";
 
 U_BOOT_CMD_WITH_SUBCMDS(acpi, "ACPI tables", acpi_help_text,
 	U_BOOT_SUBCMD_MKENT(list, 1, 1, do_acpi_list),
+	U_BOOT_SUBCMD_MKENT(items, 2, 1, do_acpi_items),
 	U_BOOT_SUBCMD_MKENT(dump, 2, 1, do_acpi_dump));

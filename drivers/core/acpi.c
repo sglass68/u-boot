@@ -105,6 +105,22 @@ static int acpi_add_item(struct acpi_ctx *ctx, struct udevice *dev,
 	return 0;
 }
 
+void acpi_dump_items(bool dump_contents)
+{
+	int i;
+
+	for (i = 0; i < item_count; i++) {
+		struct acpi_item *item = &acpi_item[i];
+
+		printf("dev '%s', type %d, size %x\n", item->dev->name,
+		       item->type, item->size);
+		if (dump_contents) {
+			print_buffer(0, item->buf, 1, item->size, 0);
+			printf("\n");
+		}
+	}
+}
+
 struct acpi_item *find_item(const char *devname)
 {
 	int i;
@@ -203,6 +219,7 @@ int acpi_fill_ssdt(struct acpi_ctx *ctx)
 	int ret;
 
 	log_debug("Writing SSDT tables\n");
+	item_count = 0;
 	ret = _acpi_fill_ssdt(ctx, dm_root());
 	log_debug("Writing SSDT finished, err=%d\n", ret);
 	ret = build_type(ctx, start, TYPE_SSDT);
@@ -248,6 +265,7 @@ int acpi_inject_dsdt(struct acpi_ctx *ctx)
 	int ret;
 
 	log_debug("Writing DSDT tables\n");
+	item_count = 0;
 	ret = _acpi_inject_dsdt(ctx, dm_root());
 	log_debug("Writing DSDT finished, err=%d\n", ret);
 	ret = build_type(ctx, start, TYPE_DSDT);
