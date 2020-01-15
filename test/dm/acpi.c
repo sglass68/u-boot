@@ -21,10 +21,14 @@ static int testacpi_write_tables(const struct udevice *dev,
 				 struct acpi_ctx *ctx)
 {
 	struct acpi_dmar *dmar;
+	int ret;
 
 	dmar = (struct acpi_dmar *)ctx->current;
 	acpi_create_dmar(dmar, DMAR_INTR_REMAP);
 	ctx->current += sizeof(struct acpi_dmar);
+	ret = acpi_add_table(ctx, dmar);
+	if (ret)
+		return log_msg_ret("add", ret);
 
 	return 0;
 }
