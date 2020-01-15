@@ -13,7 +13,7 @@ struct p_current{
        int pid;
 };
 
-extern struct p_current *current;
+// extern struct p_current *current;
 
 /* avoid conflict with <dm/device.h> */
 #ifdef dev_dbg
