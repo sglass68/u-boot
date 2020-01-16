@@ -94,6 +94,7 @@
 		int-value = <1234>;
 		uint-value = <(-1234)>;
 		interrupts-extended = <&irq 3 0>;
+		acpi,name = "GHIJ";
 	};
 
 	junk {

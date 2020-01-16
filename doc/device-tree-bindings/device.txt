@@ -18,6 +18,8 @@ U-Boot provides for some optional properties which are documented here.
  - acpi,hid-desc-reg-offset : HID register offset (for Human Interface Devices)
  - acpi,probed : Tells U-Boot to add 'linux,probed' to the ACPI tables so that
     Linux will not re-init the device
+ - acpi,name : Provides the ACPI name for a device, which is a string consisting
+   of four alphanumeric character (upper case)
  - acpi,uid : _UID value for device
 
 
@@ -34,4 +36,15 @@ synaptics_touchpad: synaptics-touchpad@2c {
 			IRQ_TYPE_EDGE_FALLING>;
 	acpi,probed;
 	acpi,hid-desc-reg-offset = <0x20>;
+};
+
+pcie-a0@14,0 {
+	reg = <0x0000a000 0 0 0 0>;
+	acpi,name = "RP01";
+	wifi: wifi {
+		compatible = "intel,generic-wifi";
+		acpi,desc = "Intel WiFi";
+		acpi,name = "WF00";
+		interrupts-extended = <&acpi_gpe 0x3c 0>;
+	};
 };

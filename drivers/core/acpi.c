@@ -9,6 +9,7 @@
 #define LOG_CATEOGRY	LOGC_ACPI
 
 #include <common.h>
+#include <acpi_device.h>
 #include <dm.h>
 #include <dm/acpi.h>
 #include <dm/device-internal.h>
@@ -51,12 +52,20 @@ int acpi_return_name(char *out_name, const char *name)
 int acpi_get_name(const struct udevice *dev, char *out_name)
 {
 	struct acpi_ops *aops;
+	const char *name;
+	int ret;
 
 	aops = device_get_acpi_ops(dev);
 	if (aops && aops->get_name)
 		return aops->get_name(dev, out_name);
+	name = dev_read_string(dev, "acpi,name");
+	if (name)
+		return acpi_return_name(out_name, name);
+	ret = acpi_device_get_name(dev, out_name);
+	if (ret)
+		return log_msg_ret("dev", ret);
 
-	return -ENOSYS;
+	return 0;
 }
 
 /**
