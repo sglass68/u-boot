@@ -11,6 +11,7 @@
 #include <common.h>
 #include <dm.h>
 #include <dm/acpi.h>
+#include <dm/device-internal.h>
 #include <dm/root.h>
 
 int acpi_return_name(char *out_name, const char *name)
@@ -29,6 +30,43 @@ int acpi_get_name(const struct udevice *dev, char *out_name)
 		return aops->get_name(dev, out_name);
 
 	return -ENOSYS;
+}
+
+int _acpi_fill_ssdt(struct acpi_ctx *ctx, struct udevice *parent)
+{
+	struct acpi_ops *aops;
+	struct udevice *dev;
+	int ret;
+
+	aops = device_get_acpi_ops(parent);
+	if (aops && aops->fill_ssdt) {
+		log_debug("\n- %s %p\n", parent->name,
+			  aops->fill_ssdt);
+		ret = device_ofdata_to_platdata(parent);
+		if (ret)
+			return log_msg_ret("ofdata", ret);
+		ret = aops->fill_ssdt(parent, ctx);
+		if (ret)
+			return log_msg_ret("ssdt", ret);
+	}
+	device_foreach_child(dev, parent) {
+		ret = _acpi_fill_ssdt(ctx, dev);
+		if (ret)
+			return log_msg_ret("recurse", ret);
+	}
+
+	return 0;
+}
+
+int acpi_fill_ssdt(struct acpi_ctx *ctx)
+{
+	int ret;
+
+	log_debug("Writing SSDT tables\n");
+	ret = _acpi_fill_ssdt(ctx, dm_root());
+	log_debug("Writing SSDT finished, err=%d\n", ret);
+
+	return ret;
 }
 
 int _acpi_write_dev_tables(struct acpi_ctx *ctx, const struct udevice *parent)
