@@ -22,6 +22,9 @@
 /* Length of an ACPI name string including nul terminator */
 #define ACPI_NAME_MAX	5
 
+/* Number of nested objects supported */
+#define ACPIGEN_LENSTACK_SIZE 10
+
 #if !defined(__ACPI__)
 
 /**
@@ -34,12 +37,16 @@
  *	adding a new table. The RSDP holds pointers to the RSDP and XSDT.
  * @rsdt: Pointer to the Root System Description Table
  * @xsdt: Pointer to the Extended System Description Table
+ * @len_stack: Stack of 'length' words to fix up later
+ * @ltop: Points to current top of stack (0 = empty)
  */
 struct acpi_ctx {
 	void *current;
 	struct acpi_rsdp *rsdp;
 	struct acpi_rsdt *rsdt;
 	struct acpi_xsdt *xsdt;
+	char *len_stack[ACPIGEN_LENSTACK_SIZE];
+	int ltop;
 };
 
 /**

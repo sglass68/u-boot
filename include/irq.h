@@ -8,6 +8,8 @@
 #ifndef __irq_H
 #define __irq_H
 
+struct ofnode_phandle_args;
+
 /*
  * Interupt controller types available. You can find a particular one with
  * irq_first_device_type()
