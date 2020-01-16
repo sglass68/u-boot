@@ -206,12 +206,12 @@
 		compatible = "denx,u-boot-devres-test";
 	};
 
-	acpi-test {
+	acpi_test1: acpi-test {
 		compatible = "denx,u-boot-acpi-test";
 		acpi-ssdt-test-data = "ab";
 	};
 
-	acpi-test2 {
+	acpi_test2: acpi-test2 {
 		compatible = "denx,u-boot-acpi-test";
 		acpi-ssdt-test-data = "cd";
 	};
@@ -822,6 +822,7 @@
 	chosen {
 		#address-cells = <1>;
 		#size-cells = <1>;
+		u-boot,acpi-ssdt-order = <&acpi_test2 &acpi_test1>;
 		chosen-test {
 			compatible = "denx,u-boot-fdt-test";
 			reg = <9 1>;
