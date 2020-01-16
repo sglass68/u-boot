@@ -535,6 +535,17 @@ size_t acpi_dp_add_property_list(struct acpi_dp *dp,
 int acpi_dp_write(struct acpi_ctx *ctx, struct acpi_dp *table);
 
 /**
+ * acpi_device_write_gpio_desc() - Write a GPIO to ACPI
+ *
+ * This creates a GPIO descriptor for a GPIO, including information ACPI needs
+ * to use it. The type is always ACPI_GPIO_TYPE_IO.
+ *
+ * @desc: GPIO to write
+ * @return 0 if OK, -ve on error
+ */
+int acpi_device_write_gpio_desc(struct acpi_ctx *ctx, const struct gpio_desc *desc);
+
+/**
  * acpi_device_write_i2c_dev() - Write an I2C device to ACPI, including
  * information ACPI needs to use it.
  *

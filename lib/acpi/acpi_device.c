@@ -287,6 +287,22 @@ int acpi_device_write_gpio(struct acpi_ctx *ctx, const struct acpi_gpio *gpio)
 	return 0;
 }
 
+int acpi_device_write_gpio_desc(struct acpi_ctx *ctx,
+				const struct gpio_desc *desc)
+{
+	struct acpi_gpio gpio;
+	int ret;
+
+	ret = gpio_get_acpi(desc, &gpio);
+	if (ret)
+		return log_msg_ret("desc", ret);
+	ret = acpi_device_write_gpio(ctx, &gpio);
+	if (ret)
+		return log_msg_ret("gpio", ret);
+
+	return 0;
+}
+
 /* ACPI 6.1 section 6.4.3.8.2.1 - I2cSerialBus() */
 static void acpi_device_write_i2c(struct acpi_ctx *ctx,
 				  const struct acpi_i2c *i2c)

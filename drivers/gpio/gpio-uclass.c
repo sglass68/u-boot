@@ -4,6 +4,7 @@
  */
 
 #include <common.h>
+#include <acpi_device.h>
 #include <dm.h>
 #include <dm/device-internal.h>
 #include <dm/lists.h>
@@ -696,6 +697,26 @@ int gpio_get_status(struct udevice *dev, int offset, char *buf, int buffsize)
 
 	return 0;
 }
+
+#if CONFIG_IS_ENABLED(ACPIGEN)
+int gpio_get_acpi(const struct gpio_desc *desc, struct acpi_gpio *gpio)
+{
+	struct dm_gpio_ops *ops;
+
+	if (!dm_gpio_is_valid(desc)) {
+		/* Indicate that the GPIO is not valid */
+		gpio->pin_count = 0;
+		gpio->pins[0] = 0;
+		return -EINVAL;
+	}
+
+	ops = gpio_get_ops(desc->dev);
+	if (!ops->get_acpi)
+		return -ENOSYS;
+
+	return ops->get_acpi(desc, gpio);
+}
+#endif
 
 int gpio_claim_vector(const int *gpio_num_array, const char *fmt)
 {
