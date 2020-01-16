@@ -18,6 +18,7 @@
 
 /* Type of table that we collected */
 enum gen_type_t {
+	TYPE_DSDT,
 	TYPE_SSDT,
 };
 
@@ -118,7 +119,9 @@ static int build_type(struct acpi_ctx *ctx, void *start, enum gen_type_t type)
 	void *end = ctx->current;
 
 	ptr = start;
-	order = ofnode_get_chosen_prop("u-boot,acpi-ssdt-order", &size);
+	order = ofnode_get_chosen_prop(type == TYPE_DSDT ?
+				       "u-boot,acpi-dsdt-order" :
+				       "u-boot,acpi-ssdt-order", &size);
 	if (!order) {
 		log_warning("Failed to find ordering, leaving as is\n");
 		return 0;
@@ -194,6 +197,51 @@ int acpi_fill_ssdt(struct acpi_ctx *ctx)
 	ret = _acpi_fill_ssdt(ctx, dm_root());
 	log_debug("Writing SSDT finished, err=%d\n", ret);
 	ret = build_type(ctx, start, TYPE_SSDT);
+	if (ret)
+		return log_msg_ret("build", ret);
+
+	return ret;
+}
+
+int _acpi_inject_dsdt(struct acpi_ctx *ctx, struct udevice *parent)
+{
+	struct acpi_ops *aops;
+	struct udevice *dev;
+	int ret;
+
+	aops = device_get_acpi_ops(parent);
+	if (aops && aops->inject_dsdt) {
+		void *start = ctx->current;
+
+		log_debug("- %s %p\n", parent->name, aops->inject_dsdt);
+		ret = device_ofdata_to_platdata(parent);
+		if (ret)
+			return log_msg_ret("ofdata", ret);
+		ret = aops->inject_dsdt(parent, ctx);
+		if (ret)
+			return ret;
+		ret = acpi_add_item(ctx, parent, TYPE_DSDT, start);
+		if (ret)
+			return ret;
+	}
+	device_foreach_child(dev, parent) {
+		ret = _acpi_inject_dsdt(ctx, dev);
+		if (ret)
+			return ret;
+	}
+
+	return 0;
+}
+
+int acpi_inject_dsdt(struct acpi_ctx *ctx)
+{
+	void *start = ctx->current;
+	int ret;
+
+	log_debug("Writing DSDT tables\n");
+	ret = _acpi_inject_dsdt(ctx, dm_root());
+	log_debug("Writing DSDT finished, err=%d\n", ret);
+	ret = build_type(ctx, start, TYPE_DSDT);
 	if (ret)
 		return log_msg_ret("build", ret);
 
