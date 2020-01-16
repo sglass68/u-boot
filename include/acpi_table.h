@@ -30,6 +30,18 @@
 struct acpi_ctx;
 
 /*
+ * The assigned ACPI ID for the coreboot project is 'BOOT'
+ * http://www.uefi.org/acpi_id_list
+ */
+#define COREBOOT_ACPI_ID	"BOOT"      /* ACPI ID for coreboot HIDs */
+
+/* List of ACPI HID that use the coreboot ACPI ID */
+enum coreboot_acpi_ids {
+	COREBOOT_ACPI_ID_CBTABLE	= 0x0000, /* BOOT0000 */
+	COREBOOT_ACPI_ID_MAX		= 0xFFFF, /* BOOTFFFF */
+};
+
+/*
  * RSDP (Root System Description Pointer)
  * Note: ACPI 1.0 didn't have length, xsdt_address, and ext_checksum
  */
@@ -356,6 +368,44 @@ struct acpi_csrt_shared_info {
 	u16 base_request_line;
 	u16 num_handshake_signals;
 	u32 max_block_size;
+};
+
+struct __packed acpi_cstate {
+	u8  ctype;
+	u16 latency;
+	u32 power;
+	struct acpi_gen_regaddr resource;
+};
+
+struct __packed acpi_tstate {
+	u32 percent;
+	u32 power;
+	u32 latency;
+	u32 control;
+	u32 status;
+};
+
+/* Port types for ACPI _UPC object */
+enum acpi_upc_type {
+	UPC_TYPE_A,
+	UPC_TYPE_MINI_AB,
+	UPC_TYPE_EXPRESSCARD,
+	UPC_TYPE_USB3_A,
+	UPC_TYPE_USB3_B,
+	UPC_TYPE_USB3_MICRO_B,
+	UPC_TYPE_USB3_MICRO_AB,
+	UPC_TYPE_USB3_POWER_B,
+	UPC_TYPE_C_USB2_ONLY,
+	UPC_TYPE_C_USB2_SS_SWITCH,
+	UPC_TYPE_C_USB2_SS,
+	UPC_TYPE_PROPRIETARY = 0xff,
+	/*
+	 * The following types are not directly defined in the ACPI
+	 * spec but are used by coreboot to identify a USB device type.
+	 */
+	UPC_TYPE_INTERNAL = 0xff,
+	UPC_TYPE_UNUSED,
+	UPC_TYPE_HUB
 };
 
 enum dmar_type {
