@@ -546,6 +546,33 @@ int acpi_dp_write(struct acpi_ctx *ctx, struct acpi_dp *table);
 int acpi_device_write_gpio_desc(struct acpi_ctx *ctx, const struct gpio_desc *desc);
 
 /**
+ * acpi_device_write_interrupt_irq() - Write an interrupt to ACPI
+ *
+ * This creates an interrupt descriptor for an interrupt, including information
+ * ACPI needs to use it.
+ *
+ * @req_irq: Interrupt to write
+ * @return 0 if OK, -ve on error
+ */
+int acpi_device_write_interrupt_irq(struct acpi_ctx *ctx,
+				    const struct irq *req_irq);
+
+/**
+ * acpi_device_write_interrupt_or_gpio() - Write interrupt or GPIO to ACPI
+ *
+ * This reads the an interrupt from the device tree, if available. If not it
+ * reads the first GPIO with the name @prop.
+ *
+ * If an interrupt is found, that is written to ACPI. If not, but an GPIO is
+ * found, that is written.
+ *
+ * @return 0 if OK, -ve if neither an interrupt nor a GPIO could be found, or
+ * some other error occurred
+ */
+int acpi_device_write_interrupt_or_gpio(struct acpi_ctx *ctx,
+					struct udevice *dev, const char *prop);
+
+/**
  * acpi_device_write_i2c_dev() - Write an I2C device to ACPI, including
  * information ACPI needs to use it.
  *

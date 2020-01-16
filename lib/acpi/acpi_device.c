@@ -153,6 +153,58 @@ int acpi_device_status(const struct udevice *dev)
 	return ACPI_STATUS_DEVICE_ALL_ON;
 }
 
+/* ACPI 6.1 section 6.4.3.6: Extended Interrupt Descriptor */
+static int acpi_device_write_interrupt(struct acpi_ctx *ctx,
+				       const struct acpi_irq *irq)
+{
+	void *desc_length;
+	uint8_t flags;
+
+	if (!irq || !irq->pin)
+		return -ENOENT;
+
+	/* This is supported by GpioInt() but not Interrupt() */
+	if (irq->polarity == ACPI_IRQ_ACTIVE_BOTH)
+		return -EINVAL;
+
+	/* Byte 0: Descriptor Type */
+	acpigen_emit_byte(ctx, ACPI_DESCRIPTOR_INTERRUPT);
+
+	/* Byte 1-2: Length (filled in later) */
+	desc_length = acpi_device_write_zero_len(ctx);
+
+	/*
+	 * Byte 3: Flags
+	 *  [7:5]: Reserved
+	 *    [4]: Wake     (0=NO_WAKE   1=WAKE)
+	 *    [3]: Sharing  (0=EXCLUSIVE 1=SHARED)
+	 *    [2]: Polarity (0=HIGH      1=LOW)
+	 *    [1]: Mode     (0=LEVEL     1=EDGE)
+	 *    [0]: Resource (0=PRODUCER  1=CONSUMER)
+	 */
+	flags = 1 << 0; /* ResourceConsumer */
+	if (irq->mode == ACPI_IRQ_EDGE_TRIGGERED)
+		flags |= 1 << 1;
+	if (irq->polarity == ACPI_IRQ_ACTIVE_LOW)
+		flags |= 1 << 2;
+	if (irq->shared == ACPI_IRQ_SHARED)
+		flags |= 1 << 3;
+	if (irq->wake == ACPI_IRQ_WAKE)
+		flags |= 1 << 4;
+	acpigen_emit_byte(ctx, flags);
+
+	/* Byte 4: Interrupt Table Entry Count */
+	acpigen_emit_byte(ctx, 1);
+
+	/* Byte 5-8: Interrupt Number */
+	acpigen_emit_dword(ctx, irq->pin);
+
+	/* Fill in Descriptor Length (account for len word) */
+	acpi_device_fill_len(ctx, desc_length);
+
+	return 0;
+}
+
 /* ACPI 6.1 section 6.4.3.8.1 - GPIO Interrupt or I/O */
 int acpi_device_write_gpio(struct acpi_ctx *ctx, const struct acpi_gpio *gpio)
 {
@@ -299,6 +351,48 @@ int acpi_device_write_gpio_desc(struct acpi_ctx *ctx,
 	ret = acpi_device_write_gpio(ctx, &gpio);
 	if (ret)
 		return log_msg_ret("gpio", ret);
+
+	return 0;
+}
+
+int acpi_device_write_interrupt_irq(struct acpi_ctx *ctx,
+				    const struct irq *req_irq)
+{
+	struct acpi_irq irq;
+	int ret;
+
+	ret = irq_get_acpi(req_irq, &irq);
+	if (ret)
+		return log_msg_ret("get", ret);
+	ret = acpi_device_write_interrupt(ctx, &irq);
+	if (ret)
+		return log_msg_ret("write", ret);
+
+	return 0;
+}
+
+int acpi_device_write_interrupt_or_gpio(struct acpi_ctx *ctx,
+					struct udevice *dev, const char *prop)
+{
+	struct irq req_irq;
+	int ret;
+
+	ret = irq_get_by_index(dev, 0, &req_irq);
+	if (!ret) {
+		ret = acpi_device_write_interrupt_irq(ctx, &req_irq);
+		if (ret)
+			return log_msg_ret("irq", ret);
+	} else {
+		struct gpio_desc req_gpio;
+
+		ret = gpio_request_by_name(dev, prop, 0, &req_gpio,
+					   GPIOD_IS_IN);
+		if (ret)
+			return log_msg_ret("no gpio", ret);
+		ret = acpi_device_write_gpio_desc(ctx, &req_gpio);
+		if (ret)
+			return log_msg_ret("gpio", ret);
+	}
 
 	return 0;
 }
