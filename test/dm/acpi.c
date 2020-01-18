@@ -9,6 +9,7 @@
 #include <common.h>
 #include <acpi_table.h>
 #include <dm.h>
+#include <version.h>
 #include <dm/acpi.h>
 #include <dm/test.h>
 #include <test/ut.h>
@@ -81,3 +82,30 @@ static int dm_test_acpi_create_dmar(struct unit_test_state *uts)
 	return 0;
 }
 DM_TEST(dm_test_acpi_create_dmar, DM_TESTF_SCAN_PDATA | DM_TESTF_SCAN_FDT);
+
+/* Test acpi_fill_header() */
+static int dm_test_acpi_fill_header(struct unit_test_state *uts)
+{
+	struct acpi_table_header hdr;
+
+	/* Make sure these 5 fields are not changed */
+	hdr.length = 0x11;
+	hdr.revision = 0x22;
+	hdr.checksum = 0x33;
+	hdr.aslc_revision = 0x44;
+	acpi_fill_header(&hdr, "ABCD");
+
+	ut_assertok(memcmp("ABCD", hdr.signature, sizeof(hdr.signature)));
+	ut_asserteq(0x11, hdr.length);
+	ut_asserteq(0x22, hdr.revision);
+	ut_asserteq(0x33, hdr.checksum);
+	ut_assertok(memcmp(OEM_ID, hdr.oem_id, sizeof(hdr.oem_id)));
+	ut_assertok(memcmp(OEM_TABLE_ID, hdr.oem_table_id,
+			   sizeof(hdr.oem_table_id)));
+	ut_asserteq(U_BOOT_BUILD_DATE, hdr.oem_revision);
+	ut_assertok(memcmp(ASLC_ID, hdr.aslc_id, sizeof(hdr.aslc_id)));
+	ut_asserteq(0x44, hdr.aslc_revision);
+
+	return 0;
+}
+DM_TEST(dm_test_acpi_fill_header, DM_TESTF_SCAN_PDATA | DM_TESTF_SCAN_FDT);
