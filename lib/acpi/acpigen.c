@@ -933,6 +933,30 @@ void acpigen_write_irq(struct acpi_ctx *ctx, u16 mask)
 	acpigen_emit_byte(ctx, (mask >> 8) & 0xff);
 }
 
+void acpigen_write_io16(struct acpi_ctx *ctx, u16 min, u16 max, u8 align, u8 len, u8 decode16)
+{
+	/*
+	 * ACPI 4.0 section 6.4.2.6: I/O Port Descriptor
+	 * Byte 0:
+	 *   Bit7  : 0 => small item
+	 *   Bit6-3: 1000 (0x8) => I/O port descriptor
+	 *   Bit2-0: 111 (0x7) => 7 Bytes long
+	 */
+	acpigen_emit_byte(ctx, 0x47);
+	/* Does the device decode all 16 or just 10 bits? */
+	/* bit1-7 are ignored */
+	acpigen_emit_byte(ctx, decode16 ? 0x01 : 0x00);
+	/* minimum base address the device may be configured for */
+	acpigen_emit_byte(ctx, min & 0xff);
+	acpigen_emit_byte(ctx, (min >> 8) & 0xff);
+	/* maximum base address the device may be configured for */
+	acpigen_emit_byte(ctx, max & 0xff);
+	acpigen_emit_byte(ctx, (max >> 8) & 0xff);
+	/* alignment for min base */
+	acpigen_emit_byte(ctx, align & 0xff);
+	acpigen_emit_byte(ctx, len & 0xff);
+}
+
 void acpigen_write_resourcetemplate_header(struct acpi_ctx *ctx)
 {
 	/*
@@ -973,6 +997,82 @@ void acpigen_write_resourcetemplate_footer(struct acpi_ctx *ctx)
 	p[1] = (len >> 8) & 0xff;
 	/* patch len field */
 	acpigen_pop_len(ctx);
+}
+
+/*
+static void acpigen_add_mainboard_rsvd_mem32(void *gp, struct device *dev,
+						struct resource *res)
+{
+	acpigen_write_mem32fixed(0, res->start, res->end - res->start);
+}
+
+static void acpigen_add_mainboard_rsvd_io(void *gp, struct device *dev,
+						struct resource *res)
+{
+	phys_addr_t base = res->start;
+	phys_addr_t size = res->end - res->start;
+
+	while (size > 0) {
+		phys_addr_t sz = size > 255 ? 255 : size;
+
+		acpigen_write_io16(base, base, 0, sz, 1);
+		size -= sz;
+		base += sz;
+	}
+}
+*/
+
+void acpigen_write_mainboard_resource_template(struct acpi_ctx *ctx)
+{
+	acpigen_write_resourcetemplate_header(ctx);
+
+#warning "to do"
+#if 0
+	/* Add reserved memory ranges. */
+	search_global_resources(
+		IORESOURCE_MEM | IORESOURCE_RESERVE,
+		 IORESOURCE_MEM | IORESOURCE_RESERVE,
+		acpigen_add_mainboard_rsvd_mem32, 0);
+
+	/* Add reserved io ranges. */
+	search_global_resources(
+		IORESOURCE_IO | IORESOURCE_RESERVE,
+		 IORESOURCE_IO | IORESOURCE_RESERVE,
+		acpigen_add_mainboard_rsvd_io, 0);
+#endif
+	acpigen_write_resourcetemplate_footer(ctx);
+}
+
+void acpigen_write_mainboard_resources(struct acpi_ctx *ctx, const char *scope, const char *name)
+{
+	acpigen_write_scope(ctx, scope);
+	acpigen_write_name(ctx, name);
+	acpigen_write_mainboard_resource_template(ctx);
+	acpigen_pop_len(ctx);
+}
+
+void acpigen_emit_eisaid(struct acpi_ctx *ctx, const char *eisaid)
+{
+	u32 compact = 0;
+
+	/* Clamping individual values would be better but
+	   there is a disagreement over what is a valid
+	   EISA id, so accept anything and don't clamp,
+	   parent code should create a valid EISAid.
+	 */
+	compact |= (eisaid[0] - 'A' + 1) << 26;
+	compact |= (eisaid[1] - 'A' + 1) << 21;
+	compact |= (eisaid[2] - 'A' + 1) << 16;
+	compact |= hex_to_bin(eisaid[3]) << 12;
+	compact |= hex_to_bin(eisaid[4]) << 8;
+	compact |= hex_to_bin(eisaid[5]) << 4;
+	compact |= hex_to_bin(eisaid[6]);
+
+	acpigen_emit_byte(ctx, 0xc);
+	acpigen_emit_byte(ctx, (compact >> 24) & 0xff);
+	acpigen_emit_byte(ctx, (compact >> 16) & 0xff);
+	acpigen_emit_byte(ctx, (compact >> 8) & 0xff);
+	acpigen_emit_byte(ctx, compact & 0xff);
 }
 
 /*
@@ -1215,6 +1315,21 @@ void acpigen_write_upc(struct acpi_ctx *ctx, enum acpi_upc_type type)
 	acpigen_write_zero(ctx);
 	acpigen_pop_len(ctx);
 }
+
+/*
+void acpigen_write_pld(struct acpi_ctx *ctx, const struct acpi_pld *pld)
+{
+	uint8_t buf[20];
+
+	if (acpi_pld_to_buffer(ctx, pld, buf, ARRAY_SIZE(buf)) < 0)
+		return;
+
+	acpigen_write_name(ctx, "_PLD");
+	acpigen_write_package(ctx, 1);
+	acpigen_write_byte_buffer(ctx, buf, ARRAY_SIZE(buf));
+	acpigen_pop_len(ctx);
+}
+*/
 
 int acpigen_write_dsm(struct acpi_ctx *ctx, const char *uuid, void (**callbacks)(struct acpi_ctx *ctx, void *),
 		      size_t count, void *arg)
