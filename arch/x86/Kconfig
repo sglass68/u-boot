@@ -971,4 +971,12 @@ config PCIEX_LENGTH_64MB
 config INTEL_GMA_ACPI
 	bool "Generate ACPI table for Intel GMA graphics"
 
+config INTEL_GENERIC_WIFI
+	bool "Enable generation of ACPI tables for Intel WiFi "
+	help
+	  Select this option to provide code to a build generic WiFi ACPI table
+	  for Intel WiFi devices. This is not a WiFi driver and offers no
+	  network functionality. It is only here to generate the ACPI tables
+	  required by Linux.
+
 endmenu
