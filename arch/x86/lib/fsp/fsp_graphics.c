@@ -3,12 +3,17 @@
  * Copyright (C) 2017, Bin Meng <bmeng.cn@gmail.com>
  */
 
+#define LOG_CATEGORY UCLASS_VIDEO
+
 #include <common.h>
+#include <acpi_table.h>
 #include <dm.h>
 #include <vbe.h>
 #include <video.h>
 #include <asm/fsp/fsp_support.h>
+#include <asm/intel_opregion.h>
 #include <asm/mtrr.h>
+#include <dm/acpi.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -114,6 +119,28 @@ err:
 	return ret;
 }
 
+static int fsp_video_acpi_write_tables(const struct udevice *dev,
+				       struct acpi_ctx *ctx)
+{
+	struct igd_opregion *opregion;
+	int ret;
+
+	printf("ACPI:    * IGD OpRegion\n");
+	opregion = (struct igd_opregion *)ctx->current;
+
+	ret = intel_gma_init_igd_opregion((struct udevice *)dev, opregion);
+	if (ret)
+		return ret;
+
+	acpi_inc_align(ctx, sizeof(struct igd_opregion));
+
+	return 0;
+}
+
+struct acpi_ops fsp_video_acpi_ops = {
+	.write_tables	= fsp_video_acpi_write_tables,
+};
+
 static const struct udevice_id fsp_video_ids[] = {
 	{ .compatible = "fsp-fb" },
 	{ }
@@ -124,6 +151,7 @@ U_BOOT_DRIVER(fsp_video) = {
 	.id	= UCLASS_VIDEO,
 	.of_match = fsp_video_ids,
 	.probe	= fsp_video_probe,
+	acpi_ops_ptr(&fsp_video_acpi_ops)
 };
 
 static struct pci_device_id fsp_video_supported[] = {

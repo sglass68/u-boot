@@ -9,6 +9,8 @@ obj-$(CONFIG_$(SPL_TPL_)X86_32BIT_INIT) += report_platform.o
 obj-$(CONFIG_$(SPL_TPL_)X86_32BIT_INIT) += mrc.o
 endif
 
+obj-$(CONFIG_INTEL_GMA_ACPI) += intel_opregion.o
+
 ifdef CONFIG_INTEL_CAR_CQOS
 obj-$(CONFIG_TPL_BUILD) += car2.o
 ifndef CONFIG_SPL_BUILD

@@ -968,4 +968,7 @@ config PCIEX_LENGTH_128MB
 config PCIEX_LENGTH_64MB
 	bool
 
+config INTEL_GMA_ACPI
+	bool "Generate ACPI table for Intel GMA graphics"
+
 endmenu
