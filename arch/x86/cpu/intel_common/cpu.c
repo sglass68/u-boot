@@ -8,6 +8,7 @@
  */
 
 #include <common.h>
+#include <acpigen.h>
 #include <cpu.h>
 #include <dm.h>
 #include <errno.h>
@@ -225,4 +226,61 @@ void cpu_set_eist(bool eist_status)
 	else
 		msr.lo &= ~MISC_ENABLE_ENHANCED_SPEEDSTEP;
 	msr_write(MSR_IA32_MISC_ENABLE, msr);
+}
+
+int cpu_get_coord_type(void)
+{
+	return HW_ALL;
+}
+
+uint32_t cpu_get_min_ratio(void)
+{
+	msr_t msr;
+	/* Get bus ratio limits and calculate clock speeds */
+	msr = msr_read(MSR_PLATFORM_INFO);
+
+	return (msr.hi >> 8) & 0xff;	/* Max Efficiency Ratio */
+}
+
+uint32_t cpu_get_max_ratio(void)
+{
+	msr_t msr;
+	uint32_t ratio_max;
+
+	if (cpu_config_tdp_levels()) {
+		/* Set max ratio to nominal TDP ratio */
+		msr = msr_read(MSR_CONFIG_TDP_NOMINAL);
+		ratio_max = msr.lo & 0xff;
+	} else {
+		msr = msr_read(MSR_PLATFORM_INFO);
+		/* Max Non-Turbo Ratio */
+		ratio_max = (msr.lo >> 8) & 0xff;
+	}
+	return ratio_max;
+}
+
+uint32_t cpu_get_bus_clock(void)
+{
+	/* CPU bus clock is set by default here to 100MHz.
+	 * This function returns the bus clock in KHz.
+	 */
+	return INTEL_BCLK_MHZ * 1000;
+}
+
+uint32_t cpu_get_power_max(void)
+{
+	msr_t msr;
+	int power_unit;
+
+	msr = msr_read(MSR_PKG_POWER_SKU_UNIT);
+	power_unit = 2 << ((msr.lo & 0xf) - 1);
+	msr = msr_read(MSR_PKG_POWER_SKU);
+	return (msr.lo & 0x7fff) * 1000 / power_unit;
+}
+
+uint32_t cpu_get_max_turbo_ratio(void)
+{
+	msr_t msr;
+	msr = msr_read(MSR_TURBO_RATIO_LIMIT);
+	return msr.lo & 0xff;
 }

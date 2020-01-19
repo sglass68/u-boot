@@ -128,4 +128,35 @@ void cpu_set_eist(bool eist_status);
  */
 void cpu_set_p_state_to_turbo_ratio(void);
 
+/*
+ * cpu_get_bus_clock returns the bus clock frequency in KHz.
+ * This is the value the clock ratio is multiplied with.
+ */
+uint32_t cpu_get_bus_clock(void);
+
+int cpu_get_coord_type(void);
+
+/*
+ * cpu_get_min_ratio returns the minimum frequency ratio that is supported
+ * by this processor
+ */
+uint32_t cpu_get_min_ratio(void);
+
+/*
+ * cpu_get_max_ratio returns the nominal TDP ratio if available or the
+ * maximum non turbo frequency ratio for this processor
+ */
+uint32_t cpu_get_max_ratio(void);
+
+/*
+ * cpu_get_power_max calculates CPU TDP in mW
+ */
+uint32_t cpu_get_power_max(void);
+
+/*
+ * cpu_get_max_turbo_ratio returns the maximum turbo ratio limit for the
+ * processor
+ */
+uint32_t cpu_get_max_turbo_ratio(void);
+
 #endif
