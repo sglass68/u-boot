@@ -6,12 +6,15 @@
  */
 
 #include <common.h>
+#include <acpi_table.h>
 #include <dm.h>
 #include <spl.h>
+#include <asm/cpu_common.h>
 #include <asm/lpc_common.h>
 #include <asm/pci.h>
 #include <asm/arch/iomap.h>
 #include <asm/arch/lpc.h>
+#include <dm/acpi.h>
 #include <linux/log2.h>
 
 void lpc_enable_fixed_io_ranges(uint io_enables)
@@ -109,6 +112,17 @@ void lpc_io_setup_comm_a_b(void)
 	lpc_enable_fixed_io_ranges(com_enable);
 }
 
+static int apl_acpi_lpc_get_name(const struct udevice *dev, char *out_name)
+{
+	return acpi_return_name(out_name, "LPCB");
+}
+
+struct acpi_ops apl_lpc_acpi_ops = {
+	.get_name	= apl_acpi_lpc_get_name,
+	.write_tables	= intel_southbridge_write_acpi_tables,
+	.inject_dsdt	= southbridge_inject_dsdt,
+};
+
 static const struct udevice_id apl_lpc_ids[] = {
 	{ .compatible = "intel,apl-lpc" },
 	{ }
@@ -119,4 +133,5 @@ U_BOOT_DRIVER(apl_lpc_drv) = {
 	.name		= "intel_apl_lpc",
 	.id		= UCLASS_LPC,
 	.of_match	= apl_lpc_ids,
+	acpi_ops_ptr(&apl_lpc_acpi_ops)
 };
