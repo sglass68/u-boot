@@ -8,10 +8,12 @@
 #include <linux/err.h>
 #include <linux/list.h>
 #include <dm.h>
+#include <dm/device-internal.h>
 #include <dm/lists.h>
-#include <dm/pinctrl.h>
-#include <dm/util.h>
 #include <dm/of_access.h>
+#include <dm/pinctrl.h>
+#include <dm/uclass-internal.h>
+#include <dm/util.h>
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -276,15 +278,33 @@ static int pinctrl_select_state_simple(struct udevice *dev)
 	struct pinctrl_ops *ops;
 	int ret;
 
+	return 0;
 	/*
 	 * For most system, there is only one pincontroller device. But in
 	 * case of multiple pincontroller devices, probe the one with sequence
 	 * number 0 (defined by alias) to avoid race condition.
 	 */
-	ret = uclass_get_device_by_seq(UCLASS_PINCTRL, 0, &pctldev);
+	ret = uclass_find_device_by_seq(UCLASS_PINCTRL, 0, false, &pctldev);
+	if (ret == -ENODEV)
+		/*
+		 * We didn't find it in probed devices. See if there is one
+		 * that will request this seq if probed.
+		 */
+		ret = uclass_find_device_by_seq(UCLASS_PINCTRL, 0, true, &dev);
 	if (ret)
 		/* if not found, get the first one */
-		ret = uclass_get_device(UCLASS_PINCTRL, 0, &pctldev);
+		ret = uclass_find_device(UCLASS_PINCTRL, 0, &pctldev);
+	if (ret)
+		return ret;
+
+	/*
+	 * If pctldev is actually a child/grandchild/... of the device that
+	 * wants pins controlled, and pctldev is not probed yet, we cannot
+	 * probe it, since the device itself may not be fully probed.
+	 */
+	if (device_is_ancestor(pctldev, dev) && !device_active(pctldev))
+		return EAGAIN;
+	ret = device_probe(pctldev);
 	if (ret)
 		return ret;
 
