@@ -33,6 +33,8 @@ enum bloblist_tag_t {
 	 * Sleeping table. This forms part of the ACPI tables passed to Linux.
 	 */
 	BLOBLISTT_ACPI_GNVS,
+	BLOBLISTT_TCPA_LOG,		/* TPM log space */
+	BLOBLISTT_TPM2_TCG_LOG,		/* TPM v2 log space */
 };
 
 /**
