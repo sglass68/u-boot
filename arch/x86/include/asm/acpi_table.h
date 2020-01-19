@@ -46,4 +46,9 @@ ulong write_acpi_tables(ulong start);
  */
 ulong acpi_get_rsdp_addr(void);
 
+int arch_read_sci_irq_select(void);
+int arch_write_sci_irq_select(uint scis);
+int arch_madt_sci_irq_polarity(int sci);
+struct acpi_cstate *arch_get_cstate_map(size_t *entries);
+
 #endif /* __ASM_ACPI_TABLE_H__ */

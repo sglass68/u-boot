@@ -14,6 +14,7 @@ enum {
 };
 
 struct cpu_info;
+struct acpi_ctx;
 
 /**
  * cpu_common_init() - Set up common CPU init
