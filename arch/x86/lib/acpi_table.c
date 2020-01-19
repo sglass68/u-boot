@@ -6,7 +6,12 @@
  * Copyright (C) 2016, Bin Meng <bmeng.cn@gmail.com>
  */
 
+#define DEBUG
+#define LOG_CATEGORY LOGC_ACPI
+
 #include <common.h>
+#include <acpigen.h>
+#include <bloblist.h>
 #include <cpu.h>
 #include <dm.h>
 #include <dm/uclass-internal.h>
@@ -15,12 +20,19 @@
 #include <version.h>
 #include <asm/acpi/global_nvs.h>
 #include <acpi_table.h>
+#include <acpi_device.h>
+#include <asm/cpu.h>
 #include <asm/ioapic.h>
 #include <asm/lapic.h>
 #include <asm/mpspec.h>
+#include <asm/processor.h>
+#include <asm/smm.h>
 #include <asm/tables.h>
 #include <asm/arch/global_nvs.h>
+#include <asm/arch/iomap.h>
+#include <asm/arch/pm.h>
 #include <dm/acpi.h>
+#include <power/acpi_pmc.h>
 
 /*
  * IASL compiles the dsdt entries and writes the hex values
@@ -30,6 +42,31 @@ extern const unsigned char AmlCode[];
 
 /* ACPI RSDP address to be used in boot parameters */
 static ulong acpi_rsdp_addr;
+
+u8 acpi_checksum(u8 *table, u32 length)
+{
+	u8 ret = 0;
+	while (length--) {
+		ret += *table;
+		table++;
+	}
+	return -ret;
+}
+
+int acpi_create_mcfg_mmconfig(struct acpi_mcfg_mmconfig *mmconfig, u32 base,
+			      u16 seg_nr, u8 start, u8 end)
+{
+	const int size = sizeof(*mmconfig);
+
+	memset(mmconfig, '\0', size);
+	mmconfig->base_address_l = base;
+	mmconfig->base_address_h = 0;
+	mmconfig->pci_segment_group_number = seg_nr;
+	mmconfig->start_bus_number = start;
+	mmconfig->end_bus_number = end;
+
+	return size;
+}
 
 int acpi_write_hpet(struct acpi_ctx *ctx, const struct udevice *dev)
 {
@@ -126,14 +163,17 @@ int acpi_create_madt_lapics(u32 current)
 {
 	struct udevice *dev;
 	int total_length = 0;
+	int cpu_num = 0;
 
 	for (uclass_find_first_device(UCLASS_CPU, &dev);
 	     dev;
 	     uclass_find_next_device(&dev)) {
 		struct cpu_platdata *plat = dev_get_parent_platdata(dev);
-		int length = acpi_create_madt_lapic(
-				(struct acpi_madt_lapic *)current,
-				plat->cpu_id, plat->cpu_id);
+		int length;
+
+		length = acpi_create_madt_lapic(
+			(struct acpi_madt_lapic *)current, cpu_num++,
+			plat->cpu_id);
 		current += length;
 		total_length += length;
 	}
@@ -194,7 +234,7 @@ static int acpi_create_madt_irq_overrides(u32 current)
 	return length;
 }
 
-__weak u32 acpi_fill_madt(u32 current)
+__weak ulong acpi_fill_madt(ulong current)
 {
 	current += acpi_create_madt_lapics(current);
 
@@ -208,10 +248,10 @@ __weak u32 acpi_fill_madt(u32 current)
 
 static void acpi_create_madt(struct acpi_madt *madt)
 {
-	struct acpi_table_header *header = &(madt->header);
+	struct acpi_table_header *header = &madt->header;
 	u32 current = (u32)madt + sizeof(struct acpi_madt);
 
-	memset((void *)madt, 0, sizeof(struct acpi_madt));
+	memset((void *)madt, '\0', sizeof(struct acpi_madt));
 
 	/* Fill out header fields */
 	acpi_fill_header(header, "APIC");
@@ -229,20 +269,7 @@ static void acpi_create_madt(struct acpi_madt *madt)
 	header->checksum = table_compute_checksum((void *)madt, header->length);
 }
 
-int acpi_create_mcfg_mmconfig(struct acpi_mcfg_mmconfig *mmconfig, u32 base,
-			      u16 seg_nr, u8 start, u8 end)
-{
-	memset(mmconfig, 0, sizeof(*mmconfig));
-	mmconfig->base_address_l = base;
-	mmconfig->base_address_h = 0;
-	mmconfig->pci_segment_group_number = seg_nr;
-	mmconfig->start_bus_number = start;
-	mmconfig->end_bus_number = end;
-
-	return sizeof(struct acpi_mcfg_mmconfig);
-}
-
-__weak u32 acpi_fill_mcfg(u32 current)
+__weak ulong acpi_fill_mcfg(ulong current)
 {
 	current += acpi_create_mcfg_mmconfig
 		((struct acpi_mcfg_mmconfig *)current,
@@ -271,15 +298,113 @@ static void acpi_create_mcfg(struct acpi_mcfg *mcfg)
 	header->checksum = table_compute_checksum((void *)mcfg, header->length);
 }
 
-__weak u32 acpi_fill_csrt(u32 current)
+/**
+ * acpi_create_tcpa() - Create a TCPA table
+ *
+ * @tcpa: Pointer to place to put table
+ *
+ * Trusted Computing Platform Alliance Capabilities Table
+ * TCPA PC Specific Implementation SpecificationTCPA is defined in the PCI
+ * Firmware Specification 3.0
+ */
+static int acpi_create_tcpa(struct acpi_tcpa *tcpa)
 {
-	return current;
+	struct acpi_table_header *header = &tcpa->header;
+	u32 current = (u32)tcpa + sizeof(struct acpi_tcpa);
+	int size = 0x10000;	/* Use this as the default size */
+	void *log;
+	int ret;
+
+	memset(tcpa, '\0', sizeof(struct acpi_tcpa));
+
+	/* Fill out header fields */
+	acpi_fill_header(header, "TCPA");
+	header->length = sizeof(struct acpi_tcpa);
+	header->revision = 1;
+
+	ret = bloblist_ensure_size_ret(BLOBLISTT_TCPA_LOG, &size, &log);
+	if (ret)
+		return log_msg_ret("blob", ret);
+
+	tcpa->platform_class = 0;
+	tcpa->laml = size;
+	tcpa->lasa = (ulong)log;
+
+	/* (Re)calculate length and checksum */
+	header->length = current - (u32)tcpa;
+	header->checksum = table_compute_checksum((void *)tcpa, header->length);
+
+	return 0;
 }
 
-static void acpi_create_csrt(struct acpi_csrt *csrt)
+static int get_tpm2_log(void **ptrp, int *sizep)
+{
+	const int tpm2_default_log_len = 0x10000;
+	int size;
+	int ret;
+
+	*sizep = 0;
+	size = tpm2_default_log_len;
+	ret = bloblist_ensure_size_ret(BLOBLISTT_TPM2_TCG_LOG, &size, ptrp);
+	if (ret)
+		return log_msg_ret("blob", ret);
+	*sizep = size;
+
+	return 0;
+}
+
+static int acpi_create_tpm2(struct acpi_tpm2 *tpm2)
+{
+	struct acpi_table_header *header = &tpm2->header;
+	int tpm2_log_len;
+	void *lasa;
+	int ret;
+
+	memset((void *)tpm2, 0, sizeof(struct acpi_tpm2));
+
+	/*
+	 * Some payloads like SeaBIOS depend on log area to use TPM2.
+	 * Get the memory size and address of TPM2 log area or initialize it.
+	 */
+	ret = get_tpm2_log(&lasa, &tpm2_log_len);
+	if (ret)
+		return ret;
+
+	/* Fill out header fields. */
+	acpi_fill_header(header, "TPM2");
+	memcpy(header->aslc_id, ASLC_ID, 4);
+
+	header->length = sizeof(struct acpi_tpm2);
+	header->revision = get_acpi_table_revision(ACPITAB_TPM2);
+
+	/* Hard to detect for coreboot. Just set it to 0 */
+	tpm2->platform_class = 0;
+
+	/* Must be set to 0 for FIFO-interface support */
+	tpm2->control_area = 0;
+	tpm2->start_method = 6;
+	memset(tpm2->msp, 0, sizeof(tpm2->msp));
+
+	/* Fill the log area size and start address fields. */
+	tpm2->laml = tpm2_log_len;
+	tpm2->lasa = (uintptr_t)lasa;
+
+	/* Calculate checksum. */
+	header->checksum = acpi_checksum((void *)tpm2, header->length);
+
+	return 0;
+}
+
+__weak u32 acpi_fill_csrt(u32 current)
+{
+	return 0;
+}
+
+static int acpi_create_csrt(struct acpi_csrt *csrt)
 {
 	struct acpi_table_header *header = &(csrt->header);
 	u32 current = (u32)csrt + sizeof(struct acpi_csrt);
+	uint ptr;
 
 	memset((void *)csrt, 0, sizeof(struct acpi_csrt));
 
@@ -288,11 +413,16 @@ static void acpi_create_csrt(struct acpi_csrt *csrt)
 	header->length = sizeof(struct acpi_csrt);
 	header->revision = 0;
 
-	current = acpi_fill_csrt(current);
+	ptr = acpi_fill_csrt(current);
+	if (!ptr)
+		return -ENOENT;
+	current = ptr;
 
 	/* (Re)calculate length and checksum */
 	header->length = current - (u32)csrt;
 	header->checksum = table_compute_checksum((void *)csrt, header->length);
+
+	return 0;
 }
 
 static void acpi_create_spcr(struct acpi_spcr *spcr)
@@ -408,6 +538,128 @@ static void acpi_create_spcr(struct acpi_spcr *spcr)
 	header->checksum = table_compute_checksum((void *)spcr, header->length);
 }
 
+void acpi_fadt_common(struct acpi_fadt *fadt, struct acpi_facs *facs,
+		      void *dsdt)
+{
+	struct acpi_table_header *header = &fadt->header;
+
+	memset((void *)fadt, '\0', sizeof(struct acpi_fadt));
+
+	acpi_fill_header(header, "FACP");
+	header->length = sizeof(struct acpi_fadt);
+	header->revision = 4;
+	memcpy(header->oem_id, OEM_ID, 6);
+	memcpy(header->oem_table_id, ACPI_TABLE_CREATOR, 8);
+	memcpy(header->aslc_id, ASLC_ID, 4);
+	header->aslc_revision = 1;
+
+	fadt->firmware_ctrl = (unsigned long) facs;
+	fadt->dsdt = (unsigned long)dsdt;
+
+	fadt->x_firmware_ctl_l = (unsigned long)facs;
+	fadt->x_firmware_ctl_h = 0;
+	fadt->x_dsdt_l = (unsigned long)dsdt;
+	fadt->x_dsdt_h = 0;
+
+// 	if (CONFIG(SYSTEM_TYPE_CONVERTIBLE) ||
+// 	    CONFIG(SYSTEM_TYPE_LAPTOP))
+		fadt->preferred_pm_profile = ACPI_PM_MOBILE;
+// 	else if (CONFIG(SYSTEM_TYPE_DETACHABLE) ||
+// 		 CONFIG(SYSTEM_TYPE_TABLET))
+// 		fadt->preferred_pm_profile = PM_TABLET;
+// 	else
+// 		fadt->preferred_pm_profile = PM_DESKTOP;
+
+	/* Use ACPI 3.0 revision */
+	fadt->header.revision = 4;
+}
+
+int acpi_create_dmar_drhd(struct acpi_ctx *ctx, uint flags, uint segment,
+			  u64 bar)
+{
+	struct dmar_entry *drhd = ctx->current;
+
+	memset(drhd, 0, sizeof(*drhd));
+	drhd->type = DMAR_DRHD;
+	drhd->length = sizeof(*drhd); /* will be fixed up later */
+	drhd->flags = flags;
+	drhd->segment = segment;
+	drhd->bar = bar;
+	acpi_inc(ctx, drhd->length);
+
+	return 0;
+}
+
+int acpi_create_dmar_rmrr(struct acpi_ctx *ctx, uint segment, u64 bar,
+			  u64 limit)
+{
+	struct dmar_rmrr_entry *rmrr = ctx->current;
+
+	memset(rmrr, 0, sizeof(*rmrr));
+	rmrr->type = DMAR_RMRR;
+	rmrr->length = sizeof(*rmrr); /* will be fixed up later */
+	rmrr->segment = segment;
+	rmrr->bar = bar;
+	rmrr->limit = limit;
+	acpi_inc(ctx, rmrr->length);
+
+	return 0;
+}
+
+void acpi_dmar_drhd_fixup(struct acpi_ctx *ctx, void *base)
+{
+	struct dmar_entry *drhd = base;
+
+	drhd->length = ctx->current - base;
+}
+
+void acpi_dmar_rmrr_fixup(struct acpi_ctx *ctx, void *base)
+{
+	struct dmar_rmrr_entry *rmrr = base;
+
+	rmrr->length = ctx->current - base;
+}
+
+static int acpi_create_dmar_ds(struct acpi_ctx *ctx, enum dev_scope_type type,
+			       uint enumeration_id, pci_dev_t bdf)
+{
+	/* we don't support longer paths yet */
+	const size_t dev_scope_length = sizeof(struct dev_scope) + 2;
+	struct dev_scope *ds = ctx->current;
+
+	memset(ds, 0, dev_scope_length);
+	ds->type	= type;
+	ds->length	= dev_scope_length;
+	ds->enumeration	= enumeration_id;
+	ds->start_bus	= PCI_BUS(bdf);
+	ds->path[0].dev	= PCI_DEV(bdf);
+	ds->path[0].fn	= PCI_FUNC(bdf);
+
+	return ds->length;
+}
+
+int acpi_create_dmar_ds_pci_br(struct acpi_ctx *ctx, pci_dev_t bdf)
+{
+	return acpi_create_dmar_ds(ctx, SCOPE_PCI_SUB, 0, bdf);
+}
+
+int acpi_create_dmar_ds_pci(struct acpi_ctx *ctx, pci_dev_t bdf)
+{
+	return acpi_create_dmar_ds(ctx, SCOPE_PCI_ENDPOINT, 0, bdf);
+}
+
+int acpi_create_dmar_ds_ioapic(struct acpi_ctx *ctx, uint enumeration_id,
+			       pci_dev_t bdf)
+{
+	return acpi_create_dmar_ds(ctx, SCOPE_IOAPIC, enumeration_id, bdf);
+}
+
+int acpi_create_dmar_ds_msi_hpet(struct acpi_ctx *ctx, uint enumeration_id,
+				 pci_dev_t bdf)
+{
+	return acpi_create_dmar_ds(ctx, SCOPE_MSI_HPET, enumeration_id, bdf);
+}
+
 /* http://www.intel.com/hardwaredesign/hpetspec_1.pdf */
 int acpi_create_hpet(struct acpi_hpet *hpet)
 {
@@ -506,6 +758,101 @@ void acpi_create_dbg2(struct acpi_dbg2_header *dbg2,
 	header->checksum = acpi_checksum((uint8_t *)dbg2, header->length);
 }
 
+ulong acpi_get_rsdp_addr(void)
+{
+	return acpi_rsdp_addr;
+}
+
+static void acpi_ssdt_write_cbtable(struct acpi_ctx *ctx)
+{
+	uintptr_t base;
+	uint32_t size;
+
+	base = 0;
+	size = 0;
+
+	acpigen_write_device(ctx, "CTBL");
+	acpigen_write_coreboot_hid(ctx, COREBOOT_ACPI_ID_CBTABLE);
+	acpigen_write_name_integer(ctx, "_UID", 0);
+	acpigen_write_sta(ctx, ACPI_STATUS_DEVICE_HIDDEN_ON);
+	acpigen_write_name(ctx, "_CRS");
+	acpigen_write_resourcetemplate_header(ctx);
+	acpigen_write_mem32fixed(ctx, 0, base, size);
+	acpigen_write_resourcetemplate_footer(ctx);
+	acpigen_pop_len(ctx);
+}
+
+void acpi_create_ssdt(struct acpi_ctx *ctx, struct acpi_table_header *ssdt,
+		      const char *oem_table_id)
+{
+	memset((void *)ssdt, '\0', sizeof(struct acpi_table_header));
+
+	acpi_fill_header(ssdt, "SSDT");
+	ssdt->revision = get_acpi_table_revision(ACPITAB_SSDT);
+	ssdt->aslc_revision = 1;
+	ssdt->length = sizeof(struct acpi_table_header);
+
+	acpi_inc(ctx, sizeof(struct acpi_table_header));
+
+	/* Write object to declare coreboot tables */
+	acpi_ssdt_write_cbtable(ctx);
+	acpi_fill_ssdt(ctx);
+
+	/* (Re)calculate length and checksum. */
+	ssdt->length = ctx->current - (void *)ssdt;
+	ssdt->checksum = acpi_checksum((void *)ssdt, ssdt->length);
+}
+
+int get_acpi_table_revision(enum acpi_tables table)
+{
+	switch (table) {
+	case ACPITAB_FADT:
+		return ACPI_FADT_REV_ACPI_3_0;
+	case ACPITAB_MADT: /* ACPI 3.0: 2, ACPI 4.0/5.0: 3, ACPI 6.2b/6.3: 5 */
+		return 2;
+	case ACPITAB_MCFG:
+		return 1;
+	case ACPITAB_TCPA:
+		return 2;
+	case ACPITAB_TPM2:
+		return 4;
+	case ACPITAB_SSDT: /* ACPI 3.0 upto 6.3: 2 */
+		return 2;
+	case ACPITAB_SRAT: /* ACPI 2.0: 1, ACPI 3.0: 2, ACPI 4.0 upto 6.3: 3 */
+		return 1; /* TODO Should probably be upgraded to 2 */
+	case ACPITAB_DMAR:
+		return 1;
+	case ACPITAB_SLIT: /* ACPI 2.0 upto 6.3: 1 */
+		return 1;
+	case ACPITAB_SPMI: /* IMPI 2.0 */
+		return 5;
+	case ACPITAB_HPET: /* Currently 1. Table added in ACPI 2.0. */
+		return 1;
+	case ACPITAB_VFCT: /* ACPI 2.0/3.0/4.0: 1 */
+		return 1;
+	case ACPITAB_IVRS:
+		return IVRS_FORMAT_FIXED;
+	case ACPITAB_DBG2:
+		return 0;
+	case ACPITAB_FACS: /* ACPI 2.0/3.0: 1, ACPI 4.0 upto 6.3: 2 */
+		return 1;
+	case ACPITAB_RSDT: /* ACPI 1.0 upto 6.3: 1 */
+		return 1;
+	case ACPITAB_XSDT: /* ACPI 2.0 upto 6.3: 1 */
+		return 1;
+	case ACPITAB_RSDP: /* ACPI 2.0 upto 6.3: 2 */
+		return 2;
+	case ACPITAB_HEST:
+		return 1;
+	case ACPITAB_NHLT:
+		return 5;
+	case ACPITAB_BERT:
+		return 1;
+	default:
+		return -EINVAL;
+	}
+}
+
 /*
  * QEMU's version of write_acpi_tables is defined in drivers/misc/qfw.c
  */
@@ -515,14 +862,18 @@ ulong write_acpi_tables(ulong start_addr)
 	struct acpi_facs *facs;
 	struct acpi_table_header *dsdt;
 	struct acpi_fadt *fadt;
+	struct acpi_table_header *ssdt;
 	struct acpi_mcfg *mcfg;
+	struct acpi_tcpa *tcpa;
 	struct acpi_madt *madt;
 	struct acpi_csrt *csrt;
 	struct acpi_spcr *spcr;
 	void *start;
 	ulong addr;
+	int ret;
 	int i;
 
+	gd->arch.acpi_start = start_addr;
 	start = map_sysmem(start_addr, 0);
 
 	debug("ACPI: Writing ACPI tables at %lx\n", start_addr);
@@ -542,16 +893,29 @@ ulong write_acpi_tables(ulong start_addr)
 	memcpy(ctx->current,
 	       (char *)&AmlCode + sizeof(struct acpi_table_header),
 	       dsdt->length - sizeof(struct acpi_table_header));
-	acpi_inc_align(ctx, dsdt->length - sizeof(struct acpi_table_header));
+
+	if (dsdt->length >= sizeof(struct acpi_table_header)) {
+		acpi_inject_dsdt(ctx);
+		memcpy(ctx->current,
+		       (char *)AmlCode + sizeof(struct acpi_table_header),
+		       dsdt->length - sizeof(struct acpi_table_header));
+		acpi_inc(ctx, dsdt->length - sizeof(struct acpi_table_header));
+
+		/* (Re)calculate length and checksum. */
+		dsdt->length = ctx->current - (void *)dsdt;
+		dsdt->checksum = 0;
+		dsdt->checksum = acpi_checksum((void *)dsdt, dsdt->length);
+	}
+	acpi_align(ctx);
 
 	if (!IS_ENABLED(CONFIG_ACPI_GNVS_EXTERNAL)) {
 		/* Pack GNVS into the ACPI table area */
 		for (i = 0; i < dsdt->length; i++) {
 			u32 *gnvs = (u32 *)((u32)dsdt + i);
 			if (*gnvs == ACPI_GNVS_ADDR) {
-				debug("Fix up global NVS in DSDT to 0x%08x\n",
-				      current);
-				*gnvs = current;
+				*gnvs = map_to_sysmem(ctx->current);
+				debug("Fix up global NVS in DSDT to %#08x\n",
+				      *gnvs);
 				break;
 			}
 		}
@@ -568,7 +932,7 @@ ulong write_acpi_tables(ulong start_addr)
 		addr = acpi_create_gnvs(ctx->current);
 		if (IS_ERR_VALUE(addr))
 			printf("Error: Gailed to create GNVS\n");
-		acpi_create_gnvs((struct acpi_global_nvs *)current);
+		acpi_create_gnvs((struct acpi_global_nvs *)ctx->current);
 		acpi_inc_align(ctx, sizeof(struct acpi_global_nvs));
 	}
 
@@ -578,11 +942,13 @@ ulong write_acpi_tables(ulong start_addr)
 	acpi_create_fadt(fadt, facs, dsdt);
 	acpi_add_table(ctx, fadt);
 
-	debug("ACPI:    * MADT\n");
-	madt = ctx->current;
-	acpi_create_madt(madt);
-	acpi_inc_align(ctx, madt->header.length);
-	acpi_add_table(ctx, madt);
+	debug("ACPI:     * SSDT\n");
+	ssdt = (struct acpi_table_header *)ctx->current;
+	acpi_create_ssdt(ctx, ssdt, ACPI_TABLE_CREATOR);
+	if (ssdt->length > sizeof(struct acpi_table_header)) {
+		acpi_inc_align(ctx, ssdt->length);
+		acpi_add_table(ctx, ssdt);
+	}
 
 	debug("ACPI:    * MCFG\n");
 	mcfg = ctx->current;
@@ -590,17 +956,52 @@ ulong write_acpi_tables(ulong start_addr)
 	acpi_inc_align(ctx, mcfg->header.length);
 	acpi_add_table(ctx, mcfg);
 
+	if (IS_ENABLED(CONFIG_TPM_V2)) {
+		struct acpi_tpm2 *tpm2;
+
+		debug("ACPI:    * TPM2\n");
+		tpm2 = (struct acpi_tpm2 *)ctx->current;
+		ret = acpi_create_tpm2(tpm2);
+		if (!ret) {
+			acpi_inc_align(ctx, tpm2->header.length);
+			acpi_add_table(ctx, tpm2);
+		} else {
+			log_warning("TPM2 table creation failed\n");
+		}
+	}
+
+	debug("ACPI:    * MADT\n");
+	madt = ctx->current;
+	acpi_create_madt(madt);
+	acpi_inc_align(ctx, madt->header.length);
+	acpi_add_table(ctx, madt);
+
+	debug("ACPI:    * TCPA\n");
+	tcpa = (struct acpi_tcpa *)ctx->current;
+	ret = acpi_create_tcpa(tcpa);
+	if (ret) {
+		log_warning("Failed to create TCPA table (err=%d)\n", ret);
+	} else {
+		acpi_inc_align(ctx, tcpa->header.length);
+		acpi_add_table(ctx, tcpa);
+	}
+
 	debug("ACPI:    * CSRT\n");
 	csrt = ctx->current;
-	acpi_create_csrt(csrt);
-	acpi_inc_align(ctx, csrt->header.length);
-	acpi_add_table(ctx, csrt);
+	if (!acpi_create_csrt(csrt)) {
+		acpi_inc_align(ctx, csrt->header.length);
+		acpi_add_table(ctx, csrt);
+	}
 
-	debug("ACPI:    * SPCR\n");
-	spcr = ctx->current;
-	acpi_create_spcr(spcr);
-	acpi_inc_align(ctx, spcr->header.length);
-	acpi_add_table(ctx, spcr);
+	if (0) {
+		debug("ACPI:    * SPCR\n");
+		spcr = ctx->current;
+		acpi_create_spcr(spcr);
+		acpi_inc_align(ctx, spcr->header.length);
+		acpi_add_table(ctx, spcr);
+	}
+
+	acpi_write_dev_tables(ctx);
 
 	addr = map_to_sysmem(ctx->current);
 	debug("current = %lx\n", addr);
@@ -609,9 +1010,4 @@ ulong write_acpi_tables(ulong start_addr)
 	debug("ACPI: done\n");
 
 	return addr;
-}
-
-ulong acpi_get_rsdp_addr(void)
-{
-	return acpi_rsdp_addr;
 }
