@@ -110,8 +110,8 @@ static const struct i2c_mode_info info_for_mode[] = {
 		I2C_SPEED_HIGH_RATE,
 		MIN_HS_SCL_HIGHTIME,
 		MIN_HS_SCL_LOWTIME,
-		120,
-		120,
+		60,
+		160,
 	},
 };
 
@@ -149,9 +149,9 @@ static int dw_i2c_calc_timing(struct dw_i2c *priv, enum i2c_speed_mode mode,
 	min_tlow_cnt = calc_counts(ic_clk, info->min_scl_lowtime_ns);
 	min_thigh_cnt = calc_counts(ic_clk, info->min_scl_hightime_ns);
 
-	debug("dw_i2c: period %d rise %d fall %d tlow %d thigh %d spk %d\n",
-	      period_cnt, rise_cnt, fall_cnt, min_tlow_cnt, min_thigh_cnt,
-	      spk_cnt);
+	debug("dw_i2c: speed mode %d, speed %d, hdrperiod %d rise %d fall %d tlow %d thigh %d spk %d\n",
+	      mode, info->speed, period_cnt, rise_cnt, fall_cnt, min_tlow_cnt,
+	      min_thigh_cnt, spk_cnt);
 
 	/*
 	 * Back-solve for hcnt and lcnt according to the following equations:
@@ -163,7 +163,8 @@ static int dw_i2c_calc_timing(struct dw_i2c *priv, enum i2c_speed_mode mode,
 
 	if (hcnt < 0 || lcnt < 0) {
 		debug("dw_i2c: bad counts. hcnt = %d lcnt = %d\n", hcnt, lcnt);
-		return -EINVAL;
+		printf("mode=%d, hcnt=%d, lcnt=%d\n", mode, hcnt, lcnt);
+// 		return log_msg_ret("counts", -EINVAL);
 	}
 
 	/*
