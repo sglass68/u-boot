@@ -93,7 +93,7 @@ int apl_p2sb_ofdata_to_platdata(struct udevice *dev)
 #if !CONFIG_IS_ENABLED(OF_PLATDATA)
 	int ret;
 
-	if (spl_phase() == PHASE_TPL) {
+// 	if (spl_phase() == PHASE_TPL) {
 		u32 base[2];
 
 		/* TPL sets up the initial BAR */
@@ -102,17 +102,22 @@ int apl_p2sb_ofdata_to_platdata(struct udevice *dev)
 		if (ret)
 			return log_msg_ret("Missing/short early-regs", ret);
 		plat->mmio_base = base[0];
-		plat->bdf = pci_get_devfn(dev);
-		if (plat->bdf < 0)
-			return log_msg_ret("Cannot get p2sb PCI address",
-					   plat->bdf);
-	}
+		if (spl_phase() == PHASE_TPL) {
+			plat->bdf = pci_get_devfn(dev);
+			if (plat->bdf < 0)
+				return log_msg_ret("Cannot get p2sb PCI address",
+						   plat->bdf);
+		}
+		upriv->mmio_base = plat->mmio_base;
+		debug("ofdata 1: mmio_base=%x\n", (uint)plat->mmio_base);
+// 	}
+// 	printf("%s: skip ofdata\n", __func__);
 #else
 	plat->mmio_base = plat->dtplat.early_regs[0];
 	plat->bdf = pci_ofplat_get_devfn(plat->dtplat.reg[0]);
-#endif
 	upriv->mmio_base = plat->mmio_base;
-	debug("p2sb: mmio_base=%x\n", (uint)plat->mmio_base);
+	debug("ofdata 2: mmio_base=%x\n", (uint)plat->mmio_base);
+#endif
 
 	return 0;
 }
@@ -122,13 +127,19 @@ static int apl_p2sb_probe(struct udevice *dev)
 	if (spl_phase() == PHASE_TPL)
 		return apl_p2sb_early_init(dev);
 	else {
+#if 0
 		struct p2sb_platdata *plat = dev_get_platdata(dev);
+		struct p2sb_uc_priv *upriv = dev_get_uclass_priv(dev);
 
+// 		printf("probe before: plat->mmio_base=%lx, upriv->mmio_base=%x\n",
+// 		       plat->mmio_base, upriv->mmio_base);
 		plat->mmio_base = dev_read_addr_pci(dev);
 		/* Don't set BDF since it should not be used */
+		printf("probe: plat->mmio_base=%lx\n", plat->mmio_base);
 		if (!plat->mmio_base || plat->mmio_base == FDT_ADDR_T_NONE)
 			return -EINVAL;
-
+		upriv->mmio_base = plat->mmio_base;
+#endif
 		if (spl_phase() == PHASE_SPL)
 			return apl_p2sb_spl_init(dev);
 	}
