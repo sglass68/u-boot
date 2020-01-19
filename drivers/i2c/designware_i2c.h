@@ -198,6 +198,7 @@ struct dw_i2c {
 #if CONFIG_IS_ENABLED(CLK)
 	struct clk clk;
 #endif
+	struct dw_i2c_speed_config config;
 };
 
 extern const struct dm_i2c_ops designware_i2c_ops;
@@ -205,5 +206,19 @@ extern const struct dm_i2c_ops designware_i2c_ops;
 int designware_i2c_probe(struct udevice *bus);
 int designware_i2c_remove(struct udevice *dev);
 int designware_i2c_ofdata_to_platdata(struct udevice *bus);
+
+/**
+ * dw_i2c_gen_speed_config() - Calculate config info from requested speed1
+ *
+ * Calculate the speed config from the given @speed_hz and return it so that
+ * it can be incorporated in ACPI tables
+ *
+ * @dev: I2C bus to check
+ * @speed_hz: Requested speed in Hz
+ * @config: Returns config to use for that speed
+ * @return 0 if OK, -ve on error
+ */
+int dw_i2c_gen_speed_config(const struct udevice *dev, int speed_hz,
+			    struct dw_i2c_speed_config *config);
 
 #endif /* __DW_I2C_H_ */
