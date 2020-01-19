@@ -34,4 +34,10 @@
  */
 void enable_bios_reset_cpl(void);
 
+/* API to get TOLUD base address */
+uintptr_t sa_get_tolud_base(struct udevice *dev);
+/* API to get GSM base address */
+ulong sa_get_gsm_base(struct udevice *dev);
+ulong sa_get_tseg_base(struct udevice *dev);
+
 #endif
