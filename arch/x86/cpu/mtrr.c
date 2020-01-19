@@ -18,6 +18,7 @@
 
 #include <common.h>
 #include <cpu_func.h>
+#include <sort.h>
 #include <asm/io.h>
 #include <asm/msr.h>
 #include <asm/mtrr.h>
@@ -61,6 +62,16 @@ static void set_var_mtrr(uint reg, uint type, uint64_t start, uint64_t size)
 	wrmsrl(MTRR_PHYS_MASK_MSR(reg), mask | MTRR_PHYS_MASK_VALID);
 }
 
+static int h_comp_mtrr(const void *p1, const void *p2)
+{
+	const struct mtrr_request *req1 = p1;
+	const struct mtrr_request *req2 = p2;
+
+	s64 diff = req1->start - req2->start;
+
+	return diff < 0 ? -1 : diff > 0 ? 1 : 0;
+}
+
 int mtrr_commit(bool do_caches)
 {
 	struct mtrr_request *req = gd->arch.mtrr_req;
@@ -75,6 +86,7 @@ int mtrr_commit(bool do_caches)
 	debug("open\n");
 	mtrr_open(&state, do_caches);
 	debug("open done\n");
+	qsort(req, gd->arch.mtrr_req_count, sizeof(*req), h_comp_mtrr);
 	for (i = 0; i < gd->arch.mtrr_req_count; i++, req++)
 		set_var_mtrr(i, req->type, req->start, req->size);
 
