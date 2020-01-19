@@ -8,6 +8,7 @@
 #define __DW_I2C_H_
 
 #include <clk.h>
+#include <i2c.h>
 #include <reset.h>
 
 struct i2c_regs {
@@ -164,12 +165,14 @@ struct dw_scl_sda_cfg {
  * @scl_lcnt: Low count value for SCL
  * @scl_hcnt: High count value for SCL
  * @sda_hold: Data hold count
+ * @speed_mode: Speed mode being used
  */
 struct dw_i2c_speed_config {
 	/* SCL high and low period count */
 	uint16_t scl_lcnt;
 	uint16_t scl_hcnt;
 	uint32_t sda_hold;
+	enum i2c_speed_mode speed_mode;
 };
 
 /**
