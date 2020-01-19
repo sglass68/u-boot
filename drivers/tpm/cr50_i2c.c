@@ -8,6 +8,8 @@
 #define LOG_CATEGORY UCLASS_TPM
 
 #include <common.h>
+#include <acpigen.h>
+#include <acpi_device.h>
 #include <dm.h>
 #include <i2c.h>
 #include <irq.h>
@@ -17,6 +19,7 @@
 #include <asm/io.h>
 #include <asm/arch/iomap.h>
 #include <asm/arch/pm.h>
+#include <dm/acpi.h>
 
 enum {
 	TIMEOUT_INIT_MS		= 30000, /* Very long timeout for TPM init */
@@ -580,6 +583,53 @@ static int cr50_i2c_cleanup(struct udevice *dev)
 	return 0;
 }
 
+static int cr50_acpi_fill_ssdt(const struct udevice *dev, struct acpi_ctx *ctx)
+{
+	char scope[ACPI_PATH_MAX];
+	char name[ACPI_NAME_MAX];
+	const char *hid;
+	int ret;
+
+	ret = acpi_device_scope(dev, scope, sizeof(scope));
+	if (ret)
+		return log_msg_ret("scope", ret);
+	ret = acpi_device_name(dev, name);
+	if (ret)
+		return log_msg_ret("name", ret);
+
+	hid = dev_read_string(dev, "acpi,hid");
+	if (!hid)
+		return log_msg_ret("hid", ret);
+
+	/* Device */
+	acpigen_write_scope(ctx, scope);
+	acpigen_write_device(ctx, name);
+	acpigen_write_name_string(ctx, "_HID", hid);
+	acpigen_write_name_integer(ctx, "_UID",
+				   dev_read_u32_default(dev, "acpi,uid", 0));
+	acpigen_write_name_string(ctx, "_DDN",
+				  dev_read_string(dev, "acpi,desc"));
+	acpigen_write_sta(ctx, acpi_device_status(dev));
+
+	/* Resources */
+	acpigen_write_name(ctx, "_CRS");
+	acpigen_write_resourcetemplate_header(ctx);
+	ret = acpi_device_write_i2c_dev(ctx, dev);
+	if (ret)
+		return log_msg_ret("i2c", ret);
+	ret = acpi_device_write_interrupt_or_gpio(ctx, (struct udevice *)dev,
+						  "ready-gpios");
+	if (ret)
+		return log_msg_ret("irq_gpio", ret);
+
+	acpigen_write_resourcetemplate_footer(ctx);
+
+	acpigen_pop_len(ctx); /* Device */
+	acpigen_pop_len(ctx); /* Scope */
+
+	return 0;
+}
+
 enum {
 	TPM_TIMEOUT_MS		= 5,
 	SHORT_TIMEOUT_MS	= 750,
@@ -652,6 +702,10 @@ static int cr50_i2c_probe(struct udevice *dev)
 	return 0;
 }
 
+struct acpi_ops cr50_acpi_ops = {
+	.fill_ssdt	= cr50_acpi_fill_ssdt,
+};
+
 static const struct tpm_ops cr50_i2c_ops = {
 	.open		= cr50_i2c_open,
 	.get_desc	= cr50_i2c_get_desc,
@@ -674,5 +728,6 @@ U_BOOT_DRIVER(cr50_i2c) = {
 	.probe	= cr50_i2c_probe,
 	.remove	= cr50_i2c_cleanup,
 	.priv_auto_alloc_size = sizeof(struct cr50_priv),
+	acpi_ops_ptr(&cr50_acpi_ops)
 	.flags		= DM_FLAG_OS_PREPARE,
 };
