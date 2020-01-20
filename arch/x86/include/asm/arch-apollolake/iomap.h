@@ -16,6 +16,22 @@
 
 #define IOMAP_ACPI_BASE		0x400
 #define IOMAP_ACPI_SIZE		0x100
+#define ACPI_BASE_ADDRESS	IOMAP_ACPI_BASE
+
+#define PMC_BAR0		0xfe042000
+
+#ifdef __ACPI__
+#define MCH_BASE_ADDRESS	0xfed10000
+#define MCH_SIZE		0x8000
+#define HPET_BASE_ADDRESS	0xfed00000
+
+#define PMC_BAR0		0xfe042000
+
+#define SRAM_BASE_0		0xfe900000
+#define SRAM_SIZE_0		(8 * KiB)
+#define SRAM_BASE_2		0xfe902000
+#define SRAM_SIZE_2		(4 * KiB)
+#endif
 
 /*
  * Use UART2. To use UART1 you need to set '2' to '1', change device tree serial
