@@ -31,6 +31,26 @@ extern const unsigned char AmlCode[];
 /* ACPI RSDP address to be used in boot parameters */
 static ulong acpi_rsdp_addr;
 
+int acpi_write_hpet(struct acpi_ctx *ctx, const struct udevice *dev)
+{
+	struct acpi_hpet *hpet;
+	int ret;
+
+	/*
+	 * We explicitly add these tables later on:
+	 */
+	log_debug("ACPI:    * HPET\n");
+
+	hpet = ctx->current;
+	acpi_inc_align(ctx, sizeof(struct acpi_hpet));
+	acpi_create_hpet(hpet);
+	ret = acpi_add_table(ctx, hpet);
+	if (ret)
+		return log_msg_ret("add", ret);
+
+	return 0;
+}
+
 static void acpi_create_facs(struct acpi_facs *facs)
 {
 	memset((void *)facs, 0, sizeof(struct acpi_facs));
@@ -342,6 +362,40 @@ static void acpi_create_spcr(struct acpi_spcr *spcr)
 
 	/* Fix checksum */
 	header->checksum = table_compute_checksum((void *)spcr, header->length);
+}
+
+/* http://www.intel.com/hardwaredesign/hpetspec_1.pdf */
+int acpi_create_hpet(struct acpi_hpet *hpet)
+{
+	struct acpi_table_header *header = &hpet->header;
+	struct acpi_gen_regaddr *addr = &hpet->addr;
+
+	memset((void *)hpet, 0, sizeof(struct acpi_hpet));
+	if (!header)
+		return -EFAULT;
+
+	/* Fill out header fields. */
+	acpi_fill_header(header, "HPET");
+
+	header->aslc_revision = ASL_REVISION;
+	header->length = sizeof(struct acpi_hpet);
+	header->revision = get_acpi_table_revision(ACPITAB_HPET);
+
+	/* Fill out HPET address. */
+	addr->space_id = 0; /* Memory */
+	addr->bit_width = 64;
+	addr->bit_offset = 0;
+	addr->addrl = CONFIG_HPET_ADDRESS & 0xffffffff;
+	addr->addrh = ((unsigned long long)CONFIG_HPET_ADDRESS) >> 32;
+
+	hpet->id = *(unsigned int *)CONFIG_HPET_ADDRESS;
+	hpet->number = 0;
+	hpet->min_tick = 0; /* HPET_MIN_TICKS */
+
+	header->checksum = acpi_checksum((void *)hpet,
+					 sizeof(struct acpi_hpet));
+
+	return 0;
 }
 
 /*

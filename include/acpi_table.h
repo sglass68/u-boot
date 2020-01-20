@@ -70,6 +70,15 @@ struct __packed acpi_table_header {
 	u32 aslc_revision;	/* ASL compiler revision number */
 };
 
+struct acpi_gen_regaddr {
+	u8 space_id;	/* Address space ID */
+	u8 bit_width;	/* Register size in bits */
+	u8 bit_offset;	/* Register bit offset */
+	u8 access_size;	/* Access size */
+	u32 addrl;	/* Register address, low 32 bits */
+	u32 addrh;	/* Register address, high 32 bits */
+};
+
 /* A maximum number of 32 ACPI tables ought to be enough for now */
 #define MAX_ACPI_TABLES		32
 
@@ -83,6 +92,16 @@ struct acpi_rsdt {
 struct acpi_xsdt {
 	struct acpi_table_header header;
 	u64 entry[MAX_ACPI_TABLES];
+};
+
+/* HPET timers */
+struct __packed acpi_hpet {
+	struct acpi_table_header header;
+	u32 id;
+	struct acpi_gen_regaddr addr;
+	u8 number;
+	u16 min_tick;
+	u8 attributes;
 };
 
 /* FADT Preferred Power Management Profile */
@@ -150,15 +169,6 @@ enum acpi_address_space_size {
 	ACPI_ACCESS_SIZE_WORD_ACCESS,
 	ACPI_ACCESS_SIZE_DWORD_ACCESS,
 	ACPI_ACCESS_SIZE_QWORD_ACCESS
-};
-
-struct acpi_gen_regaddr {
-	u8 space_id;	/* Address space ID */
-	u8 bit_width;	/* Register size in bits */
-	u8 bit_offset;	/* Register bit offset */
-	u8 access_size;	/* Access size */
-	u32 addrl;	/* Register address, low 32 bits */
-	u32 addrh;	/* Register address, high 32 bits */
 };
 
 /* FADT (Fixed ACPI Description Table) */
@@ -616,6 +626,10 @@ int acpi_add_table(struct acpi_ctx *ctx, void *table);
  * @ctx: Context to set up
  */
 void acpi_setup_base_tables(struct acpi_ctx *ctx, void *start);
+
+int acpi_write_hpet(struct acpi_ctx *ctx, const struct udevice *dev);
+
+int acpi_create_hpet(struct acpi_hpet *hpet);
 
 #endif /* !__ACPI__*/
 
