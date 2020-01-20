@@ -1,0 +1,37 @@
+Devices
+=======
+
+Device bindings are described by their own individual binding files.
+
+U-Boot provides for some optional properties which are documented here.
+
+ - acpi,has-power-resource : (boolean) true if this device has a power resource.
+    This causes a PRIC (ACPI PowerResource) to be written containing the
+    properties provided by this binding, to describe how to handle powering the
+    device up and down using GPIOs
+ - acpi,cid : Contains the string to use as the compatible ID (_CID)
+ - acpi,compatible : compatible string to report
+ - acpi,desc : Contains the string to use as the _DDN (DOS (Disk Operating
+    System) Device Name)
+ - acpi,hid : Contains the string to use as the HID (Human Interface Device)
+    identifier _HID
+ - acpi,hid-desc-reg-offset : HID register offset (for Human Interface Devices)
+ - acpi,probed : Tells U-Boot to add 'linux,probed' to the ACPI tables so that
+    Linux will not re-init the device
+ - acpi,uid : _UID value for device
+
+
+Example
+-------
+
+synaptics_touchpad: synaptics-touchpad@2c {
+	compatible = "i2c-chip";
+	reg = <0x2c>;
+	acpi,hid = "PNP0C50";
+	acpi,cid = "PNP0C50";
+	acpi,desc = "Synaptics Touchpad";
+	interrupts-extended = <&acpi_gpe GPIO_18_IRQ
+			IRQ_TYPE_EDGE_FALLING>;
+	acpi,probed;
+	acpi,hid-desc-reg-offset = <0x20>;
+};
