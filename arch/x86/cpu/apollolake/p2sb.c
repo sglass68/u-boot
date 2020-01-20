@@ -14,6 +14,9 @@
 #include <spl.h>
 #include <asm/pci.h>
 
+#define PCH_P2SB_E0		0xe0
+#define HIDE_BIT		BIT(0)
+
 struct p2sb_platdata {
 #if CONFIG_IS_ENABLED(OF_PLATDATA)
 	struct dtd_intel_apl_p2sb dtplat;
@@ -147,6 +150,29 @@ static int apl_p2sb_probe(struct udevice *dev)
 	return 0;
 }
 
+static void p2sb_set_hide_bit(struct udevice *dev, bool hide)
+{
+	dm_pci_clrset_config8(dev, PCH_P2SB_E0 + 1, HIDE_BIT,
+			      hide ? HIDE_BIT : 0);
+}
+
+static int apl_p2sb_set_hide(struct udevice *dev, bool hide)
+{
+	u16 vendor;
+
+	if (!CONFIG_IS_ENABLED(PCI))
+		return -EPERM;
+	p2sb_set_hide_bit(dev, hide);
+
+	dm_pci_read_config16(dev, PCI_VENDOR_ID, &vendor);
+	if (hide && vendor != 0xffff)
+		return log_msg_ret("hide", -EEXIST);
+	else if (!hide && vendor != PCI_VENDOR_ID_INTEL)
+		return log_msg_ret("unhide", -ENOMEDIUM);
+
+	return 0;
+}
+
 static int p2sb_child_post_bind(struct udevice *dev)
 {
 #if !CONFIG_IS_ENABLED(OF_PLATDATA)
@@ -162,6 +188,10 @@ static int p2sb_child_post_bind(struct udevice *dev)
 
 	return 0;
 }
+
+struct p2sb_ops apl_p2sb_ops = {
+	.set_hide	= apl_p2sb_set_hide,
+};
 
 static const struct udevice_id apl_p2sb_ids[] = {
 	{ .compatible = "intel,apl-p2sb" },

@@ -9,6 +9,7 @@
 #include <binman.h>
 #include <dm.h>
 #include <irq.h>
+#include <p2sb.h>
 #include <asm/intel_pinctrl.h>
 #include <asm/io.h>
 #include <asm/intel_regs.h>
@@ -19,9 +20,7 @@
 #include <asm/arch/systemagent.h>
 #include <asm/arch/fsp/fsp_configs.h>
 #include <asm/arch/fsp/fsp_s_upd.h>
-
-#define PCH_P2SB_E0		0xe0
-#define HIDE_BIT		BIT(0)
+#include <dm/uclass-internal.h>
 
 #define INTEL_GSPI_MAX		3
 #define MAX_USB2_PORTS		8
@@ -433,12 +432,6 @@ int fsps_update_config(struct udevice *dev, ulong rom_offset,
 	return 0;
 }
 
-static void p2sb_set_hide_bit(pci_dev_t dev, int hide)
-{
-	pci_x86_clrset_config(dev, PCH_P2SB_E0 + 1, HIDE_BIT,
-			      hide ? HIDE_BIT : 0, PCI_SIZE_8);
-}
-
 /* Configure package power limits */
 static int set_power_limits(struct udevice *dev)
 {
@@ -511,15 +504,15 @@ static int set_power_limits(struct udevice *dev)
 
 int p2sb_unhide(void)
 {
-	pci_dev_t dev = PCI_BDF(0, 0xd, 0);
-	ulong val;
+	struct udevice *dev;
+	int ret;
 
-	p2sb_set_hide_bit(dev, 0);
-
-	pci_x86_read_config(dev, PCI_VENDOR_ID, &val, PCI_SIZE_16);
-
-	if (val != PCI_VENDOR_ID_INTEL)
-		return log_msg_ret("p2sb unhide", -EIO);
+	ret = uclass_find_first_device(UCLASS_P2SB, &dev);
+	if (ret)
+		return log_msg_ret("p2sb", ret);
+	ret = p2sb_set_hide(dev, false);
+	if (ret)
+		return log_msg_ret("hide", ret);
 
 	return 0;
 }
