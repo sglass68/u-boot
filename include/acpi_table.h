@@ -489,6 +489,29 @@ struct acpi_dmar {
 
 #define ACPI_DBG2_UNKNOWN		0x00FF
 
+/* DBG2: Microsoft Debug Port Table 2 header */
+struct __packed acpi_dbg2_header {
+	struct acpi_table_header header;
+	uint32_t devices_offset;
+	uint32_t devices_count;
+};
+
+/* DBG2: Microsoft Debug Port Table 2 device entry */
+struct __packed acpi_dbg2_device {
+	uint8_t  revision;
+	uint16_t length;
+	uint8_t  address_count;
+	uint16_t namespace_string_length;
+	uint16_t namespace_string_offset;
+	uint16_t oem_data_length;
+	uint16_t oem_data_offset;
+	uint16_t port_type;
+	uint16_t port_subtype;
+	uint8_t  reserved[2];
+	uint16_t base_address_offset;
+	uint16_t address_size_offset;
+};
+
 /* SPCR (Serial Port Console Redirection table) */
 struct __packed acpi_spcr {
 	struct acpi_table_header header;
@@ -630,6 +653,9 @@ void acpi_setup_base_tables(struct acpi_ctx *ctx, void *start);
 int acpi_write_hpet(struct acpi_ctx *ctx, const struct udevice *dev);
 
 int acpi_create_hpet(struct acpi_hpet *hpet);
+
+int acpi_write_dbg2_pci_uart(struct acpi_ctx *ctx, struct udevice *dev,
+			     uint access_size);
 
 #endif /* !__ACPI__*/
 
