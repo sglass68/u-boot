@@ -769,7 +769,7 @@ int acpi_dp_write(struct acpi_ctx *ctx, struct acpi_dp *table)
 	}
 
 	/* Clean up */
-	acpi_dp_free(table);
+// 	acpi_dp_free(table);
 
 	return 0;
 }

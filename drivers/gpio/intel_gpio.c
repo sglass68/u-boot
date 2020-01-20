@@ -19,6 +19,7 @@
 #include <asm/io.h>
 #include <asm/pci.h>
 #include <asm/arch/gpio.h>
+#include <dm/acpi.h>
 #include <dt-bindings/gpio/x86-gpio.h>
 
 static int intel_gpio_direction_input(struct udevice *dev, uint offset)
@@ -140,7 +141,7 @@ static int intel_gpio_get_acpi(const struct gpio_desc *desc,
 	gpio->polarity = ACPI_GPIO_ACTIVE_HIGH;
 	gpio->pin_count = 1;
 	gpio->pins[0] = intel_pinctrl_get_acpi_pin(pinctrl, desc->offset);
-	ret = acpi_device_path(pinctrl, gpio->resource, sizeof(gpio->resource));
+	ret = acpi_get_path(pinctrl, gpio->resource, sizeof(gpio->resource));
 	if (ret)
 		return log_msg_ret("resource", ret);
 
