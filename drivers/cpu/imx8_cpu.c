@@ -85,7 +85,7 @@ static int cpu_imx_get_temp(void)
 }
 #endif
 
-int cpu_imx_get_desc(struct udevice *dev, char *buf, int size)
+int cpu_imx_get_desc(const struct udevice *dev, char *buf, int size)
 {
 	struct cpu_imx_platdata *plat = dev_get_platdata(dev);
 	int ret;
@@ -107,7 +107,7 @@ int cpu_imx_get_desc(struct udevice *dev, char *buf, int size)
 	return 0;
 }
 
-static int cpu_imx_get_info(struct udevice *dev, struct cpu_info *info)
+static int cpu_imx_get_info(const struct udevice *dev, struct cpu_info *info)
 {
 	struct cpu_imx_platdata *plat = dev_get_platdata(dev);
 
@@ -116,12 +116,12 @@ static int cpu_imx_get_info(struct udevice *dev, struct cpu_info *info)
 	return 0;
 }
 
-static int cpu_imx_get_count(struct udevice *dev)
+static int cpu_imx_get_count(const struct udevice *dev)
 {
 	return 4;
 }
 
-static int cpu_imx_get_vendor(struct udevice *dev,  char *buf, int size)
+static int cpu_imx_get_vendor(const struct udevice *dev,  char *buf, int size)
 {
 	snprintf(buf, size, "NXP");
 	return 0;

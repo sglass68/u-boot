@@ -34,7 +34,7 @@ int cpu_probe_all(void)
 	return 0;
 }
 
-int cpu_get_desc(struct udevice *dev, char *buf, int size)
+int cpu_get_desc(const struct udevice *dev, char *buf, int size)
 {
 	struct cpu_ops *ops = cpu_get_ops(dev);
 
@@ -44,7 +44,7 @@ int cpu_get_desc(struct udevice *dev, char *buf, int size)
 	return ops->get_desc(dev, buf, size);
 }
 
-int cpu_get_info(struct udevice *dev, struct cpu_info *info)
+int cpu_get_info(const struct udevice *dev, struct cpu_info *info)
 {
 	struct cpu_ops *ops = cpu_get_ops(dev);
 
@@ -54,7 +54,7 @@ int cpu_get_info(struct udevice *dev, struct cpu_info *info)
 	return ops->get_info(dev, info);
 }
 
-int cpu_get_count(struct udevice *dev)
+int cpu_get_count(const struct udevice *dev)
 {
 	struct cpu_ops *ops = cpu_get_ops(dev);
 
@@ -64,7 +64,7 @@ int cpu_get_count(struct udevice *dev)
 	return ops->get_count(dev);
 }
 
-int cpu_get_vendor(struct udevice *dev, char *buf, int size)
+int cpu_get_vendor(const struct udevice *dev, char *buf, int size)
 {
 	struct cpu_ops *ops = cpu_get_ops(dev);
 

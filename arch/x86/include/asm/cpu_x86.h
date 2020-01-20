@@ -28,7 +28,7 @@ int cpu_x86_bind(struct udevice *dev);
  * @size:	Size of string space
  * @return:	0 if OK, -ENOSPC if buffer is too small, other -ve on error
  */
-int cpu_x86_get_desc(struct udevice *dev, char *buf, int size);
+int cpu_x86_get_desc(const struct udevice *dev, char *buf, int size);
 
 /**
  * cpu_x86_get_vendor() - Get a vendor string for an x86 CPU
@@ -41,6 +41,6 @@ int cpu_x86_get_desc(struct udevice *dev, char *buf, int size);
  * @size:	Size of string space
  * @return:	0 if OK, -ENOSPC if buffer is too small, other -ve on error
  */
-int cpu_x86_get_vendor(struct udevice *dev, char *buf, int size);
+int cpu_x86_get_vendor(const struct udevice *dev, char *buf, int size);
 
 #endif /* _ASM_CPU_X86_H */
