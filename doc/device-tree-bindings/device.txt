@@ -16,6 +16,8 @@ U-Boot provides for some optional properties which are documented here.
  - acpi,hid : Contains the string to use as the HID (Human Interface Device)
     identifier _HID
  - acpi,hid-desc-reg-offset : HID register offset (for Human Interface Devices)
+ - acpi,path : Specifies the full ACPI path for a device. This overrides the
+    normal path build from driver model
  - acpi,probed : Tells U-Boot to add 'linux,probed' to the ACPI tables so that
     Linux will not re-init the device
  - acpi,name : Provides the ACPI name for a device, which is a string consisting
@@ -48,3 +50,24 @@ pcie-a0@14,0 {
 		interrupts-extended = <&acpi_gpe 0x3c 0>;
 	};
 };
+
+p2sb: p2sb@d,0 {
+	u-boot,dm-pre-reloc;
+	reg = <0x02006810 0 0 0 0>;
+	compatible = "intel,apl-p2sb";
+	early-regs = <IOMAP_P2SB_BAR 0x100000>;
+	pci,no-autoconfig;
+
+	n {
+		compatible = "intel,apl-pinctrl";
+		u-boot,dm-pre-reloc;
+		intel,p2sb-port-id = <PID_GPIO_N>;
+		acpi,path = "\\_SB.GPO0";
+		gpio_n: gpio-n {
+			compatible = "intel,gpio";
+			u-boot,dm-pre-reloc;
+			gpio-controller;
+			#gpio-cells = <2>;
+			linux-name = "INT3452:00";
+		};
+	};
