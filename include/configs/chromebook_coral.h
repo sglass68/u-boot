@@ -11,14 +11,22 @@
 #define __CONFIG_H
 
 #define CONFIG_BOOTCOMMAND	\
-	"fatload mmc 1:c 1000000 syslinux/vmlinuz.A; zboot 1000000"
+	"tpm init; tpm startup TPM2_SU_CLEAR; " \
+	"usb start; ext2load usb 0:1 111000 vmlinuz; " \
+	"echo; echo; echo !!!!!!! warning hard-coded serial; echo; echo; " \
+	"zboot 111000"
+
+#define xCONFIG_BOOTCOMMAND	\
+	"fatload mmc 1:c 1000000 syslinux/vmlinuz.A; " \
+	"echo; echo; echo !!!!!!! warning hard-coded serial; echo; echo; " \
+	"zboot 1000000"
 
 #include <configs/x86-common.h>
 #include <configs/x86-chromebook.h>
 
 #undef CONFIG_STD_DEVICES_SETTINGS
 #define CONFIG_STD_DEVICES_SETTINGS     "stdin=usbkbd,i8042-kbd,serial\0" \
-					"stdout=vidconsole,serial\0" \
+					"stdout=serial\0" \
 					"stderr=vidconsole,serial\0"
 
 #define CONFIG_ENV_SECT_SIZE		0x1000
