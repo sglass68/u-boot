@@ -98,7 +98,6 @@ struct pad_group {
  * groups exist inside a community
  *
  * @name: Community name
- * @acpi_path: ACPI path
  * @num_gpi_regs: number of gpi registers in community
  * @max_pads_per_group: number of pads in each group; number of pads bit-mapped
  *	in each GPI status/en and Host Own Reg
@@ -119,7 +118,6 @@ struct pad_group {
  */
 struct pad_community {
 	const char *name;
-	const char *acpi_path;
 	size_t num_gpi_regs;
 	size_t max_pads_per_group;
 	uint first_pad;
