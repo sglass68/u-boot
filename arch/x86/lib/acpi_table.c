@@ -18,7 +18,6 @@
 #include <asm/lapic.h>
 #include <asm/mpspec.h>
 #include <asm/tables.h>
-#include <asm/arch/global_nvs.h>
 
 /*
  * IASL compiles the dsdt entries and writes the hex values
