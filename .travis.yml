@@ -134,14 +134,8 @@ script:
      cp ~/grub_x64.efi $UBOOT_TRAVIS_BUILD_DIR/;
      cp ~/grub2-arm/usr/lib/grub2/arm-efi/grub.efi $UBOOT_TRAVIS_BUILD_DIR/grub_arm.efi;
      cp ~/grub2-arm64/usr/lib/grub2/arm64-efi/grub.efi $UBOOT_TRAVIS_BUILD_DIR/grub_arm64.efi;
-     ret=0;
-     tools/buildman/buildman -o ${UBOOT_TRAVIS_BUILD_DIR} -w -E -W
-       --board ${TEST_PY_BD} ${OVERRIDE}|| ret=$?;
-     if [[ $ret -ne 0 ]]; then
-       tools/buildman/buildman -se -o ${UBOOT_TRAVIS_BUILD_DIR} -w
-         --board ${TEST_PY_BD};
-       exit $ret;
-     fi;
+     tools/buildman/buildman -o ${UBOOT_TRAVIS_BUILD_DIR} -w -E -W -e
+       --board ${TEST_PY_BD} ${OVERRIDE} || exit;
      virtualenv -p /usr/bin/python3 /tmp/venv;
      . /tmp/venv/bin/activate;
      pip install -r test/py/requirements.txt;
