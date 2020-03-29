@@ -16,9 +16,29 @@
 		     "google,veyron-jerry-rev3", "google,veyron-jerry",
 		     "google,veyron", "rockchip,rk3288";
 
-        chosen {
-                stdout-path = &uart2;
-        };
+	binman {
+		filename = "u-boot.rom";
+		size = <0x400000>;
+		pad-byte = <0xff>;
+
+		mkimage {
+			args = "-n rk3288 -T rkspi";
+			u-boot-spl {
+			};
+		};
+		u-boot-img {
+			offset = <0x20000>;
+		};
+		u-boot {
+			offset = <0x300000>;
+		};
+		fdtmap {
+		};
+	};
+
+	chosen {
+		stdout-path = &uart2;
+	};
 
 	panel_regulator: panel-regulator {
 		compatible = "regulator-fixed";

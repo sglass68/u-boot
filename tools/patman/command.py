@@ -120,6 +120,10 @@ def Output(*cmd, **kwargs):
     kwargs['raise_on_error'] = kwargs.get('raise_on_error', True)
     return RunPipe([cmd], capture=True, **kwargs).stdout
 
+def RunCheck(*cmd, **kwargs):
+    return RunPipe([cmd], capture=True, capture_stderr=True,
+                   raise_on_error=False, **kwargs)
+
 def OutputOneLine(*cmd, **kwargs):
     """Run a command and output it as a single-line string
 

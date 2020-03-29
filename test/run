@@ -53,6 +53,7 @@ run_test "patman" ./tools/patman/patman --test
 run_test "buildman" ./tools/buildman/buildman -t ${skip}
 run_test "fdt" ./tools/dtoc/test_fdt -t
 run_test "dtoc" ./tools/dtoc/dtoc -t
+run_test "labman" ./tools/labman/labman test
 
 # This needs you to set up Python test coverage tools.
 # To enable Python test coverage on Debian-type distributions (e.g. Ubuntu):
@@ -61,6 +62,7 @@ export PATH=$PATH:${TOOLS_DIR}
 run_test "binman code coverage" ./tools/binman/binman test -T
 run_test "dtoc code coverage" ./tools/dtoc/dtoc -T
 run_test "fdt code coverage" ./tools/dtoc/test_fdt -T
+run_test "labman code coverage" ./tools/labman/labman test -T
 
 if [ $failures == 0 ]; then
 	echo "Tests passed!"

@@ -5,6 +5,7 @@ choice
 
 config TARGET_CHROMEBOOK_JERRY
 	bool "Google/Rockchip Veyron-Jerry Chromebook"
+	select HAS_ROM
 	select BOARD_LATE_INIT
 	help
 	  Jerry is a RK3288-based clamshell device with 2 USB 3.0 ports,

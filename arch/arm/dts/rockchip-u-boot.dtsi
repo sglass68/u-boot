@@ -6,6 +6,7 @@
 #include <config.h>
 
 / {
+#ifdef CONFIG_ARM64
 	binman {
 		filename = "u-boot-rockchip.bin";
 		pad-byte = <0xff>;
@@ -18,4 +19,5 @@
 			offset = <CONFIG_SPL_PAD_TO>;
 		};
 	};
+#endif
 };
