@@ -17,6 +17,26 @@
 		     "google,bob-rev5", "google,bob-rev4",
 		     "google,bob", "google,gru", "rockchip,rk3399";
 
+	binman {
+		filename = "u-boot.rom";
+		size = <0x400000>;
+		pad-byte = <0xff>;
+
+		mkimage {
+			args = "-n rk3399 -T rkspi";
+			u-boot-spl {
+			};
+		};
+		u-boot-img {
+			offset = <0x40000>;
+		};
+		u-boot {
+			offset = <0x300000>;
+		};
+		fdtmap {
+		};
+	};
+
 	edp_panel: edp-panel {
 		compatible = "boe,nv101wxmn51";
 		backlight = <&backlight>;

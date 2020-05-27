@@ -957,6 +957,9 @@ duts:
     power: *servo_bob
     username: root
     password: test0000
+    blobs:
+      dest: .
+      src: /vid/software/devel/bob/bl31.elf
     flash:
       method: em100
     network:
@@ -965,4 +968,4 @@ duts:
     builds:
       bob:
         target: chromebook_bob
-        toolchain: armv7-a
+        toolchain: aarch64

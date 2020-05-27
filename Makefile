@@ -916,9 +916,12 @@ ALL-$(CONFIG_REMAKE_ELF) += u-boot.elf
 ALL-$(CONFIG_EFI_APP) += u-boot-app.efi
 ALL-$(CONFIG_EFI_STUB) += u-boot-payload.efi
 
+ifneq ($(CONFIG_HAS_ROM),)
 ifneq ($(BUILD_ROM)$(CONFIG_BUILD_ROM),)
 ALL-y += u-boot.rom
 endif
+endif
+
 ifeq ($(CONFIG_SYS_COREBOOT)$(CONFIG_SPL),yy)
 ALL-$(CONFIG_BINMAN) += u-boot-x86-with-spl.bin
 endif

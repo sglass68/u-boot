@@ -632,6 +632,7 @@ config ROM_NEEDS_BLOBS
 config BUILD_ROM
 	bool
 	depends on HAS_ROM
+	select BINMAN
 	default y if !ROM_NEEDS_BLOBS
 	help
 	  This option allows to build a ROM version of U-Boot.

@@ -205,7 +205,6 @@ def Run(name, *args, **kwargs):
             env = dict(os.environ)
             env['PATH'] = ':'.join(tool_search_paths) + ':' + env['PATH']
         all_args = (name,) + args
-        print(all_args)
         result = command.RunPipe([all_args], capture=True, capture_stderr=True,
                                  env=env, raise_on_error=False, binary=binary)
         if result.return_code:
