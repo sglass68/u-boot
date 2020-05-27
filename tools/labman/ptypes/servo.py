@@ -250,6 +250,18 @@ class Part_servo(Part):
             good = False
         return work.CheckResult(self, good, msg)
 
+    @classmethod
+    def guess_part(cls, lab, phys):
+        result = lab.get_usb_files(phys, 'idProduct', 'idVendor')
+        if not result:
+            return
+        if result['idProduct'] == '2517' and result['idVendor'] == '0424':
+            result = lab.get_usb_files(phys + '.5', 'serial')
+            if not result:
+                return None
+            return result['serial']
+        return None
+
     def get_code(self, prop, prop_list, partref):
         if prop == 'poweron':
             return None

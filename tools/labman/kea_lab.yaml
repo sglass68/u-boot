@@ -273,6 +273,12 @@ em100s:
     serial: DP022783
     chip: GD25LQ32
 
+  em100-4: &em100_bob
+    hub-port: *hube_15
+    symlink: em100_bob
+    serial: DP139156
+    chip: GD25LQ32
+
 sdwires:
   sdwire0: &sdwire0
     serial: sdwire-18
@@ -377,6 +383,12 @@ servos:
     serial: 730422-00045
     port: 9903
     hub-port: *huba_8
+
+  svbob: &servo_bob
+    board: bob
+    serial: 911416-00262
+    port: 9904
+    hub-port: *hube_14
 
 ykushs:
   ykush0: &ykush0
@@ -937,3 +949,20 @@ duts:
       edison:
         target: edison
         toolchain: i385
+
+  bob:
+    desc: Chromebook Bok
+    console: *servo_bob
+    bootdev: *em100_bob
+    power: *servo_bob
+    username: root
+    password: test0000
+    flash:
+      method: em100
+    network:
+      method: ethernet
+      mac-address: none
+    builds:
+      bob:
+        target: chromebook_bob
+        toolchain: armv7-a
