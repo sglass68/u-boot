@@ -1593,8 +1593,9 @@ quiet_cmd_ldr = LD      $@
 cmd_ldr = $(LD) $(LDFLAGS_$(@F)) \
 	       $(filter-out FORCE,$^) -o $@
 
+rom-deps := u-boot.bin
 ifdef CONFIG_X86
-rom-deps := u-boot-x86-start16.bin u-boot-x86-reset16.bin \
+rom-deps += u-boot-x86-start16.bin u-boot-x86-reset16.bin \
 		$(if $(CONFIG_SPL_X86_16BIT_INIT),spl/u-boot-spl.bin) \
 		$(if $(CONFIG_TPL_X86_16BIT_INIT),tpl/u-boot-tpl.bin) \
 		$(if $(CONFIG_HAVE_REFCODE),refcode.bin)
@@ -1606,10 +1607,22 @@ u-boot-x86-start16.bin: u-boot FORCE
 OBJCOPYFLAGS_u-boot-x86-reset16.bin := -O binary -j .resetvec
 u-boot-x86-reset16.bin: u-boot FORCE
 	$(call if_changed,objcopy)
+
+else # !CONFIG_X86
+
+ifdef CONFIG_SPL
+rom-deps += spl/u-boot-spl.bin
+rom-deps += u-boot.img
 endif
 
-u-boot.rom: u-boot.bin $(rom-deps) FORCE
-	echo ROM
+ifdef CONFIG_TPL
+rom-deps += tpl/u-boot-tpl.bin
+endif
+
+endif
+
+u-boot.rom: $(rom-deps) FORCE
+	echo ROM $(rom-deps)
 	$(call if_changed,binman)
 endif
 

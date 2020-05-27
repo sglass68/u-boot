@@ -9,6 +9,7 @@
 		mmc0 = &sdhci;
 		mmc1 = &sdmmc;
 		pci0 = &pcie0;
+		spi1 = &spi1;
 	};
 
 	cic: syscon@ff620000 {

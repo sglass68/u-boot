@@ -359,6 +359,12 @@ sdwires:
     hub-port: *hubb_1
     block-symlink: sdcard8
 
+  sdwire13: &sdwire13
+    serial: sdwireda6
+    symlink: sdwire13
+    hub-port: *hube_3
+    block-symlink: sdcard9
+
 servos:
   svsamus: &servo_samus
     board: samus
@@ -531,6 +537,10 @@ uarts:
     hub-port: *huba_16
     need-dut-power: yes
     dut-power-delay: 0.7
+  usbport18: &ttyusb_port18
+    type: usb-uart
+    symlink: ttyusb_port18
+    hub-port: *hube_4
   portserver1: &portserver1
     type: portserver
     host: 192.168.4.23
@@ -969,3 +979,18 @@ duts:
       bob:
         target: chromebook_bob
         toolchain: aarch64
+
+  lcdk:
+    desc: OMAPL138_LCDK
+    console: *ttyusb_port18
+    bootdev: *sdwire13
+    power: *dli_second_port6
+    flash:
+      method: davinci
+    network:
+      method: ethernet
+      mac-address: 02:00:00:00:53:49
+    builds:
+      lcdk:
+        target: omapl138_lcdk
+        toolchain: armv7-a
