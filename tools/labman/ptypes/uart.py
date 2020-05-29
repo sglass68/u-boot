@@ -22,6 +22,7 @@ class Part_uart(Part):
             yam (dict): Yaml definition
         """
         self._type = yam.get('type')
+        self._speed = yam.get('speed', 115200)
         if self._type is None:
             self.Raise("Invalid type '%s'" % cname)
         if self._type == 'usb-uart':
@@ -61,10 +62,16 @@ class Part_uart(Part):
         raise ValueError('%s: %s' % (str(self), msg))
 
     def get_detail(self, port=None):
-        return '%s' % self._symlink
+        if self._type == 'usb-uart':
+            return '%s' % self._symlink
+        else:
+            return '%s' % self._host
 
     def get_all_detail(self, out):
-        out['symlink'] = self._symlink
+        if self._type == 'usb-uart':
+            out['symlink'] = self._symlink
+        else:
+            out['symlink'] = self._host
         return out
 
     def check(self):
@@ -155,7 +162,7 @@ ACTION=="add" \\
                 return 'self.wait_for_uart(%s)' % self._dut_power_delay
         elif prop == 'connect_uart':
             if self._type == 'usb-uart':
-                return 'mach.open_channel("picocom", "-q", "-b", "115200", self.console_uart)'
+                return 'mach.open_channel("picocom", "-q", "-b", "%d", self.console_uart)' % self._speed
             elif self._type == 'portserver':
                 return ('mach.open_channel("bash", "-c", "stty raw; nc %s %s")' %
                     (self._host, self._base_port + int(partref.port)))

@@ -365,6 +365,12 @@ sdwires:
     hub-port: *hube_3
     block-symlink: sdcard9
 
+  sdwire14: &sdwire14
+    serial: sdwireda7
+    symlink: sdwire13
+    hub-port: *hube_6
+    block-symlink: sdcard10
+
 servos:
   svsamus: &servo_samus
     board: samus
@@ -541,6 +547,11 @@ uarts:
     type: usb-uart
     symlink: ttyusb_port18
     hub-port: *hube_4
+  usbport19: &ttyusb_port19
+    type: usb-uart
+    symlink: ttyusb_port19
+    hub-port: *hube_5
+    speed: 1500000
   portserver1: &portserver1
     type: portserver
     host: 192.168.4.23
@@ -623,10 +634,10 @@ usbrelays:
         port-number: 4
 
   usbrelay2: &usbrelay2
-    serial: RAAMZ
+    serial: 7QMBS
     hub-port: *huba_10
     symlink: relay2
-    num-ports: 4
+    num-ports: 8
     ports:
       port1: &usbrelay2_port1
         port-number: 1
@@ -636,6 +647,14 @@ usbrelays:
         port-number: 3
       port4: &usbrelay2_port4
         port-number: 4
+      port5: &usbrelay2_port5
+        port-number: 5
+      port6: &usbrelay2_port6
+        port-number: 6
+      port7: &usbrelay2_port7
+        port-number: 7
+      port8: &usbrelay2_port8
+        port-number: 8
 
 duts:
   rpi_3:
@@ -949,9 +968,9 @@ duts:
     desc: Intel Edison
     console: *ttyusb_port17
     power: *dli_second_port5
-    reset: *usbrelay2_port1
-    recovery: *usbrelay2_port2  # FM button (firmware recovery)
-    recovery-extra: *usbrelay2_port3  # RM buton (recovery mode)
+    reset: *usbrelay2_port5
+    recovery: *usbrelay2_port6  # FM button (firmware recovery)
+    recovery-extra: *usbrelay2_port7  # RM buton (recovery mode)
     send:
       method: edison
       device: *dfu_usb0
@@ -985,6 +1004,7 @@ duts:
     console: *ttyusb_port18
     bootdev: *sdwire13
     power: *dli_second_port6
+    reset: *usbrelay2_port8
     flash:
       method: davinci
     network:
@@ -994,3 +1014,18 @@ duts:
       lcdk:
         target: omapl138_lcdk
         toolchain: armv7-a
+
+  ff3399:
+    desc: Firefly RK3399
+    console: *ttyusb_port19
+    bootdev: *sdwire14
+    reset: *usbrelay2_port1
+    flash:
+      method: rockchip3399
+    network:
+      method: ethernet
+      mac-address: unknown
+    builds:
+      rock2:
+        toolchain: aarch64
+        target: firefly-rk3399
