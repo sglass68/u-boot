@@ -988,7 +988,7 @@ duts:
     password: test0000
     blobs:
       dest: .
-      src: /vid/software/devel/bob/bl31.elf
+      src: /vid/software/devel/rk3399/bl31.elf
     flash:
       method: em100
     network:
@@ -1021,7 +1021,10 @@ duts:
     bootdev: *sdwire14
     reset: *usbrelay2_port1
     flash:
-      method: rockchip3399
+      method: rockchip3399_tpl
+    blobs:
+      dest: .
+      src: /vid/software/devel/rk3399/bl31.elf
     network:
       method: ethernet
       mac-address: unknown
