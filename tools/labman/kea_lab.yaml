@@ -433,6 +433,9 @@ dfus:
   dfu0: &dfu_usb0
     hub-port: *huba_15
     symlink: usbdev-edison
+  at91-usb0: &sn9260_send
+    hub-port: *hube_13
+    symlink: usbdev-sn9260
 
 imxusbs:
   imxusb0: &salmon_send
@@ -1032,3 +1035,18 @@ duts:
       rock2:
         toolchain: aarch64
         target: firefly-rk3399
+
+  sn9260:
+    desc: Snapper 9260
+    console: *portserver1_3
+    reset: *usbrelay2_port2
+    recovery: *usbrelay1_port3
+    flash:
+      method: at91
+    send:
+      device: *sn9260_send
+      method: at91
+    builds:
+      salmon:
+        target: snapper9260
+        toolchain: armv7-a
