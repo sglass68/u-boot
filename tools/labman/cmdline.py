@@ -62,6 +62,8 @@ def ParseArgs(argv):
                              help='Name to provision with')
     prov_parser.add_argument('-s', '--serial', type=str,
                              help='Serial number to provision with')
+    prov_parser.add_argument('-t', '--test', action='store_true',
+                             help='Test that provisioning worked')
 
     scan_parser = subparser.add_parser('scan',
                                        help='Scan for unprovisioned devices')

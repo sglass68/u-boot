@@ -5,6 +5,7 @@
 """Implement support for the SDwire USB/uSD mux"""
 
 from datetime import datetime, timedelta
+import glob
 import re
 import time
 
@@ -32,6 +33,7 @@ class Part_sdwire(Part_bootdev):
         self._serial = None
         self._symlink = None
         self._verbose = False
+        self._sleep = time.sleep
 
     def __str__(self):
         """Convert the object into a string for presentation to the user"""
@@ -192,42 +194,87 @@ class Part_sdwire(Part_bootdev):
             self.raise_self("Expected to find one SDwire, found %s" % found)
         return serial
 
+    def wait_for(self, req_count, orig=False):
+        for _ in range(self.TIMEOUT_S):
+            found, serial = self.list_matching(self.ORIG_IDS if orig else [])
+            if found == req_count:
+                return serial
+            if req_count:
+                msg = '\rInsert the SDwire...'
+            else:
+                msg = '\rUnplug all SDwires...%d ' % found
+            self._print(msg, end='', flush=True)
+            self._sleep(1)
+        self.raise_self('gave up waiting')
+
     def provision(self, new_serial):
         """Provision an SDwire ready for use
 
         This only works if there is a single SDwire connected.
         """
         # Get the current serial number
+        if not new_serial:
+            self.raise_self('Please specify a serial number')
         self._verbose = True
-        old_serial = self.get_serial()
+
+        self.wait_for(0, True)
+        old_serial = self.wait_for(1, True)
 
         # Program in the new serial number
         self.sdmux_ctrl('--device-serial=%s' % old_serial, *self.ORIG_IDS,
                         '--device-type=sd-wire', '--set-serial=%s' % new_serial)
 
         # Wait for the device to re-appear with the new details
-        self._print('Unplug the SDwire...', end='', flush=True)
-        for _ in range(self.TIMEOUT_S):
-            found, serial = self.list_matching(self.ORIG_IDS)
-            if not found:
-                break
-            self._sleep(1)
-        if found:
-            self.raise_self('gave up waiting')
-
-        self._print('\nInsert the SDwire...', end='', flush=True)
-        for _ in range(self.TIMEOUT_S):
-            found, serial = self.list_matching([])
-            if found == 1:
-                break
-            self._sleep(1)
-        if found != 1:
-            self.raise_self('gave up waiting')
+        self.wait_for(0, True)
+        self.wait_for(1, False)
 
         if serial != new_serial:
             self.raise_self("Expected serial '%s' but got '%s'" %
                             (new_serial, serial))
-        self._print('\nProvision complete')
+        self._print("\nProvision complete for serial '%s'" % new_serial)
+
+    def list_disks(self):
+        disks = glob.glob('/dev/sd?')
+        return set([name[-1] for name in disks])
+
+    def provision_test(self):
+        self.wait_for(0)
+        orig_disks = self.list_disks()
+
+        self._serial = self.wait_for(1)
+        print("Running provision test on serial '%s'" % self._serial)
+        self.select_dut()
+        if self.get_status() != self.DUT:
+            self.raise_self('Failed to switch to DUT')
+        time.sleep(1)
+
+        self.select_ts()
+        if self.get_status() != self.TS:
+            self.raise_self('Failed to switch to TS')
+        time.sleep(1)
+        new_disks = self.list_disks().difference(orig_disks)
+        if len(new_disks) != 1:
+            self.raise_self('Cannot find disk')
+        new_disk = new_disks.pop()
+        print('Found disk %s' % new_disk)
+        self._block_symlink = 'sd%s' % new_disk
+        self.check_for_block_symlink()
+
+        self.select_dut()
+        if self.get_status() != self.DUT:
+            self.raise_self('Failed to switch to DUT')
+
+        bsymlink_path = '/dev/%s' % self._block_symlink
+        done = False
+        for i in range(5):
+            result = self.lab.run_command('dd', 'if=%s' % bsymlink_path,
+                                          'of=/dev/null', 'count=1')
+            if result.return_code:
+                done = True
+                break
+            time.sleep(1)
+        if not done:
+            raise ValueError("Cannot remove device '%s'" % bsymlink_path)
 
     def check_for_block_symlink(self):
         bsymlink_path = '/dev/%s' % self._block_symlink

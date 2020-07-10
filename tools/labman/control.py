@@ -33,7 +33,7 @@ def Labman(args, lab=None):
     elif args.cmd == 'ls':
         lab.show(args.args)
     elif args.cmd == 'prov':
-        lab.provision(args.component, args.name, args.serial)
+        lab.provision(args.component, args.name, args.serial, args.test)
     elif args.cmd == 'start':
         lab.start_daemons()
     elif args.cmd == 'scan':

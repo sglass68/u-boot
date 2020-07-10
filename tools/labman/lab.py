@@ -221,7 +221,7 @@ class Lab:
             with open(path, 'w') as outf:
                 outf.write(data)
 
-    def provision(self, component, name, serial, test_obj=None):
+    def provision(self, component, name, serial, test, test_obj=None):
         """Provision a new component for the lab
 
         Args:
@@ -235,7 +235,10 @@ class Lab:
             sdw.name = name
             sdw.lab = self
             sdw.parts = None
-            sdw.provision(serial)
+            if test:
+                sdw.provision_test()
+            else:
+                sdw.provision_test(serial, test)
         else:
             self.raise_self("Unknown component '%s'" % component)
 
