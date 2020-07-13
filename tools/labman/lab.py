@@ -221,13 +221,14 @@ class Lab:
             with open(path, 'w') as outf:
                 outf.write(data)
 
-    def provision(self, component, name, serial, test, test_obj=None):
+    def provision(self, component, name, serial, test, device, test_obj=None):
         """Provision a new component for the lab
 
         Args:
             component: String compatible type ('sdwire')
             name: Name to use for component
             serial: Serial number to assign to component
+            device: Device to used for the DUT end of the SDwire
             test_obj: Sdwire object to use for testing
         """
         if component == 'sdwire':
@@ -235,10 +236,22 @@ class Lab:
             sdw.name = name
             sdw.lab = self
             sdw.parts = None
-            if test:
-                sdw.provision_test()
-            else:
-                sdw.provision_test(serial, test)
+            sdw.provision(serial, device, test)
+        else:
+            self.raise_self("Unknown component '%s'" % component)
+
+    def provision_test(self, component, device):
+        """Check that a new component was provisioned correctly
+
+        Args:
+            component: String compatible type ('sdwire')
+            device: Device to used for the DUT end of the SDwire
+        """
+        if component == 'sdwire':
+            sdw = sdwire.Part_sdwire()
+            sdw.lab = self
+            sdw.parts = None
+            sdw.provision_test(device)
         else:
             self.raise_self("Unknown component '%s'" % component)
 

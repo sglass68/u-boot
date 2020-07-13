@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: GPL-2.0+
+## SPDX-License-Identifier: GPL-2.0+
 # Copyright 2020 Google LLC
 # Written by Simon Glass <sjg@chromium.org>
 
@@ -22,6 +22,7 @@ class Part_sdwire(Part_bootdev):
     """
     ORIG_IDS = ['--vendor=0x0403', '--product=0x6015']
     TIMEOUT_S = 30
+    TIMEOUT_LONG_S = 300
 
     DUT, TS = range(2)
 
@@ -194,20 +195,75 @@ class Part_sdwire(Part_bootdev):
             self.raise_self("Expected to find one SDwire, found %s" % found)
         return serial
 
-    def wait_for(self, req_count, orig=False):
-        for _ in range(self.TIMEOUT_S):
+    def wait_for(self, req_count, orig=False, delay=None):
+        if not delay:
+            delay = self.TIMEOUT_S
+        for _ in range(delay):
             found, serial = self.list_matching(self.ORIG_IDS if orig else [])
             if found == req_count:
                 return serial
             if req_count:
-                msg = '\rInsert the SDwire...'
+                msg = '\rInsert the SDwire...   '
             else:
                 msg = '\rUnplug all SDwires...%d ' % found
             self._print(msg, end='', flush=True)
             self._sleep(1)
         self.raise_self('gave up waiting')
 
-    def provision(self, new_serial):
+    def wait_for_device_state(self, device, want_present):
+        done = False
+        print('Waiting for %s, present=%s' % (device, want_present))
+        for i in range(5):
+            result = self.lab.run_command('dd', 'if=%s' % device,
+                                          'of=/dev/null', 'count=1')
+            is_present = not result.return_code
+            if is_present == want_present:
+                done = True
+                break
+            time.sleep(1)
+        return done
+
+    def _provision_test(self, orig_disks, device):
+        print("Running provision test on serial '%s'" % self._serial)
+        self._serial = self.wait_for(1, False)
+        self.select_dut()
+        if self.get_status() != self.DUT:
+            self.raise_self('Failed to switch to DUT')
+
+        # The device should appear in the card reader device
+        if not self.wait_for_device_state(device, True):
+            raise ValueError("Cannot access '%s' with SDwire set to DUT" %
+                             device)
+
+        self.select_ts()
+        if self.get_status() != self.TS:
+            self.raise_self('Failed to switch to TS')
+
+        # The device should disappear in the card reader device
+        if not self.wait_for_device_state(device, False):
+            raise ValueError(
+                "Device '%s' still present with SDwire set to TS'%s'" % device)
+
+        time.sleep(1)
+        new_disks = self.list_disks().difference(orig_disks)
+        if len(new_disks) != 1:
+            self.raise_self('Cannot find disk')
+        new_disk = new_disks.pop()
+        #print('Found disk %s' % new_disk)
+        bsymlink_path = '/dev/sd%s' % new_disk
+        if not self.wait_for_device_state(bsymlink_path, True):
+            raise ValueError("Cannot access '%s' with SDwire set to TS'%s'" %
+                             bsymlink_path)
+
+        self.select_dut()
+        if self.get_status() != self.DUT:
+            self.raise_self('Failed to switch to DUT')
+
+        # The USB device should disappear
+        if not self.wait_for_device_state(bsymlink_path, False):
+            raise ValueError("Cannot remove device '%s'" % bsymlink_path)
+
+    def provision(self, new_serial, device, test):
         """Provision an SDwire ready for use
 
         This only works if there is a single SDwire connected.
@@ -216,9 +272,13 @@ class Part_sdwire(Part_bootdev):
         if not new_serial:
             self.raise_self('Please specify a serial number')
         self._verbose = True
+        print("Provisioning with serial '%s'" % new_serial)
+        print('Please insert uSD card into SDwire, SDwire into card reader')
+        print('Follow prompts to insert/remove SDwire from USB port')
 
-        self.wait_for(0, True)
-        old_serial = self.wait_for(1, True)
+        self.wait_for(0, True, self.TIMEOUT_S)
+
+        old_serial = self.wait_for(1, True, self.TIMEOUT_LONG_S)
 
         # Program in the new serial number
         self.sdmux_ctrl('--device-serial=%s' % old_serial, *self.ORIG_IDS,
@@ -226,55 +286,26 @@ class Part_sdwire(Part_bootdev):
 
         # Wait for the device to re-appear with the new details
         self.wait_for(0, True)
-        self.wait_for(1, False)
+        orig_disks = self.list_disks()
+        serial = self.wait_for(1, False)
 
         if serial != new_serial:
             self.raise_self("Expected serial '%s' but got '%s'" %
                             (new_serial, serial))
         self._print("\nProvision complete for serial '%s'" % new_serial)
+        if test:
+            self._serial = new_serial
+            self._provision_test(orig_disks, device)
 
     def list_disks(self):
         disks = glob.glob('/dev/sd?')
         return set([name[-1] for name in disks])
 
-    def provision_test(self):
+    def provision_test(self, device):
         self.wait_for(0)
         orig_disks = self.list_disks()
 
-        self._serial = self.wait_for(1)
-        print("Running provision test on serial '%s'" % self._serial)
-        self.select_dut()
-        if self.get_status() != self.DUT:
-            self.raise_self('Failed to switch to DUT')
-        time.sleep(1)
-
-        self.select_ts()
-        if self.get_status() != self.TS:
-            self.raise_self('Failed to switch to TS')
-        time.sleep(1)
-        new_disks = self.list_disks().difference(orig_disks)
-        if len(new_disks) != 1:
-            self.raise_self('Cannot find disk')
-        new_disk = new_disks.pop()
-        print('Found disk %s' % new_disk)
-        self._block_symlink = 'sd%s' % new_disk
-        self.check_for_block_symlink()
-
-        self.select_dut()
-        if self.get_status() != self.DUT:
-            self.raise_self('Failed to switch to DUT')
-
-        bsymlink_path = '/dev/%s' % self._block_symlink
-        done = False
-        for i in range(5):
-            result = self.lab.run_command('dd', 'if=%s' % bsymlink_path,
-                                          'of=/dev/null', 'count=1')
-            if result.return_code:
-                done = True
-                break
-            time.sleep(1)
-        if not done:
-            raise ValueError("Cannot remove device '%s'" % bsymlink_path)
+        self._provision_test(orig_disks, device)
 
     def check_for_block_symlink(self):
         bsymlink_path = '/dev/%s' % self._block_symlink

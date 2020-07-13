@@ -7,6 +7,13 @@
 
 from argparse import ArgumentParser
 
+def add_prov_args(parser):
+    parser.add_argument('-c', '--component', type=str,
+                        help='Select the component to provision')
+    parser.add_argument(
+        '-d', '--device', type=str,
+        help="Device to use for DUT end of SDwire test (e.g. '/dev/sdb'")
+
 def ParseArgs(argv):
     """Parse the labman command-line arguments
 
@@ -56,14 +63,17 @@ def ParseArgs(argv):
                            help="Things to list ('all', 'hubs', <part>)")
 
     prov_parser = subparser.add_parser('prov', help='Provision a lab component')
-    prov_parser.add_argument('-c', '--component', type=str,
-                             help='Select the component to provision')
+    add_prov_args(prov_parser)
     prov_parser.add_argument('-n', '--name', type=str,
                              help='Name to provision with')
     prov_parser.add_argument('-s', '--serial', type=str,
                              help='Serial number to provision with')
     prov_parser.add_argument('-t', '--test', action='store_true',
                              help='Test that provisioning worked')
+
+    provtest_parser = subparser.add_parser(
+        'provtest', help='Test provisioning of a lab component')
+    add_prov_args(provtest_parser)
 
     scan_parser = subparser.add_parser('scan',
                                        help='Scan for unprovisioned devices')
