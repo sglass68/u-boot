@@ -279,6 +279,12 @@ em100s:
     serial: DP139156
     chip: GD25LQ32
 
+  em100-5: &em100_nyan_big
+    hub-port: *hube_12
+    symlink: em100_nyan_big
+    serial: DP138817
+    chip: W25Q32DW
+
 sdwires:
   sdwire0: &sdwire0
     serial: sdwire-18
@@ -769,6 +775,7 @@ duts:
   nyan-big:
     desc: Asus Chromebook
     console: *servo_samus
+    bootdev: *em100_nyan_big
     power: *servo_nyan_big
     username: root
     password: test0000
@@ -779,7 +786,7 @@ duts:
       mac-address: 94:eb:2c:15:84:a3
     builds:
       nyan_big:
-        target: nyan_big
+        target: nyan-big
         toolchain: armv7-a
 
   link:
