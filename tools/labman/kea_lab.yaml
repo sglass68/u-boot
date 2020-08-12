@@ -628,7 +628,7 @@ usbrelays:
         port-number: 8
 
   usbrelay1: &usbrelay1
-    serial: QAAMZ
+    serial: 6AAMZ
     hub-port: *hubd_2
     symlink: relay1
     num-ports: 4
