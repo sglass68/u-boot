@@ -67,19 +67,8 @@ class Part_usbboot(Part):
     def check(self):
         dut = self.find_dut_by_send_device()
         try:
-            dut.reset_to_recovery(self._symlink)
-
-            for i in range(10):
-                result = self.lab.run_command('head', '-0',
-                                              '/dev/%s' % self._symlink)
-                if not result.return_code:
-                    good = True
-                    msg = ''
-                    break
-                else:
-                    msg = result.stderr.strip()
-                    good = False
-                time.sleep(.1)
+            msg = dut.reset_to_recovery(self._symlink)
+            good = not msg
         except ValueError as e:
             good = False
             msg = str(e)

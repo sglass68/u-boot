@@ -440,12 +440,7 @@ LINUX = {class_name}Linux
                 time.sleep(.1)
             else:
                 self._power.obj.set_power(True, self._power.port)
-                count = 0
-                while not os.path.exists('/dev/usbdev-pcduino3') and count < 10:
-                    time.sleep(.1)
-                    count += .1
-                print('\ncount', count)
-                #time.sleep(2)  # pcduino3 takes >1s sometimes
+                time.sleep(1)  # pcduino3 takes >1s sometimes
         else:
             self._power.obj.set_power(True, self._power.port)
 
@@ -464,3 +459,13 @@ LINUX = {class_name}Linux
         self.setup_recovery(use_reset_method)
         self.initiate_recovery(use_reset_method)
         self.complete_recovery(use_reset_method)
+        msg = ''
+        for i in range(20):
+            result = self.lab.run_command('head', '-0', '/dev/%s' % symlink)
+            if not result.return_code:
+                return None
+            else:
+                msg = result.stderr.strip()
+                good = False
+            time.sleep(.1)
+        return msg
