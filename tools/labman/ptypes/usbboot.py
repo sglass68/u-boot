@@ -67,7 +67,7 @@ class Part_usbboot(Part):
     def check(self):
         dut = self.find_dut_by_send_device()
         try:
-            dut.reset_to_recovery()
+            dut.reset_to_recovery(self._symlink)
 
             for i in range(10):
                 result = self.lab.run_command('head', '-0',

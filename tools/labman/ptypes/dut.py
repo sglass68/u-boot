@@ -409,10 +409,9 @@ LINUX = {class_name}Linux
     def get_send_device(self):
         return self._send_device
 
-    def reset_to_recovery(self):
-        if (self._send_device and self._send_device.obj.recovery_method in
-            [Part_usbboot.Method.RECOVERY_RESET_EXTRA,
-             Part_usbboot.Method.RECOVERY_RESET]):
+    def setup_recovery(self, use_reset_method):
+        "Enable recovery and assert reset (or power off)"""
+        if use_reset_method:
             tout.Detail('%s: Recovery: Using reset/power' % str(self))
             self._recovery.obj.set_power(True, self._recovery.port)
             if self._recovery_extra:
@@ -445,3 +444,10 @@ LINUX = {class_name}Linux
             self._power.obj.set_power(False, self._power.port)
             time.sleep(1)
             self._power.obj.set_power(True, self._power.port)
+
+    def reset_to_recovery(self, symlink):
+        use_reset_method = (self._send_device and
+            self._send_device.obj.recovery_method in
+            [Part_usbboot.Method.RECOVERY_RESET_EXTRA,
+             Part_usbboot.Method.RECOVERY_RESET])
+        self.setup_recovery(use_reset_method)
