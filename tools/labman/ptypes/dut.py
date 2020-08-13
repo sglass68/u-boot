@@ -446,11 +446,15 @@ LINUX = {class_name}Linux
                     count += .1
                 print('\ncount', count)
                 #time.sleep(2)  # pcduino3 takes >1s sometimes
+        else:
+            self._power.obj.set_power(True, self._power.port)
+
+    def complete_recovery(self, use_reset_method):
+        """Finish up by de-asserting recovery"""
+        if use_reset_method:
             self._recovery.obj.set_power(False, self._recovery.port)
             if self._recovery_extra:
                 self._recovery.obj.set_power(False, self._recovery_extra.port)
-        else:
-            self._power.obj.set_power(True, self._power.port)
 
     def reset_to_recovery(self, symlink):
         use_reset_method = (self._send_device and
@@ -459,3 +463,4 @@ LINUX = {class_name}Linux
              Part_usbboot.Method.RECOVERY_RESET])
         self.setup_recovery(use_reset_method)
         self.initiate_recovery(use_reset_method)
+        self.complete_recovery(use_reset_method)
