@@ -420,11 +420,25 @@ LINUX = {class_name}Linux
             if self._reset:
                 self._reset.obj.set_power(True, self._reset.port)
                 time.sleep(.1)
+            else:
+                self._power.obj.set_power(False, self._power.port)
+                time.sleep(1)
+        else:
+            tout.Detail('%s: Recovery: Using select_ts, power' % str(self))
+            if not self._power:
+                self.raise_self('No power control')
+            if self._bootdev:
+                self._bootdev.obj.select_ts()
+            self._power.obj.set_power(False, self._power.port)
+            time.sleep(1)
+
+    def initiate_recovery(self, use_reset_method):
+        """Power-on (or de-assert reset) so that the board goes into recovery"""
+        if use_reset_method:
+            if self._reset:
                 self._reset.obj.set_power(False, self._reset.port)
                 time.sleep(.1)
             else:
-                self._power.obj.set_power(False, self._power.port)
-                time.sleep(2)
                 self._power.obj.set_power(True, self._power.port)
                 count = 0
                 while not os.path.exists('/dev/usbdev-pcduino3') and count < 10:
@@ -436,13 +450,6 @@ LINUX = {class_name}Linux
             if self._recovery_extra:
                 self._recovery.obj.set_power(False, self._recovery_extra.port)
         else:
-            tout.Detail('%s: Recovery: Using select_ts, power' % str(self))
-            if not self._power:
-                self.raise_self('No power control')
-            if self._bootdev:
-                self._bootdev.obj.select_ts()
-            self._power.obj.set_power(False, self._power.port)
-            time.sleep(1)
             self._power.obj.set_power(True, self._power.port)
 
     def reset_to_recovery(self, symlink):
@@ -451,3 +458,4 @@ LINUX = {class_name}Linux
             [Part_usbboot.Method.RECOVERY_RESET_EXTRA,
              Part_usbboot.Method.RECOVERY_RESET])
         self.setup_recovery(use_reset_method)
+        self.initiate_recovery(use_reset_method)
