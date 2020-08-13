@@ -70,13 +70,19 @@ class Part_dli(Part, Power):
         Raises:
             ValueError: if it did not respond
         """
-        print('set_power')
-        if power_on:
-            tout.Detail('%s-%s: Power on' % (str(self), port))
-            self.switch.on(port)
-        else:
-            tout.Detail('%s-%s: Power off' % (str(self), port))
-            self.switch.off(port)
+        for passnum in range(2):
+            try:
+                if power_on:
+                    tout.Detail('%s-%s: Power on' % (str(self), port))
+                    self.switch.on(port)
+                else:
+                    tout.Detail('%s-%s: Power off' % (str(self), port))
+                    self.switch.off(port)
+                return
+            except DLIPowerException:
+                if passnum == 1:
+                    raise
+
 
     def check(self):
         """Run a check on a dli to see that it seems to work OK

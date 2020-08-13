@@ -103,17 +103,17 @@ class Part_sdwire(Part_bootdev):
             self._sleep(1)
         return result
 
-    def select_ts(self):
+    def select_ts(self, retry=True):
         """Connect the uSD card to the test system"""
-        self.sdmux_ctrl('-e', self._serial, '--ts', retry=False)
+        self.sdmux_ctrl('-e', self._serial, '--ts', retry=retry)
 
-    def select_dut(self):
+    def select_dut(self, retry=True):
         """Connect the uSD card to the DUT"""
-        result = self.sdmux_ctrl('-e', self._serial, '--dut', retry=False)
+        result = self.sdmux_ctrl('-e', self._serial, '--dut', retry=retry)
         if result.return_code:
             self.raise_self("Failed '%s'" % result.stderr.strip())
 
-    def get_status(self):
+    def get_status(self, retry=True):
         """Get the current status of the SDwire
 
         Returns:
@@ -124,7 +124,7 @@ class Part_sdwire(Part_bootdev):
         Raises:
             ValueError if the result could not be parsed
         """
-        result = self.sdmux_ctrl('-e', self._serial, '--status', retry=False)
+        result = self.sdmux_ctrl('-e', self._serial, '--status', retry=retry)
         out = result.stdout
         words = out.split()
         if not len(words):
@@ -226,8 +226,8 @@ class Part_sdwire(Part_bootdev):
     def _provision_test(self, orig_disks, device):
         print("Running provision test on serial '%s'" % self._serial)
         self._serial = self.wait_for(1, False)
-        self.select_dut()
-        if self.get_status() != self.DUT:
+        self.select_dut(retry=False)
+        if self.get_status(retry=False) != self.DUT:
             self.raise_self('Failed to switch to DUT')
 
         # The device should appear in the card reader device
@@ -235,8 +235,8 @@ class Part_sdwire(Part_bootdev):
             raise ValueError("Cannot access '%s' with SDwire set to DUT" %
                              device)
 
-        self.select_ts()
-        if self.get_status() != self.TS:
+        self.select_ts(retry=False)
+        if self.get_status(retry=False) != self.TS:
             self.raise_self('Failed to switch to TS')
 
         # The device should disappear in the card reader device
@@ -255,8 +255,8 @@ class Part_sdwire(Part_bootdev):
             raise ValueError("Cannot access '%s' with SDwire set to TS'%s'" %
                              bsymlink_path)
 
-        self.select_dut()
-        if self.get_status() != self.DUT:
+        self.select_dut(retry=False)
+        if self.get_status(retry=False) != self.DUT:
             self.raise_self('Failed to switch to DUT')
 
         # The USB device should disappear

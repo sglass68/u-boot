@@ -461,6 +461,7 @@ sunxiusbs:
     hub-port: *ykush0_port2
     symlink: usbdev-pcduino3
     loadaddr: 0x4a000000
+    retries: 6
 
   sunxi-usb2: &olimex_a20_send
     hub-port: *huba_12

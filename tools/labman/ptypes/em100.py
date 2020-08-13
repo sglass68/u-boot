@@ -69,12 +69,15 @@ class Part_em100(Part):
             ValueError: if the tool failed
         """
         with self._lock:
-            args = ['em100'] + list(in_args)
-            result = self.lab.run_command(*args)
-            if result.stderr:
-                self.raise_self("Failed to run '%s': %s" %
-                                (' '.join(args), result.stderr))
-            return result.stdout
+            # Every now an then we get:
+            # libusb: error [udev_hotplug_event] ignoring udev action bind
+            for _ in range(2):
+                args = ['em100'] + list(in_args)
+                result = self.lab.run_command(*args)
+                if not result.stderr:
+                    return result.stdout
+        self.raise_self("Failed to run '%s': %s" %
+                        (' '.join(args), result.stderr))
 
     def get_serial(self):
         """Get the serial number as reported by the device

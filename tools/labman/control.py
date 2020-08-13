@@ -26,8 +26,9 @@ def Labman(args, lab=None):
 
     lab.setup_state_dir()
 
+    result = 0
     if args.cmd == 'check':
-        lab.check(args.parts)
+        result = lab.check(args.parts)
     elif args.cmd == 'emit':
         lab.emit(args.output_dir, args.dut, args.ftype)
     elif args.cmd == 'ls':
@@ -41,3 +42,5 @@ def Labman(args, lab=None):
         lab.start_daemons()
     elif args.cmd == 'scan':
         lab.scan()
+
+    return result

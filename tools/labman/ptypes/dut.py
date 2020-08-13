@@ -2,6 +2,7 @@
 # Copyright 2020 Google LLC
 
 import collections
+from datetime import datetime, timedelta
 import os
 from typing import Optional
 import re
@@ -440,7 +441,7 @@ LINUX = {class_name}Linux
                 time.sleep(.1)
             else:
                 self._power.obj.set_power(True, self._power.port)
-                time.sleep(1)  # pcduino3 takes >1s sometimes
+                time.sleep(1)
         else:
             self._power.obj.set_power(True, self._power.port)
 
@@ -451,21 +452,31 @@ LINUX = {class_name}Linux
             if self._recovery_extra:
                 self._recovery.obj.set_power(False, self._recovery_extra.port)
 
-    def reset_to_recovery(self, symlink):
+    def reset_to_recovery(self, symlink, retries):
         use_reset_method = (self._send_device and
             self._send_device.obj.recovery_method in
             [Part_usbboot.Method.RECOVERY_RESET_EXTRA,
              Part_usbboot.Method.RECOVERY_RESET])
-        self.setup_recovery(use_reset_method)
-        self.initiate_recovery(use_reset_method)
-        self.complete_recovery(use_reset_method)
-        msg = ''
-        for i in range(20):
-            result = self.lab.run_command('head', '-0', '/dev/%s' % symlink)
-            if not result.return_code:
-                return None
-            else:
-                msg = result.stderr.strip()
-                good = False
-            time.sleep(.1)
-        return msg
+        try:
+            # Out of 100 runs, pcduino3 required 5 attempts once, 4 attempts
+            # 4 times, 3 attempts 9 times, 2 attempts 21 times and the rest
+            # succeeded on the first attempt.
+            for attempt in range(retries):
+                self.setup_recovery(use_reset_method)
+                self.initiate_recovery(use_reset_method)
+                msg = ''
+                start_time = datetime.now()
+
+                # opi_pc takes >2s about half the time
+                while datetime.now() - start_time < timedelta(seconds=3):
+                    result = self.lab.run_command('head', '-0', '/dev/%s' %
+                                                  symlink)
+                    if not result.return_code:
+                        return None
+                    else:
+                        msg = result.stderr.strip()
+                        good = False
+                    time.sleep(.1)
+            return msg
+        finally:
+            self.complete_recovery(use_reset_method)

@@ -341,6 +341,7 @@ class Lab:
                     out[hub.get_port_name(port)] = ports[port].name
                 for port in sorted(out.keys()):
                     print('   %2s: %s' % (port, out[port]))
+        return 1 if bad else 0
 
     def start_daemons(self):
         """Start daemons used by the lab

@@ -46,6 +46,7 @@ class Part_usbboot(Part):
         if self._symlink is None:
             self.raise_self("Missing symlink")
         self.loadaddr = yam.get('loadaddr')
+        self.retries = yam.get('retries', 2)
 
     def raise_self(self, msg):
         """Raise an error related to this USB connection
@@ -67,7 +68,7 @@ class Part_usbboot(Part):
     def check(self):
         dut = self.find_dut_by_send_device()
         try:
-            msg = dut.reset_to_recovery(self._symlink)
+            msg = dut.reset_to_recovery(self._symlink, retries=self.retries)
             good = not msg
         except ValueError as e:
             good = False
