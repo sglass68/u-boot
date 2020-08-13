@@ -5,6 +5,8 @@
 import re
 
 import collections
+import threading
+
 from labman.part import Part
 from labman.power import Power
 from labman import work
@@ -18,6 +20,8 @@ class Part_usbrelay(Part, Power):
         _serial: Serial number of the Ykusb
         _symlink: Symlink to the device
     """
+    _lock = threading.Lock()
+
     def load(self, yam):
         """Load the object from a yaml definition
 
@@ -73,19 +77,24 @@ class Part_usbrelay(Part, Power):
             ValueError: if the tool failed
         """
         # The old tool prints everything on stderr
-        args = ['usbrelay'] + list(in_args)
-        result = lab.run_command(*args)
-        if result.return_code:
-            raiser("Failed to run '%s': %d" %
-                   (' '.join(args), result.return_code))
-        if not result.stderr:
-            args = ['usbrelay', '-d'] + list(in_args)
+        with cls._lock:
+            args = ['usbrelay'] + list(in_args)
             result = lab.run_command(*args)
+            if result.return_code and 'invalid' in result.stderr:
+                result.return_code = 0
             if result.return_code:
-                raiser("Failed to run '%s': %d" %
-                       (' '.join(args), result.return_code))
-            return result.stdout, result.stderr
-        return '', result.stderr
+                raiser("Failed to run1 '%s': %d: %s" %
+                       (' '.join(args), result.return_code, result.stderr))
+            if not result.stderr:
+                args = ['usbrelay', '-d'] + list(in_args)
+                result = lab.run_command(*args)
+                if result.return_code and 'invalid' in result.stderr:
+                    result.return_code = 0
+                if result.return_code:
+                    raiser("Failed to run2 '%s': %d: %s" %
+                           (' '.join(args), result.return_code, result.stderr))
+                return result.stdout, result.stderr
+            return '', result.stderr
 
     def usbrelay(self, *in_args):
         """Perform an operation with the usbrelay tool

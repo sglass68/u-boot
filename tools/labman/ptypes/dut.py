@@ -2,6 +2,7 @@
 # Copyright 2020 Google LLC
 
 import collections
+import os
 from typing import Optional
 import re
 import time
@@ -424,9 +425,14 @@ LINUX = {class_name}Linux
                 time.sleep(.1)
             else:
                 self._power.obj.set_power(False, self._power.port)
-                time.sleep(1)
+                time.sleep(2)
                 self._power.obj.set_power(True, self._power.port)
-                time.sleep(1)
+                count = 0
+                while not os.path.exists('/dev/usbdev-pcduino3') and count < 10:
+                    time.sleep(.1)
+                    count += .1
+                print('\ncount', count)
+                #time.sleep(2)  # pcduino3 takes >1s sometimes
             self._recovery.obj.set_power(False, self._recovery.port)
             if self._recovery_extra:
                 self._recovery.obj.set_power(False, self._recovery_extra.port)

@@ -86,6 +86,9 @@ class Part_ykush(Part):
         # stderr
         args = ['ykushcmd'] + list(in_args)
         result = self.lab.run_command(*args)
+        if result.return_code:
+            self.raise_self("Failed to run '%s': %d: %s" %
+                   (' '.join(args), result.return_code, result.stderr))
         lines = result.stdout.strip().splitlines()
         if len(lines) > 1:
             self.raise_self(lines[0])

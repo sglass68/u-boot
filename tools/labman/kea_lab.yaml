@@ -667,6 +667,29 @@ usbrelays:
       port8: &usbrelay2_port8
         port-number: 8
 
+  usbrelay3: &usbrelay3
+    serial: 8QMBS
+    hub-port: *hube_11
+    symlink: relay3
+    num-ports: 8
+    ports:
+      port1: &usbrelay3_port1
+        port-number: 1
+      port2: &usbrelay3_port2
+        port-number: 2
+      port3: &usbrelay3_port3
+        port-number: 3
+      port4: &usbrelay3_port4
+        port-number: 4
+      port5: &usbrelay3_port5
+        port-number: 5
+      port6: &usbrelay3_port6
+        port-number: 6
+      port7: &usbrelay3_port7
+        port-number: 7
+      port8: &usbrelay3_port8
+        port-number: 8
+
 duts:
   rpi_3:
     desc: Raspberry Pi 3b
@@ -921,10 +944,11 @@ duts:
     console: *ttyusb_port13
     bootdev: *sdwire9
     power: *dli_main_port4
+    reset: *usbrelay3_port7
+    recovery: *usbrelay3_port8
     flash:
       method: sunxi
     send:
-      # Does not work, need to hook up recovery and reset lines
       device: *olimex_a20_send
       method: sunxi
     builds:

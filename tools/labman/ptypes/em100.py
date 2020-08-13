@@ -72,7 +72,8 @@ class Part_em100(Part):
             args = ['em100'] + list(in_args)
             result = self.lab.run_command(*args)
             if result.stderr:
-                self.raise_self("Failed to run '%s'" % ' '.join(args))
+                self.raise_self("Failed to run '%s': %s" %
+                                (' '.join(args), result.stderr))
             return result.stdout
 
     def get_serial(self):
@@ -115,7 +116,7 @@ class Part_em100(Part):
         result = lab.get_usb_files(phys, 'idProduct', 'idVendor', 'serial')
         if not result:
             return
-        if result['idVendor'] == '0483' and result['idProduct'] == '5750':
+        if result['idVendor'] == '04b4' and result['idProduct'] == '1235':
             return '(serial number unknown)'
         return None
 

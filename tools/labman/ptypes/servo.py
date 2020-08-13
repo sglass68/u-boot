@@ -7,6 +7,7 @@ import re
 import select
 import shutil
 import sys
+import threading
 import time
 
 from labman.part import Part
@@ -39,6 +40,7 @@ class ServoComms(object):
             a line at a time
         errs: List of error messages written by servod into the @info_file
     """
+
     def __init__(self, name, port, serial, board, logdir, lab):
         self.name = name
         self.port = port
@@ -160,6 +162,8 @@ class ServoComms(object):
 
 class Part_servo(Part):
     """Chrome OS servo board with control and UARTS for a Chromebook"""
+    _lock = threading.Lock()
+
     def __init__(self):
         super().__init__()
         self._need_dut_power = False
@@ -240,15 +244,16 @@ class Part_servo(Part):
         Returns:
             work.CheckResult: Result obtained from the check
         """
-        result = self.lab.run_command('dut-control', '--port', str(self._port),
-                                      'cpu_uart_pty')
-        if not result.return_code:
-            good = True
-            msg = ''
-        else:
-            msg = result.stderr.strip()
-            good = False
-        return work.CheckResult(self, good, msg)
+        with self._lock:
+            result = self.lab.run_command('dut-control', '--port',
+                                          str(self._port), 'cpu_uart_pty')
+            if not result.return_code:
+                good = True
+                msg = ''
+            else:
+                msg = result.stderr.strip()
+                good = False
+            return work.CheckResult(self, good, msg)
 
     @classmethod
     def guess_part(cls, lab, phys):

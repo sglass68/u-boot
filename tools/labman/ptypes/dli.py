@@ -70,6 +70,7 @@ class Part_dli(Part, Power):
         Raises:
             ValueError: if it did not respond
         """
+        print('set_power')
         if power_on:
             tout.Detail('%s-%s: Power on' % (str(self), port))
             self.switch.on(port)
