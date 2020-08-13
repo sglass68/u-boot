@@ -83,7 +83,7 @@ class Part_uart(Part):
             if good:
                 msg = ''
             else:
-                msg = result.stdout
+                msg = 'Cannot connect: %s' % result.stdout
             return work.CheckResult(self, good, msg)
         tries = 1
         dut = None

@@ -10,7 +10,7 @@ from labman.ptypes.usbboot import Part_usbboot
 from labman import work
 
 class Part_imxusb(Part_usbboot):
-    """A tegra RCM (Remote Controller and Monitoring) connection
+    """A Freescale iMX USB connection
 
     This allows downloading software to the DUT oevr USB using the boot ROM
 

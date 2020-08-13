@@ -76,12 +76,14 @@ class Part_usbrelay(Part, Power):
         args = ['usbrelay'] + list(in_args)
         result = lab.run_command(*args)
         if result.return_code:
-            raiser("Failed to run '%s'" % ' '.join(args))
+            raiser("Failed to run '%s': %d" %
+                   (' '.join(args), result.return_code))
         if not result.stderr:
             args = ['usbrelay', '-d'] + list(in_args)
             result = lab.run_command(*args)
             if result.return_code:
-                raiser("Failed to run '%s'" % ' '.join(args))
+                raiser("Failed to run '%s': %d" %
+                       (' '.join(args), result.return_code))
             return result.stdout, result.stderr
         return '', result.stderr
 

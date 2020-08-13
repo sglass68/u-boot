@@ -439,6 +439,8 @@ dfus:
   dfu0: &dfu_usb0
     hub-port: *huba_15
     symlink: usbdev-edison
+
+at91usbs:
   at91-usb0: &sn9260_send
     hub-port: *hube_13
     symlink: usbdev-sn9260
@@ -1047,7 +1049,7 @@ duts:
     desc: Snapper 9260
     console: *portserver1_3
     reset: *usbrelay2_port2
-    recovery: *usbrelay1_port3
+    recovery: *usbrelay2_port3
     flash:
       method: at91
     send:
