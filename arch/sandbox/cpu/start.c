@@ -388,6 +388,15 @@ static int sandbox_cmdline_cb_select_unittests(struct sandbox_state *state,
 }
 SANDBOX_CMDLINE_OPT_SHORT(select_unittests, 'k', 1, "Select unit tests to run");
 
+static int sandbox_cmdline_cb_log_test(struct sandbox_state *state,
+				       const char *arg)
+{
+	state->log_test = true;
+
+	return 0;
+}
+SANDBOX_CMDLINE_OPT(log_test, 0, "Show logging info on startup (for testing)");
+
 static void setup_ram_buf(struct sandbox_state *state)
 {
 	/* Zero the RAM buffer if we didn't read it, to keep valgrind happy */
@@ -488,8 +497,10 @@ int main(int argc, char *argv[])
 	gd->reloc_off = (ulong)gd->arch.text_base;
 
 	/* sandbox test: log functions called before log_init in board_init_f */
-	log_info("sandbox: starting...\n");
-	log_debug("debug: %s\n", __func__);
+	if (state->log_test) {
+		log_info("sandbox: starting...\n");
+		log_debug("debug: %s\n", __func__);
+	}
 
 	/* Do pre- and post-relocation init */
 	board_init_f(0);

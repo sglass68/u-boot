@@ -43,7 +43,7 @@ def test_log_dropped(u_boot_console):
     """Test dropped 'log' message when debug_uart is activated"""
 
     cons = u_boot_console
-    cons.restart_uboot()
+    cons.restart_uboot_with_flags(['--log_test'])
     output = cons.get_spawn_output().replace('\r', '')
     assert 'sandbox: starting...' in output
     assert (not 'debug: main' in output)
