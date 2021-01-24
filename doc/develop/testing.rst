@@ -47,6 +47,12 @@ You can run the tests on sandbox with::
 
 This will produce HTML output in build-sandbox/test-log.html
 
+Some tests run with other versions of sandbox. For example sandbox_flattree
+runs the tests with livetree (the hierachical devicetree) disabled. You can
+also select particular tests with -k::
+
+   ./test/py/test.py --bd sandbox_flattree --build -k hello
+
 See test/py/README.md for more information about the pytest suite.
 
 
