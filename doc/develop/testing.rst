@@ -19,6 +19,12 @@ Some tests take ages to run. To run just the quick ones, type this::
 
     make qcheck
 
+To run just the tests for tools (patman, binman, etc.), type this::
+
+    make tcheck
+
+All of the above use the test/run script with a paremeter to select which tests
+are run.
 
 Sandbox
 -------
