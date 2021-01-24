@@ -53,6 +53,11 @@ also select particular tests with -k::
 
    ./test/py/test.py --bd sandbox_flattree --build -k hello
 
+There are some special tests that run in SPL. For this you need the sandbox_spl
+build::
+
+   ./test/py/test.py --bd sandbox_spl --build -k test_spl
+
 See test/py/README.md for more information about the pytest suite.
 
 
