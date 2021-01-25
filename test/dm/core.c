@@ -108,14 +108,13 @@ int dm_leak_check_end(struct unit_test_state *uts)
 /* Test that binding with plat occurs correctly */
 static int dm_test_autobind(struct unit_test_state *uts)
 {
-	struct dm_test_state *dms = uts->priv;
 	struct udevice *dev;
 
 	/*
 	 * We should have a single class (UCLASS_ROOT) and a single root
 	 * device with no children.
 	 */
-	ut_assert(dms->root);
+	ut_assert(uts->root);
 	ut_asserteq(1, list_count_items(gd->uclass_root));
 	ut_asserteq(0, list_count_items(&gd->dm_root->child_head));
 	ut_asserteq(0, dm_testdrv_op_count[DM_TEST_OP_POST_BIND]);
@@ -198,7 +197,6 @@ DM_TEST(dm_test_autobind_uclass_pdata_valid, UT_TESTF_SCAN_PDATA);
 /* Test that autoprobe finds all the expected devices */
 static int dm_test_autoprobe(struct unit_test_state *uts)
 {
-	struct dm_test_state *dms = uts->priv;
 	int expected_base_add;
 	struct udevice *dev;
 	struct uclass *uc;
@@ -212,7 +210,7 @@ static int dm_test_autoprobe(struct unit_test_state *uts)
 	ut_asserteq(0, dm_testdrv_op_count[DM_TEST_OP_POST_PROBE]);
 
 	/* The root device should not be activated until needed */
-	ut_assert(dev_get_flags(dms->root) & DM_FLAG_ACTIVATED);
+	ut_assert(dev_get_flags(uts->root) & DM_FLAG_ACTIVATED);
 
 	/*
 	 * We should be able to find the three test devices, and they should
@@ -232,7 +230,7 @@ static int dm_test_autoprobe(struct unit_test_state *uts)
 
 		/* Activating a device should activate the root device */
 		if (!i)
-			ut_assert(dev_get_flags(dms->root) & DM_FLAG_ACTIVATED);
+			ut_assert(dev_get_flags(uts->root) & DM_FLAG_ACTIVATED);
 	}
 
 	/*
@@ -284,7 +282,6 @@ DM_TEST(dm_test_plat, UT_TESTF_SCAN_PDATA);
 /* Test that we can bind, probe, remove, unbind a driver */
 static int dm_test_lifecycle(struct unit_test_state *uts)
 {
-	struct dm_test_state *dms = uts->priv;
 	int op_count[DM_TEST_OP_COUNT];
 	struct udevice *dev, *test_dev;
 	int pingret;
@@ -292,7 +289,7 @@ static int dm_test_lifecycle(struct unit_test_state *uts)
 
 	memcpy(op_count, dm_testdrv_op_count, sizeof(op_count));
 
-	ut_assertok(device_bind_by_name(dms->root, false, &driver_info_manual,
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_manual,
 					&dev));
 	ut_assert(dev);
 	ut_assert(dm_testdrv_op_count[DM_TEST_OP_BIND]
@@ -300,7 +297,7 @@ static int dm_test_lifecycle(struct unit_test_state *uts)
 	ut_assert(!dev_get_priv(dev));
 
 	/* Probe the device - it should fail allocating private data */
-	dms->force_fail_alloc = 1;
+	uts->force_fail_alloc = 1;
 	ret = device_probe(dev);
 	ut_assert(ret == -ENOMEM);
 	ut_assert(dm_testdrv_op_count[DM_TEST_OP_PROBE]
@@ -308,7 +305,7 @@ static int dm_test_lifecycle(struct unit_test_state *uts)
 	ut_assert(!dev_get_priv(dev));
 
 	/* Try again without the alloc failure */
-	dms->force_fail_alloc = 0;
+	uts->force_fail_alloc = 0;
 	ut_assertok(device_probe(dev));
 	ut_assert(dm_testdrv_op_count[DM_TEST_OP_PROBE]
 			== op_count[DM_TEST_OP_PROBE] + 2);
@@ -340,19 +337,18 @@ DM_TEST(dm_test_lifecycle, UT_TESTF_SCAN_PDATA | UT_TESTF_PROBE_TEST);
 /* Test that we can bind/unbind and the lists update correctly */
 static int dm_test_ordering(struct unit_test_state *uts)
 {
-	struct dm_test_state *dms = uts->priv;
 	struct udevice *dev, *dev_penultimate, *dev_last, *test_dev;
 	int pingret;
 
-	ut_assertok(device_bind_by_name(dms->root, false, &driver_info_manual,
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_manual,
 					&dev));
 	ut_assert(dev);
 
 	/* Bind two new devices (numbers 4 and 5) */
-	ut_assertok(device_bind_by_name(dms->root, false, &driver_info_manual,
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_manual,
 					&dev_penultimate));
 	ut_assert(dev_penultimate);
-	ut_assertok(device_bind_by_name(dms->root, false, &driver_info_manual,
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_manual,
 					&dev_last));
 	ut_assert(dev_last);
 
@@ -367,7 +363,7 @@ static int dm_test_ordering(struct unit_test_state *uts)
 	ut_assert(dev_last == test_dev);
 
 	/* Add back the original device 3, now in position 5 */
-	ut_assertok(device_bind_by_name(dms->root, false, &driver_info_manual,
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_manual,
 					&dev));
 	ut_assert(dev);
 
@@ -559,7 +555,6 @@ static int create_children(struct unit_test_state *uts, struct udevice *parent,
 
 static int dm_test_children(struct unit_test_state *uts)
 {
-	struct dm_test_state *dms = uts->priv;
 	struct udevice *top[NODE_COUNT];
 	struct udevice *child[NODE_COUNT];
 	struct udevice *grandchild[NODE_COUNT];
@@ -569,12 +564,12 @@ static int dm_test_children(struct unit_test_state *uts)
 	int i;
 
 	/* We don't care about the numbering for this test */
-	dms->skip_post_probe = 1;
+	uts->skip_post_probe = 1;
 
 	ut_assert(NODE_COUNT > 5);
 
 	/* First create 10 top-level children */
-	ut_assertok(create_children(uts, dms->root, NODE_COUNT, 0, top));
+	ut_assertok(create_children(uts, uts->root, NODE_COUNT, 0, top));
 
 	/* Now a few have their own children */
 	ut_assertok(create_children(uts, top[2], NODE_COUNT, 2, NULL));
@@ -645,7 +640,6 @@ DM_TEST(dm_test_children, 0);
 
 static int dm_test_device_reparent(struct unit_test_state *uts)
 {
-	struct dm_test_state *dms = uts->priv;
 	struct udevice *top[NODE_COUNT];
 	struct udevice *child[NODE_COUNT];
 	struct udevice *grandchild[NODE_COUNT];
@@ -655,12 +649,12 @@ static int dm_test_device_reparent(struct unit_test_state *uts)
 	int i;
 
 	/* We don't care about the numbering for this test */
-	dms->skip_post_probe = 1;
+	uts->skip_post_probe = 1;
 
 	ut_assert(NODE_COUNT > 5);
 
 	/* First create 10 top-level children */
-	ut_assertok(create_children(uts, dms->root, NODE_COUNT, 0, top));
+	ut_assertok(create_children(uts, uts->root, NODE_COUNT, 0, top));
 
 	/* Now a few have their own children */
 	ut_assertok(create_children(uts, top[2], NODE_COUNT, 2, NULL));
@@ -806,15 +800,14 @@ DM_TEST(dm_test_device_reparent, 0);
 /* Test that pre-relocation devices work as expected */
 static int dm_test_pre_reloc(struct unit_test_state *uts)
 {
-	struct dm_test_state *dms = uts->priv;
 	struct udevice *dev;
 
 	/* The normal driver should refuse to bind before relocation */
-	ut_asserteq(-EPERM, device_bind_by_name(dms->root, true,
+	ut_asserteq(-EPERM, device_bind_by_name(uts->root, true,
 						&driver_info_manual, &dev));
 
 	/* But this one is marked pre-reloc */
-	ut_assertok(device_bind_by_name(dms->root, true,
+	ut_assertok(device_bind_by_name(uts->root, true,
 					&driver_info_pre_reloc, &dev));
 
 	return 0;
@@ -827,10 +820,9 @@ DM_TEST(dm_test_pre_reloc, 0);
  */
 static int dm_test_remove_active_dma(struct unit_test_state *uts)
 {
-	struct dm_test_state *dms = uts->priv;
 	struct udevice *dev;
 
-	ut_assertok(device_bind_by_name(dms->root, false, &driver_info_act_dma,
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_act_dma,
 					&dev));
 	ut_assert(dev);
 
@@ -863,7 +855,7 @@ static int dm_test_remove_active_dma(struct unit_test_state *uts)
 	 * the active DMA remove call
 	 */
 	ut_assertok(device_unbind(dev));
-	ut_assertok(device_bind_by_name(dms->root, false, &driver_info_manual,
+	ut_assertok(device_bind_by_name(uts->root, false, &driver_info_manual,
 					&dev));
 	ut_assert(dev);
 
@@ -1038,11 +1030,10 @@ DM_TEST(dm_test_uclass_names, UT_TESTF_SCAN_PDATA);
 
 static int dm_test_inactive_child(struct unit_test_state *uts)
 {
-	struct dm_test_state *dms = uts->priv;
 	struct udevice *parent, *dev1, *dev2;
 
 	/* Skip the behaviour in test_post_probe() */
-	dms->skip_post_probe = 1;
+	uts->skip_post_probe = 1;
 
 	ut_assertok(uclass_first_device_err(UCLASS_TEST, &parent));
 
