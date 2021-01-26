@@ -120,6 +120,28 @@ int test_post_run(struct unit_test_state *uts, struct unit_test *test)
 	return 0;
 }
 
+int ut_run_test(struct unit_test_state *uts, struct unit_test *test,
+		const char *name)
+{
+	int ret;
+
+	printf("Test: %s\n", name);
+
+	ret = test_pre_run(uts, test);
+	if (ret == -EAGAIN)
+		return -EAGAIN;
+	if (ret)
+		return ret;
+
+	test->func(uts);
+
+	ret = test_post_run(uts, test);
+	if (ret)
+		return ret;
+
+	return 0;
+}
+
 int ut_run_tests(struct unit_test_state *uts, const char *prefix,
 		 struct unit_test *tests, int count, const char *test_name)
 {
@@ -137,18 +159,10 @@ int ut_run_tests(struct unit_test_state *uts, const char *prefix,
 
 		if (test_name && strcmp(test_name, name))
 			continue;
-		printf("Test: %s\n", name);
+		ret = ut_run_test(uts, test, name);
 		found++;
-
-		ret = test_pre_run(uts, test);
 		if (ret == -EAGAIN)
 			continue;
-		if (ret)
-			return ret;
-
-		test->func(uts);
-
-		ret = test_post_run(uts, test);
 		if (ret)
 			return ret;
 	}
