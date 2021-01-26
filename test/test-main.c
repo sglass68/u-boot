@@ -123,9 +123,13 @@ int test_post_run(struct unit_test_state *uts, struct unit_test *test)
 int ut_run_test(struct unit_test_state *uts, struct unit_test *test,
 		const char *name)
 {
+	const char *fname = strrchr(test->file, '/') + 1;
+	const char *note = "";
 	int ret;
 
-	printf("Test: %s\n", name);
+	if ((test->flags & UT_TESTF_DM) && !uts->of_live)
+		note = " (flat tree)";
+	printf("Test: %s: %s%s\n", test->name, fname, note);
 
 	ret = test_pre_run(uts, test);
 	if (ret == -EAGAIN)
