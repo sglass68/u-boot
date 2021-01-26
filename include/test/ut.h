@@ -405,6 +405,26 @@ int ut_run_test(struct unit_test_state *uts, struct unit_test *test,
 		const char *name);
 
 /**
+ * ut_run_test_live_flat() - Run a test with both live and flat tree
+ *
+ * This calls ut_run_test() with livetree enabled, which is the standard setup
+ * for runnig tests. Then, for driver model test, it calls it again with
+ * livetree disabled. This allows checking of flattree being used when OF_LIVE
+ * is enabled, as is the case in U-Boot proper before relocation, as well as in
+ * SPL.
+ *
+ * @uts: Test state to update. The caller should ensure that this is zeroed for
+ *	the first call to this function. On exit, @uts->fail_count is
+ *	incremented by the number of failures (0, one hopes)
+ * @test: Test to run
+ * @name: Name of test, possibly skipping a prefix that should not be displayed
+ * @return 0 if all tests passed, -EAGAIN if the test should be skipped, -1 if
+ *	any failed
+ */
+int ut_run_test_live_flat(struct unit_test_state *uts, struct unit_test *test,
+			  const char *name);
+
+/**
  * ut_run_tests() - Run a set of tests
  *
  * This runs the tests, handling any preparation and clean-up needed. It prints
