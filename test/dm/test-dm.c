@@ -19,6 +19,7 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+<<<<<<< HEAD
 static bool test_matches(const char *test_name, const char *find_name)
 {
 	if (!find_name)
@@ -36,14 +37,16 @@ static bool test_matches(const char *test_name, const char *find_name)
 
 	return false;
 }
+=======
+struct unit_test_state global_dm_test_state;
+>>>>>>> b2a858733b1 (test: Use ut_run_list() to run driver model tests)
 
 int dm_test_run(const char *test_name)
 {
 	struct unit_test *tests = ll_entry_start(struct unit_test, dm_test);
 	const int n_ents = ll_entry_count(struct unit_test, dm_test);
 	struct unit_test_state *uts = &global_dm_test_state;
-	struct unit_test *test;
-	int found;
+	struct device_node *of_root;
 
 	uts->fail_count = 0;
 
@@ -59,29 +62,11 @@ int dm_test_run(const char *test_name)
 		}
 	}
 
-	if (!test_name)
-		printf("Running %d driver model tests\n", n_ents);
-	else
-
-	found = 0;
-	uts->of_root = gd_of_root();
-	for (test = tests; test < tests + n_ents; test++) {
-		const char *name = test->name;
-
-		if (!test_matches(name, test_name))
-			continue;
-
-		ut_assertok(ut_run_test_live_flat(uts, test, test->name));
-		found++;
-	}
-
-	if (test_name && !found)
-		printf("Test '%s' not found\n", test_name);
-	else
-		printf("Failures: %d\n", uts->fail_count);
+	of_root = gd_of_root();
+	ut_run_list("driver model", "dm_test_", tests, n_ents, test_name);
 
 	/* Put everything back to normal so that sandbox works as expected */
-	gd_set_of_root(uts->of_root);
+	gd_set_of_root(of_root);
 	gd->dm_root = NULL;
 	ut_assertok(dm_init(CONFIG_IS_ENABLED(OF_LIVE)));
 	dm_scan_plat(false);

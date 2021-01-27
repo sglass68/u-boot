@@ -102,6 +102,25 @@ static bool dm_test_run_on_flattree(struct unit_test *test)
 	return !strstr(fname, "video") || strstr(test->name, "video_base");
 }
 
+static bool test_matches(const char *prefix, const char *test_name,
+			 const char *find_name)
+{
+	if (!find_name)
+		return true;
+
+	if (!strcmp(test_name, find_name))
+		return true;
+
+	/* All tests have this prefix */
+	if (!strncmp(test_name, prefix, strlen(prefix)))
+		test_name += 8;
+
+	if (!strcmp(test_name, find_name))
+		return true;
+
+	return false;
+}
+
 int test_pre_run(struct unit_test_state *uts, struct unit_test *test)
 {
 	if (test->flags & UT_TESTF_DM)
@@ -206,18 +225,13 @@ int ut_run_tests(struct unit_test_state *uts, const char *prefix,
 		 struct unit_test *tests, int count, const char *test_name)
 {
 	struct unit_test *test;
-	int prefix_len = prefix ? strlen(prefix) : 0;
 	int found = 0;
 
 	for (test = tests; test < tests + count; test++) {
 		const char *name = test->name;
 		int ret;
 
-		/* Remove the prefix */
-		if (prefix && !strncmp(test_name, prefix, prefix_len))
-			name += prefix_len;
-
-		if (test_name && strcmp(test_name, name))
+		if (!test_matches(prefix, name, test_name))
 			continue;
 		ret = ut_run_test_live_flat(uts, test, name);
 		found++;
@@ -241,6 +255,7 @@ int ut_run_list(const char *category, const char *prefix,
 	if (!test_name)
 		printf("Running %d %s tests\n", count, category);
 
+	uts.of_root = gd_of_root();
 	ret = ut_run_tests(&uts, prefix, tests, count, test_name);
 
 	if (ret == -ENOENT)
