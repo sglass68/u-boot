@@ -18,7 +18,6 @@
 #include <test/ut.h>
 
 int dm_testdrv_op_count[DM_TEST_OP_COUNT];
-static struct unit_test_state *uts = &global_dm_test_state;
 
 static int testdrv_ping(struct udevice *dev, int pingval, int *pingret)
 {

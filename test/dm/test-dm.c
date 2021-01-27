@@ -19,8 +19,6 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
-struct unit_test_state global_dm_test_state;
-
 static bool test_matches(const char *test_name, const char *find_name)
 {
 	if (!find_name)
