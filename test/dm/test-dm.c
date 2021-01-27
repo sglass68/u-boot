@@ -20,6 +20,7 @@
 DECLARE_GLOBAL_DATA_PTR;
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 static bool test_matches(const char *test_name, const char *find_name)
 {
 	if (!find_name)
@@ -41,14 +42,14 @@ static bool test_matches(const char *test_name, const char *find_name)
 struct unit_test_state global_dm_test_state;
 >>>>>>> b2a858733b1 (test: Use ut_run_list() to run driver model tests)
 
+=======
+>>>>>>> 489f0a186be (wip)
 int dm_test_run(const char *test_name)
 {
 	struct unit_test *tests = ll_entry_start(struct unit_test, dm_test);
 	const int n_ents = ll_entry_count(struct unit_test, dm_test);
-	struct unit_test_state *uts = &global_dm_test_state;
 	struct device_node *of_root;
-
-	uts->fail_count = 0;
+	int ret;
 
 	if (!CONFIG_IS_ENABLED(OF_PLATDATA)) {
 		/*
@@ -58,22 +59,23 @@ int dm_test_run(const char *test_name)
 		if (!gd->fdt_blob || fdt_next_node(gd->fdt_blob, 0, NULL) < 0) {
 			puts("Please run with test device tree:\n"
 			     "    ./u-boot -d arch/sandbox/dts/test.dtb\n");
-			ut_assert(gd->fdt_blob);
+			return CMD_RET_FAILURE;
 		}
 	}
 
 	of_root = gd_of_root();
-	ut_run_list("driver model", "dm_test_", tests, n_ents, test_name);
+	ret = ut_run_list("driver model", "dm_test_", tests, n_ents, test_name);
 
 	/* Put everything back to normal so that sandbox works as expected */
 	gd_set_of_root(of_root);
 	gd->dm_root = NULL;
-	ut_assertok(dm_init(CONFIG_IS_ENABLED(OF_LIVE)));
+	if (dm_init(CONFIG_IS_ENABLED(OF_LIVE)))
+		return CMD_RET_FAILURE;
 	dm_scan_plat(false);
 	if (!CONFIG_IS_ENABLED(OF_PLATDATA))
 		dm_scan_fdt(false);
 
-	return uts->fail_count ? CMD_RET_FAILURE : 0;
+	return ret ? CMD_RET_FAILURE : 0;
 }
 
 int do_ut_dm(struct cmd_tbl *cmdtp, int flag, int argc, char *const argv[])
